@@ -1,11 +1,11 @@
 import { Account, address, Address, getProgramDerivedAddress,
-    getAddressEncoder
+    getAddressEncoder,
+    Rpc,
+    GetAccountInfoApi,
+    GetMultipleAccountsApi
  } from "@solana/kit";
 import { ADRENA_PROGRAM_ADDRESS } from "../../codama-generated/programs/adrena";
 import { Custody, fetchAllCustody, fetchPool, Pool } from "../../codama-generated";
-import { createClient } from "./KitClient";
-
-const client = createClient();
 
 
 export function getPoolPda(poolName: string = 'main-pool', programId: Address = ADRENA_PROGRAM_ADDRESS) {
@@ -15,11 +15,14 @@ export function getPoolPda(poolName: string = 'main-pool', programId: Address = 
     });
 };
 
-export async function fetchPoolUtil(poolName: string = 'main-pool', programId: Address = ADRENA_PROGRAM_ADDRESS) {
+export async function fetchPoolUtil(
+    poolName: string = 'main-pool', 
+    programId: Address = ADRENA_PROGRAM_ADDRESS, 
+    rpc: Rpc<GetAccountInfoApi>) {
 
     const poolPda = await getPoolPda(poolName, programId);
     const pool = await fetchPool(
-        client.rpc,
+        rpc,
         poolPda[0],
         {
             commitment: 'confirmed',
@@ -29,12 +32,12 @@ export async function fetchPoolUtil(poolName: string = 'main-pool', programId: A
     return pool;
 }
 
-export async function loadCustodies(pool: Pool) {
+export async function loadCustodies(pool: Pool, rpc: Rpc<GetMultipleAccountsApi>) {
 
     const custodies = pool.custodies.filter(custody => custody !== (address('11111111111111111111111111111111')));
 
     const fetchCustodyAccsResult = await fetchAllCustody(
-        client.rpc,
+        rpc,
         custodies,
         {
             commitment: 'confirmed',

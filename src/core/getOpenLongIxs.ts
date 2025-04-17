@@ -1,21 +1,29 @@
-import { Address, address, IInstruction, Rpc, SolanaRpcApi, TransactionSigner } from '@solana/kit';
+import { Account, Address, IInstruction, Rpc, SolanaRpcApi, TransactionSigner } from '@solana/kit';
 import { 
-    getOpenOrIncreasePositionWithSwapLongInstruction,
-    OpenOrIncreasePositionWithSwapLongInstruction
+    getOpenOrIncreasePositionWithSwapLongInstruction
 } from '../../codama-generated/instructions/openOrIncreasePositionWithSwapLong';
-import { ADRENA_PROGRAM_ID, BPS, JITOSOL_TOKEN_MINT, PRICE_DECIMALS, SYSTEM_PROGRAM_ID, TOKEN_ADDRESSES, TOKEN_PROGRAM_ID, USDC_TOKEN_MINT } from '../helpers/constants';
+import { ADRENA_PROGRAM_ID, BPS, PRICE_DECIMALS, PRINCIPAL_ADDRESSES, SYSTEM_PROGRAM_ID, TOKEN_ADDRESSES, TOKEN_PROGRAM_ID } from '../helpers/constants';
 import { fetchPoolUtil, findCustodyAddress, findCustodyTokenAccountAddress, findPositionAddress, getCortexPda, getCustodyByMint, getTransferAuthorityAddress, loadCustodies } from '../helpers/utils';
 import { createAssociatedTokenAccountIx, findATAAddress } from '../helpers/tokenHelpers';
-import { applySlippage } from '../helpers/math';
 import { getPythPrice } from '../helpers/pyth';
+import { ADRENA_PROGRAM_ADDRESS, Custody } from '../../codama-generated';
+import { CollateralToken, PrincipalToken } from '../types';
 
-export async function openSolLong(
+export async function openLongIxs(
     owner: TransactionSigner,
-    collateralToken: keyof typeof TOKEN_ADDRESSES = 'USDC',
-    normalCollateralAmount: number, // how we normally percieve
+    principalToken: PrincipalToken = 'JITOSOL',
+    collateralToken: CollateralToken = 'USDC',
+    normalCollateralAmount: number,
     normalLeverage: number,
     rpc: Rpc<SolanaRpcApi>
-) {
+): Promise<{
+    ixns: IInstruction[],
+    owner: TransactionSigner,
+    cortex: Address,
+    pool: Address,
+    positionAddress: Address,
+    principalCustodyObj: Account<Custody>
+}> {
 
     const ixns: IInstruction[] = [];
 
@@ -23,7 +31,7 @@ export async function openSolLong(
     const bigIntLeverage = Math.floor(normalLeverage * BPS);
 
     const collateralMint = TOKEN_ADDRESSES[collateralToken].address; // token to be used as collateral
-    const principalMint = JITOSOL_TOKEN_MINT; // token we want to trade / open a position for
+    const principalMint = PRINCIPAL_ADDRESSES[principalToken].address; // token we want to trade / open a position for
 
     const ataIxForPrincipal = await createAssociatedTokenAccountIx(
         owner.address, 
@@ -39,17 +47,17 @@ export async function openSolLong(
     const collateralAccount = (await findATAAddress(owner.address, principalMint))[0]; // token acc for the trader's principal mint
 
 
-    const pool = await fetchPoolUtil('main-pool');
+    const pool = await fetchPoolUtil('main-pool', ADRENA_PROGRAM_ADDRESS, rpc);
     const poolPda = pool.address;
 
     const transferAuthAddress = (await getTransferAuthorityAddress())[0];
     const cortexPda = (await getCortexPda())[0];
 
-    const custodies = await loadCustodies(pool.data);
+    const custodies = await loadCustodies(pool.data, rpc);
 
     // receiving custody -----------------------------------------------------------------------
     const receivingCustodyAddress = (await findCustodyAddress(poolPda, collateralMint))[0];
-    const receivingCustodyObj = getCustodyByMint(custodies, collateralMint)//.data.oracle;
+    const receivingCustodyObj = getCustodyByMint(custodies, collateralMint);
     // throw if null
     if (!receivingCustodyObj) {
         throw new Error("No receiving custody found");
@@ -60,6 +68,7 @@ export async function openSolLong(
     // principal custody -----------------------------------------------------------------------
     const principalCustodyAddress = (await findCustodyAddress(poolPda, principalMint))[0];
     const principalCustodyObj = getCustodyByMint(custodies, principalMint);
+
     // throw if null
     if (!principalCustodyObj) {
         throw new Error("No principal custody found");
@@ -107,7 +116,14 @@ export async function openSolLong(
 
     ixns.push(openLongIx);
 
-        return ixns;
+        return {
+            ixns,
+            owner,
+            cortex: cortexPda,
+            pool: poolPda,
+            positionAddress,
+            principalCustodyObj,
+        };
 
 
 }

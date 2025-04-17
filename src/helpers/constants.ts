@@ -43,6 +43,25 @@ export const TOKEN_ADDRESSES: Record<string, {
     },
   };
 
+  export const PRINCIPAL_ADDRESSES: Record<string, {
+    address: Address,
+    decimals: number,
+}> = {
+
+    'BONK': {
+        address: address('DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263'),
+        decimals: 5,
+    },
+    'JITOSOL': {
+        address: address('J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn'),
+        decimals: 9,
+    },
+    'WBTC': {
+        address: address('3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh'),
+        decimals: 8,
+    },
+  };
+
 
 export const tokensInfo: {
     [tokenPubkey: string]: {

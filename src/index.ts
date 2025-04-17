@@ -1,8 +1,8 @@
 import { createKeyPairSignerFromBytes, IInstruction } from "@solana/kit";
 import path from "path";
 import fs from "fs";
-import { openSolLong } from "./examples/openLong";
-import { createClient } from "./helpers/KitClient";
+import { openLongIxs } from "./core/getOpenLongIxs";
+import { createClient as createKitClient } from "./clients/KitClient";
 
 import { findATAAddress, hasATA } from './helpers/tokenHelpers';
 import { address } from '@solana/kit';
@@ -12,12 +12,12 @@ import { buildInitUserProfileIx, hasUserProfile } from "./helpers/userProfile";
 
 async function main() {
 
-    const kitClient = createClient();
+    const kitClient = await createKitClient();
     const rpc = kitClient.rpc;
+    const wallet = kitClient.wallet;
 
     const config = require(path.join(process.cwd(), 'config.json'));
     const keyPairBytes = new Uint8Array(JSON.parse(fs.readFileSync(config.keypairPath, 'utf8')));
-    const wallet = await createKeyPairSignerFromBytes(keyPairBytes);
 
     const testAddress = address('2Cdt59MDpoDqCRCfo3tphfhXvgnVm4pDGztwC83NXnMt');
 
@@ -33,15 +33,15 @@ async function main() {
 
 
 
-    const openLongIxns = await openSolLong(wallet, 'USDC', 10, 10, rpc);
-    ixns.push(...openLongIxns);
+    const openLongIxns = await openLongIxs(wallet, 'JITOSOL', 'USDC', 10, 5, rpc);
+    ixns.push(...openLongIxns.ixns);
 
     const sendJitoResult = await sendTransactionWithJito(
         ixns,
         wallet,
         rpc,
         false,
-        false
+        true
     )
 
     console.log(sendJitoResult);
