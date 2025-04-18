@@ -1,4 +1,4 @@
-SDK for the interacting with the Adrena Protocol using Typescript and [@solana/kit](https://github.com/anza-xyz/kit)
+SDK for interacting with the Adrena Protocol using Typescript and [@solana/kit](https://github.com/anza-xyz/kit)
 
 Adrena Links:
 - Website: https://app.adrena.xyz/

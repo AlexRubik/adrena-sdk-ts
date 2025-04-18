@@ -51,7 +51,7 @@ async function main() {
     );
     ixns.push(...openLongIxns.ixns);
 
-    const normalStopLossLimitPrice = 100.5;
+    const normalStopLossTriggerPrice = 100.5;
 
     const setStopLossLongIx = await getSetStopLossLongIx(
         {
@@ -60,7 +60,7 @@ async function main() {
             pool: openLongIxns.pool,
             position: openLongIxns.positionAddress,
             custody: openLongIxns.principalCustodyObj.address,
-            stopLossLimitPrice: normalStopLossLimitPrice,
+            stopLossLimitPrice: normalStopLossTriggerPrice,
             closePositionPrice: null
     });
     ixns.push(setStopLossLongIx);
