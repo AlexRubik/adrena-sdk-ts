@@ -1,12 +1,12 @@
 import { Address, getComputeUnitEstimateForTransactionMessageFactory, SolanaRpcApi } from "@solana/kit";
 
-import { GetMultipleAccountsApi } from "@solana/kit";
-
-import { Rpc } from "@solana/kit";
-
-import { fetchJsonParsedAccounts } from "@solana/kit";
-
-import { AddressesByLookupTableAddress } from "@solana/kit";
+import { 
+    GetMultipleAccountsApi,
+    Rpc,
+    fetchJsonParsedAccounts,
+    AddressesByLookupTableAddress,
+    IAccountLookupMeta
+} from "@solana/kit";
 
 interface FetchedAddressLookup {
     address: string;
@@ -29,10 +29,10 @@ export async function fetchLookupTables(
     );
 
     return fetchedLookupTables.reduce<AddressesByLookupTableAddress>((acc, lookup: any) => {
-        console.log("Lookup table address:", lookup);
+        // console.log("Lookup table addresses:", lookup.data.addresses);
         return {
             ...acc,
-            [lookup.address]: lookup.parsed.info.addresses,
+            [lookup.address]: lookup.data.addresses,
         };
     }, {});
 }

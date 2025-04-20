@@ -20,7 +20,7 @@ import {
 } from "@solana/kit";
 import { fetchLookupTables, getCUEst } from "./txnHelpers";
 
-const DEBUG = true;
+const DEBUG = false;
 
 type JitoTipData = {
   time: string;
@@ -181,9 +181,13 @@ export async function sendTransactionWithJito(
     const signedTxn = await signTransactionMessageWithSigners(finalTransactionMessage);
     const base64Txn = getBase64EncodedWireTransaction(signedTxn);
 
-    console.log("Base64 transaction:", base64Txn);
+    console.log(`Base64 transaction:\n${base64Txn}\n`);
+
+    console.log(`Paste this long base64 string into this transaction inspector to simulate/analyze the transaction:`);
+    console.log('https://explorer.solana.com/tx/inspector');
 
     const signature = getSignatureFromTransaction(signedTxn);
+    
 
     if (send) {
 

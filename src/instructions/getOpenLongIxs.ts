@@ -80,7 +80,7 @@ export async function openLongIxs(
     // position -----------------------------------------------------------------------
     const positionAddress = (await findPositionAddress(poolPda, owner.address, principalCustodyAddress, "long"))[0];
 
-    const price = await getPythPrice();
+    const price = await getPythPrice(principalToken === "JITOSOL" ? "SOL" : principalToken); // default is solana price
 
     const priceWithSlippage = price * 1.003; // 0.3% slippage
 

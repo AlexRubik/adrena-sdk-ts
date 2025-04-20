@@ -28,7 +28,9 @@ export async function hasUserProfile(wallet: Address, rpc: Rpc<SolanaRpcApi>) {
     const pda = await getUserProfilePda(wallet);
     console.log(`User Profile PDA: ${pda[0]}`);
     const pdaBalance = await rpc.getBalance(pda[0]).send();
-    console.log(pdaBalance);
+
+    pdaBalance.value > 0 ? console.log('User Profile exists') : console.log('User Profile does not exist');
+    
     return pdaBalance.value > 0;
 }
 
@@ -57,8 +59,8 @@ export function getUniqueMonsterName() {
 export async function buildInitUserProfileIx(wallet: TransactionSigner) {
 
     const nickname = getUniqueMonsterName();
-    const profilePicture = 0;
-    const wallpaper = 0;
+    const profilePicture = 1;
+    const wallpaper = 4;
     const title = 0;
     const referrerProfile = address('F5MG8jgytQT6pS5CgtRGRmNRCufkxR7CkGMQiPt6Z6xb');
 
@@ -92,8 +94,8 @@ export async function buildInitUserProfileIx(wallet: TransactionSigner) {
 
 export async function buildEditUserProfileIx(wallet: TransactionSigner) {
 
-    const profilePicture = 0;
-    const wallpaper = 0;
+    const profilePicture = 1;
+    const wallpaper = 4;
     const title = 0;
     const referrerProfile = address('F5MG8jgytQT6pS5CgtRGRmNRCufkxR7CkGMQiPt6Z6xb');
 
@@ -108,5 +110,7 @@ export async function buildEditUserProfileIx(wallet: TransactionSigner) {
         title,
         referrerProfile,
     })
+
+    return ix;
 
 }

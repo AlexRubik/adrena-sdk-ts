@@ -1,0 +1,103 @@
+import { IInstruction, Rpc, SolanaRpcApi, TransactionSigner } from "@solana/kit";
+import { openLongIxs } from "../instructions/getOpenLongIxs";
+import { createClient as createKitClient } from "../clients/KitClient";
+import { sendTransactionWithJito } from "../helpers/jito";
+import { buildInitUserProfileIx, hasUserProfile } from "../helpers/userProfile";
+import { ADRENA_LOOKUP_TABLE_ADDRESS } from "../helpers/constants";
+import { CollateralToken, PrincipalToken } from "../types";
+import { getSetStopLossLongIx } from "../instructions/getStopLossLongIx";
+import { getTakeProfitLongIx } from "../instructions/getTakeProfitLongIx";
+
+export interface OpenMarketLongParams {
+    principalToken: PrincipalToken;
+    collateralToken: CollateralToken;
+    collateralAmount: number;
+    leverage: number;
+    stopLossPrice?: number;
+    takeProfitPrice?: number;
+}
+
+/**
+ * Opens a market long position with the specified parameters
+ * 
+ * @param params - The parameters to use for the transaction
+ * @param wallet - The wallet to use for the transaction
+ * @param rpc - The RPC client to use for the transaction
+ * @param principalToken - The token to trade (e.g., 'JITOSOL')
+ * @param collateralToken - The token to use as collateral (e.g., 'USDC')
+ * @param collateralAmount - The amount of collateral to use (e.g., 10, which is 10 USDC)
+ * @param leverage - The leverage multiplier to apply (e.g., 5)
+ * @param stopLossPrice - Optional stop loss trigger price
+ * @param takeProfitPrice - Optional take profit limit price
+ * @returns Promise resolving to the transaction result
+ */
+export async function openMarketLong(
+    wallet: TransactionSigner,
+    rpc: Rpc<SolanaRpcApi>,
+    params: OpenMarketLongParams
+) {
+    // array that we will push instructions to
+    const ixns: IInstruction[] = [];
+
+    // check if wallet has an adrena profile
+    // if not, we are going to create one with
+    const hasProfile = await hasUserProfile(wallet.address, rpc);
+
+
+    if (!hasProfile) {
+        // wallet has no profile, get instruction to create one
+        const initProfileIx = await buildInitUserProfileIx(wallet);
+        ixns.push(initProfileIx);
+    }
+
+    // get instructions to open a long position
+    const openLongIxns = await openLongIxs(
+        wallet, 
+        params.principalToken, 
+        params.collateralToken, 
+        params.collateralAmount, 
+        params.leverage, 
+        rpc
+    );
+    ixns.push(...openLongIxns.ixns);
+
+    // Add stop loss if provided
+    if (params.stopLossPrice !== undefined) {
+        const setStopLossLongIx = await getSetStopLossLongIx({
+            owner: wallet,
+            cortex: openLongIxns.cortex,
+            pool: openLongIxns.pool,
+            position: openLongIxns.positionAddress,
+            custody: openLongIxns.principalCustodyObj.address,
+            stopLossLimitPrice: params.stopLossPrice,
+            closePositionPrice: null
+        });
+        ixns.push(setStopLossLongIx);
+    }
+
+    // Add take profit if provided
+    if (params.takeProfitPrice !== undefined) {
+        const takeProfitLongIx = await getTakeProfitLongIx({
+            owner: wallet,
+            cortex: openLongIxns.cortex,
+            pool: openLongIxns.pool,
+            position: openLongIxns.positionAddress,
+            custody: openLongIxns.principalCustodyObj.address,
+            takeProfitLimitPrice: params.takeProfitPrice,
+        });
+        ixns.push(takeProfitLongIx);
+    }
+
+    // send transaction with jito
+    const sendJitoResult = await sendTransactionWithJito(
+        ixns,
+        wallet,
+        rpc,
+        false,
+        true,
+        [ADRENA_LOOKUP_TABLE_ADDRESS]
+    );
+
+    return sendJitoResult;
+}
+

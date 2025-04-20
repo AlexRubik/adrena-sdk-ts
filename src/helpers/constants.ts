@@ -9,6 +9,7 @@ export const ASSOCIATED_TOKEN_PROGRAM_ID = address('ATokenGPvbdGVxr1b2hvZbsiqW5x
 export const TOKEN_PROGRAM_ID = address('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
 export const SYSTEM_PROGRAM_ID = address('11111111111111111111111111111111');
 export const ADRENA_PROGRAM_ID = address('13gDzEXCdocbj8iAiqrScGo47NiSuYENGsRqi3SEAwet');
+export const ADRENA_LOOKUP_TABLE_ADDRESS = address('4PZaPEXPzMLuBSKgZUvpzLi3zGXJ1pSz6NTKrtoXUd4q');
 
 export const RATE_DECIMALS = 9;
 export const PRICE_DECIMALS = 10;
