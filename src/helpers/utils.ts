@@ -2,7 +2,8 @@ import { Account, address, Address, getProgramDerivedAddress,
     getAddressEncoder,
     Rpc,
     GetAccountInfoApi,
-    GetMultipleAccountsApi
+    GetMultipleAccountsApi,
+    SolanaRpcApi
  } from "@solana/kit";
 import { ADRENA_PROGRAM_ADDRESS } from "../../codama-generated/programs/adrena";
 import { Custody, fetchAllCustody, fetchPool, Pool } from "../../codama-generated";
@@ -118,3 +119,38 @@ export function findCustodyTokenAccountAddress(mainPool: Address, mint: Address,
         ])],
     });
   }
+
+
+export async function getLimitOrderBookPda(wallet: Address, programId: Address = ADRENA_PROGRAM_ADDRESS) {
+
+    const mainPool = (await getPoolPda('main-pool', programId))[0];
+    const encoder = getAddressEncoder();
+
+    const encodedWallet = encoder.encode(wallet);
+    const encodedMainPool = encoder.encode(mainPool);
+
+    return getProgramDerivedAddress({
+        programAddress: programId,
+        seeds: [Buffer.from("limit_order_book"), encodedWallet, encodedMainPool],
+    });
+}
+
+
+export async function getCollateralEscrowPda(wallet: Address, collateralMint: Address, programId: Address = ADRENA_PROGRAM_ADDRESS) {
+    const encoder = getAddressEncoder();
+
+    const encodedWallet = encoder.encode(wallet);
+    const encodedCollateralMint = encoder.encode(collateralMint);
+    const mainPool = (await getPoolPda('main-pool', programId))[0];
+    const encodedMainPool = encoder.encode(mainPool);
+
+    return getProgramDerivedAddress({
+        programAddress: programId,
+        seeds: [Buffer.from("escrow_account"), encodedWallet, encodedMainPool, encodedCollateralMint],
+    });
+}
+
+export async function accountExists(account: Address, rpc: Rpc<SolanaRpcApi>) {
+    const balance = await rpc.getBalance(account).send();
+    return balance.value > 0;
+}

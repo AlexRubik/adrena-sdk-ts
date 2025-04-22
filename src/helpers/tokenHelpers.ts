@@ -81,6 +81,7 @@ export async function createAssociatedTokenAccountIx(
   if (hasAta) {
     return {
       ataExists: true,
+      associatedAccount: associatedAccount[0],
       ix: null
     };
   }
@@ -101,6 +102,7 @@ export async function createAssociatedTokenAccountIx(
 
   return {
     ataExists: false,
+    associatedAccount: associatedAccount[0],
     ix: ix
   };
 }

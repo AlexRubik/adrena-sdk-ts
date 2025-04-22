@@ -27,6 +27,8 @@ export async function runOpenMarketLongExample() {
     positionObj.estimatedUsdPnlAtOpen = -positionObj.estimatedFeeUsd; // simplified calculation
 
     const params: OpenMarketLongParams = {
+        wallet,
+        rpc,
         principalToken: positionObj.principalToken,
         collateralToken: positionObj.collateralToken,
         collateralAmount: positionObj.collateralAmount,
@@ -36,8 +38,6 @@ export async function runOpenMarketLongExample() {
     }
 
     const txSignature = await openMarketLong(
-        wallet, 
-        rpc, 
         params
     );
 

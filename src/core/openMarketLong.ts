@@ -1,6 +1,5 @@
 import { IInstruction, Rpc, SolanaRpcApi, TransactionSigner } from "@solana/kit";
 import { openLongIxs } from "../instructions/getOpenLongIxs";
-import { createClient as createKitClient } from "../clients/KitClient";
 import { sendTransactionWithJito } from "../helpers/jito";
 import { buildInitUserProfileIx, hasUserProfile } from "../helpers/userProfile";
 import { ADRENA_LOOKUP_TABLE_ADDRESS } from "../helpers/constants";
@@ -9,6 +8,8 @@ import { getSetStopLossLongIx } from "../instructions/getStopLossLongIx";
 import { getTakeProfitLongIx } from "../instructions/getTakeProfitLongIx";
 
 export interface OpenMarketLongParams {
+    wallet: TransactionSigner;
+    rpc: Rpc<SolanaRpcApi>;
     principalToken: PrincipalToken;
     collateralToken: CollateralToken;
     collateralAmount: number;
@@ -32,8 +33,6 @@ export interface OpenMarketLongParams {
  * @returns Promise resolving to the transaction result
  */
 export async function openMarketLong(
-    wallet: TransactionSigner,
-    rpc: Rpc<SolanaRpcApi>,
     params: OpenMarketLongParams
 ) {
     // array that we will push instructions to
@@ -41,30 +40,30 @@ export async function openMarketLong(
 
     // check if wallet has an adrena profile
     // if not, we are going to create one with
-    const hasProfile = await hasUserProfile(wallet.address, rpc);
+    const hasProfile = await hasUserProfile(params.wallet.address, params.rpc);
 
 
     if (!hasProfile || !hasProfile.exists) {
         // wallet has no profile, get instruction to create one
-        const initProfileIx = await buildInitUserProfileIx(wallet);
+        const initProfileIx = await buildInitUserProfileIx(params.wallet);
         ixns.push(initProfileIx);
     }
 
     // get instructions to open a long position
     const openLongIxns = await openLongIxs(
-        wallet, 
+        params.wallet, 
         params.principalToken, 
         params.collateralToken, 
         params.collateralAmount, 
         params.leverage, 
-        rpc
+        params.rpc
     );
     ixns.push(...openLongIxns.ixns);
 
     // Add stop loss if provided
     if (params.stopLossPrice !== undefined) {
         const setStopLossLongIx = await getSetStopLossLongIx({
-            owner: wallet,
+            owner: params.wallet,
             cortex: openLongIxns.cortex,
             pool: openLongIxns.pool,
             position: openLongIxns.positionAddress,
@@ -78,7 +77,7 @@ export async function openMarketLong(
     // Add take profit if provided
     if (params.takeProfitPrice !== undefined) {
         const takeProfitLongIx = await getTakeProfitLongIx({
-            owner: wallet,
+            owner: params.wallet,
             cortex: openLongIxns.cortex,
             pool: openLongIxns.pool,
             position: openLongIxns.positionAddress,
@@ -91,8 +90,8 @@ export async function openMarketLong(
     // send transaction with jito
     const sendJitoResult = await sendTransactionWithJito(
         ixns,
-        wallet,
-        rpc,
+        params.wallet,
+        params.rpc,
         false,
         true,
         [ADRENA_LOOKUP_TABLE_ADDRESS]

@@ -13,6 +13,7 @@ export async function runCancelSLTPExample() {
     const cancelStopLoss: boolean = true; // whether to cancel the stop loss
     const cancelTakeProfit: boolean = true; // whether to cancel the take profit
 
+    // cancelSLTP will cancel the stop loss and/or take profit
     const result = await cancelSLTP(wallet, rpc, principalToken, side, cancelStopLoss, cancelTakeProfit);
     return result;
 }
