@@ -1,15 +1,23 @@
-// public getUserProfilePda = (wallet: PublicKey) => {
-//     return PublicKey.findProgramAddressSync(
-//       [Buffer.from("user_profile"), wallet.toBuffer()],
-//       AdrenaClient.programId,
-//     )[0];
-//   };
 
-import { address, Address, getAddressEncoder, getProgramDerivedAddress, Rpc, SolanaRpcApi, TransactionSigner } from "@solana/kit";
+
+import { address, 
+    Address, 
+    GetAccountInfoApi, 
+    getAddressEncoder, 
+    getProgramDerivedAddress, 
+    getUtf8Decoder,
+    Rpc, 
+    SolanaRpcApi, 
+    TransactionSigner 
+} from "@solana/kit";
 import { ADRENA_PROGRAM_ID } from "./constants";
 import { getCortexPda } from "./utils";
 import { SYSTEM_PROGRAM_ADDRESS } from "@solana-program/system";
-import { getEditUserProfileInstruction, getInitUserProfileInstruction } from "../../codama-generated";
+import { 
+    fetchUserProfile, 
+    getEditUserProfileInstruction, 
+    getInitUserProfileInstruction,
+} from "../../codama-generated";
 
 
 export function getUserProfilePda(wallet: Address) {
@@ -25,13 +33,25 @@ export function getUserProfilePda(wallet: Address) {
 }
 
 export async function hasUserProfile(wallet: Address, rpc: Rpc<SolanaRpcApi>) {
-    const pda = await getUserProfilePda(wallet);
-    console.log(`User Profile PDA: ${pda[0]}`);
-    const pdaBalance = await rpc.getBalance(pda[0]).send();
+
+    try {
+        const pda = await getUserProfilePda(wallet);
+        console.log(`User Profile PDA: ${pda[0]}`);
+        const pdaBalance = await rpc.getBalance(pda[0]).send();
 
     pdaBalance.value > 0 ? console.log('User Profile exists') : console.log('User Profile does not exist');
     
-    return pdaBalance.value > 0;
+    return {
+            exists: pdaBalance.value > 0,
+            pda: pda[0],
+        };
+    } catch (error) {
+        console.error(error);
+        return {
+            exists: false,
+            pda: null,
+        };
+    }
 }
 
 // public getUserNicknamePda = (nickname: string) => {
@@ -113,4 +133,19 @@ export async function buildEditUserProfileIx(wallet: TransactionSigner) {
 
     return ix;
 
+}
+
+export async function getBasicProfileData(wallet: Address, rpc: Rpc<GetAccountInfoApi>) {
+
+    // address value is in userProfile object is pda, not wallet address
+    // referrerProfile is also a pda
+    const userProfile = await fetchUserProfile(rpc, wallet);
+
+    const decoder = getUtf8Decoder();
+    const nickname = decoder.decode(userProfile.data.nickname.value);
+
+    return {
+        nickname,
+        userProfile,
+    };
 }

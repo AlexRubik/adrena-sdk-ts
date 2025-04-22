@@ -1,3 +1,7 @@
+// https://docs.pyth.network/benchmarks/rate-limits
+// https://hermes.pyth.network/docs/#/rest/latest_price_updates
+// https://www.pyth.network/developers/price-feed-ids
+
 interface PythPrice {
     price: string;
     conf: string;

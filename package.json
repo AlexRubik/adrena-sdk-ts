@@ -12,7 +12,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
-    "test": "ts-node src/helpers/keyUtil.ts",
+    "test": "ts-node src/helpers/gitApi.ts",
     "open-long": "ts-node src/examples/openMarketLongExample.ts"
   },
   "dependencies": {

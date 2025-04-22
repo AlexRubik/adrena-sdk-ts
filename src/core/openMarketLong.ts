@@ -44,7 +44,7 @@ export async function openMarketLong(
     const hasProfile = await hasUserProfile(wallet.address, rpc);
 
 
-    if (!hasProfile) {
+    if (!hasProfile || !hasProfile.exists) {
         // wallet has no profile, get instruction to create one
         const initProfileIx = await buildInitUserProfileIx(wallet);
         ixns.push(initProfileIx);
