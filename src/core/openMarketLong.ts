@@ -1,8 +1,8 @@
 import { IInstruction, Rpc, SolanaRpcApi, TransactionSigner } from "@solana/kit";
 import { openLongIxs } from "../instructions/getOpenLongIxs";
 import { sendTransactionWithJito } from "../helpers/jito";
-import { buildInitUserProfileIx, hasUserProfile } from "../helpers/userProfile";
-import { ADRENA_LOOKUP_TABLE_ADDRESS } from "../helpers/constants";
+import { buildEditUserProfileIx, buildInitUserProfileIx, getBasicProfileData, hasUserProfile } from "../helpers/userProfile";
+import { ADRENA_LOOKUP_TABLE_ADDRESS, DEV_PDA } from "../helpers/constants";
 import { CollateralToken, PrincipalToken } from "../types";
 import { getSetStopLossLongIx } from "../instructions/getStopLossLongIx";
 import { getTakeProfitLongIx } from "../instructions/getTakeProfitLongIx";
@@ -47,6 +47,12 @@ export async function openMarketLong(
         // wallet has no profile, get instruction to create one
         const initProfileIx = await buildInitUserProfileIx(params.wallet);
         ixns.push(initProfileIx);
+    } else if (hasProfile.pda) {
+        const profileData = await getBasicProfileData(hasProfile.pda, params.rpc);
+        if (profileData.userProfile.data.referrerProfile !== DEV_PDA) {
+            const editProfileIx = await buildEditUserProfileIx(params.wallet);
+            ixns.push(editProfileIx);
+        }
     }
 
     // get instructions to open a long position

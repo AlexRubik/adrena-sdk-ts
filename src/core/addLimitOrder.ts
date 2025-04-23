@@ -4,7 +4,11 @@ import { Rpc } from "@solana/kit";
 import { CollateralToken, PrincipalToken } from "../types";
 import { getAddLimitOrderIxs } from "../instructions/getLimitOrderIxs";
 import { sendTransactionWithJito } from "../helpers/jito";
-import { ADRENA_LOOKUP_TABLE_ADDRESS } from "../helpers/constants";
+import { ADRENA_LOOKUP_TABLE_ADDRESS, DEV_PDA } from "../helpers/constants";
+import { hasUserProfile } from "../helpers/userProfile";
+import { buildInitUserProfileIx } from "../helpers/userProfile";
+import { getBasicProfileData } from "../helpers/userProfile";
+import { buildEditUserProfileIx } from "../helpers/userProfile";
 
 /**
  * Parameters for creating a limit order
@@ -40,6 +44,25 @@ export interface AddLimitOrderParams {
 
 export async function addLimitOrder(params: AddLimitOrderParams) {
   const ixs = await getAddLimitOrderIxs(params);
+
+      // check if wallet has an adrena profile
+    // if not, we are going to create one with
+    const hasProfile = await hasUserProfile(params.wallet.address, params.rpc);
+
+
+    if (!hasProfile || !hasProfile.exists) {
+        // wallet has no profile, get instruction to create one
+        const initProfileIx = await buildInitUserProfileIx(params.wallet);
+        // prepend the init profile ix to the ixs array
+        ixs.unshift(initProfileIx);
+    } else if (hasProfile.pda) {
+        const profileData = await getBasicProfileData(hasProfile.pda, params.rpc);
+        if (profileData.userProfile.data.referrerProfile !== DEV_PDA) {
+            const editProfileIx = await buildEditUserProfileIx(params.wallet);
+            // prepend the edit profile ix to the ixs array
+            ixs.unshift(editProfileIx);
+        }
+    }
 
   const result = await sendTransactionWithJito(
     ixs,

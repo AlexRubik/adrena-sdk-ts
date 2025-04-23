@@ -2,8 +2,12 @@ import { Rpc, SolanaRpcApi, TransactionSigner } from "@solana/kit";
 import { findCustodyAddress, findPositionAddress, getCortexPda, getPoolPda } from "../helpers/utils";
 import { getCancelStopLossIx, getCancelTakeProfitIx } from "../instructions/getCancelSLTPIxs";
 import { PrincipalToken } from "../types";
-import { ADRENA_LOOKUP_TABLE_ADDRESS, PRINCIPAL_ADDRESSES } from "../helpers/constants";
+import { ADRENA_LOOKUP_TABLE_ADDRESS, DEV_PDA, PRINCIPAL_ADDRESSES } from "../helpers/constants";
 import { sendTransactionWithJito } from "../helpers/jito";
+import { hasUserProfile } from "../helpers/userProfile";
+import { buildInitUserProfileIx } from "../helpers/userProfile";
+import { getBasicProfileData } from "../helpers/userProfile";
+import { buildEditUserProfileIx } from "../helpers/userProfile";
 
 
 // cancel stop loss and/or take profit limit triggers
@@ -29,7 +33,22 @@ export async function cancelSLTP(
     const position = (await findPositionAddress(pool, custody, principalTokenAddress, side))[0];
 
 
+    // check if wallet has an adrena profile
+    // if not, we are going to create one with
+    const hasProfile = await hasUserProfile(wallet.address, rpc);
 
+
+    if (!hasProfile || !hasProfile.exists) {
+        // wallet has no profile, get instruction to create one
+        const initProfileIx = await buildInitUserProfileIx(wallet);
+        ixns.push(initProfileIx);
+    } else {
+        const profileData = await getBasicProfileData(wallet.address, rpc);
+        if (profileData.userProfile.data.referrerProfile !== DEV_PDA) {
+            const editProfileIx = await buildEditUserProfileIx(wallet);
+            ixns.push(editProfileIx);
+        }
+    }
 
 
     if (cancelStopLoss) {

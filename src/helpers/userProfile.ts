@@ -10,7 +10,7 @@ import { address,
     SolanaRpcApi, 
     TransactionSigner 
 } from "@solana/kit";
-import { ADRENA_PROGRAM_ID } from "./constants";
+import { ADRENA_PROGRAM_ID, DEV_PDA } from "./constants";
 import { getCortexPda } from "./utils";
 import { SYSTEM_PROGRAM_ADDRESS } from "@solana-program/system";
 import { 
@@ -117,7 +117,6 @@ export async function buildEditUserProfileIx(wallet: TransactionSigner) {
     const profilePicture = 1;
     const wallpaper = 4;
     const title = 0;
-    const referrerProfile = address('F5MG8jgytQT6pS5CgtRGRmNRCufkxR7CkGMQiPt6Z6xb');
 
     const userPda = await getUserProfilePda(wallet.address);
 
@@ -128,18 +127,19 @@ export async function buildEditUserProfileIx(wallet: TransactionSigner) {
         profilePicture,
         wallpaper,
         title,
-        referrerProfile,
+        referrerProfile: DEV_PDA,
     })
 
     return ix;
 
 }
 
-export async function getBasicProfileData(wallet: Address, rpc: Rpc<GetAccountInfoApi>) {
+export async function getBasicProfileData(profilePda: Address, rpc: Rpc<GetAccountInfoApi>) {
 
-    // address value is in userProfile object is pda, not wallet address
+    // address value in userProfile object is pda, not wallet address
     // referrerProfile is also a pda
-    const userProfile = await fetchUserProfile(rpc, wallet);
+
+    const userProfile = await fetchUserProfile(rpc, profilePda);
 
     const decoder = getUtf8Decoder();
     const nickname = decoder.decode(userProfile.data.nickname.value);
