@@ -46,7 +46,7 @@ export async function addLimitOrder(params: AddLimitOrderParams) {
     params.wallet,
     params.rpc,
     false,
-    false,
+    true,
     [ADRENA_LOOKUP_TABLE_ADDRESS]
   )
 
