@@ -19,6 +19,8 @@
     "@solana-program/compute-budget": "^0.7.0",
     "@solana-program/system": "^0.7.0",
     "@solana/kit": "^2.1.0",
+    "@types/bn.js": "^5.1.6",
+    "bn.js": "^5.2.1",
     "codama": "^1.2.11",
     "dotenv": "^16.5.0",
     "ws": "^8.18.1"

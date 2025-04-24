@@ -3,11 +3,13 @@ import { getBasicProfileData } from "./helpers/userProfile";
 import { createClient as createKitClient } from "./clients/KitClient";
 import { hasUserProfile } from "./helpers/userProfile";
 import { runLimitOrderExample } from "./examples/limitOrderExample";
-import { getPositionUtil } from "./helpers/position";
+import { calculateTotalInterest, getPositionUtil } from "./helpers/position";
 import { address } from "@solana/kit";
 import { PRICE_DECIMALS, TOKEN_ADDRESSES } from "./helpers/constants";
 import { getPythPrice } from "./helpers/pyth";
 import { fetchPoolUtil, findPositionAddress, getCustodyByMint, getPoolPda, loadCustodies } from "./helpers/utils";
+import BN from "bn.js";
+import { formatScaledValue } from "./helpers/math";
 async function main() {
     // await runOpenMarketLongExample();
 
@@ -17,23 +19,34 @@ async function main() {
 
     const pool = await fetchPoolUtil('main-pool', undefined, client.rpc);
     const custodies = await loadCustodies(pool.data, client.rpc);
+    const side = 'short';
 
-    const custody = getCustodyByMint(
+    const principalCustody = getCustodyByMint(
         custodies,
         TOKEN_ADDRESSES['WBTC'].address
     );
 
-    if (!custody) {
+    const collateralCustody = getCustodyByMint(
+        custodies,
+        TOKEN_ADDRESSES['USDC'].address
+    );
+
+    if (!collateralCustody) {
         throw new Error('Custody not found');
     }
+
+    if (!principalCustody) {
+        throw new Error('Custody not found');
+    }
+
 
     const testUserWalletAddress = address('2Cdt59MDpoDqCRCfo3tphfhXvgnVm4pDGztwC83NXnMt');
 
     const testPos = await findPositionAddress(
         pool.address,
         testUserWalletAddress,
-        custody.address,
-        "short"
+        principalCustody.address,
+        side
     )
 
     const position = await getPositionUtil(client.rpc, testPos[0]);
@@ -64,17 +77,21 @@ async function main() {
 
     const pythPrice = await getPythPrice("BTC");
     const preFeePnl = (normalizedSizeUsd - assetAmount * pythPrice);
+    const totalInterest = calculateTotalInterest(position.position, collateralCustody);
 
-    const pnl = preFeePnl - normalizedExitFee - normalizedUnrealizedInterestUsd * timeSinceUpdateHours;
+    const formattedInterest = formatScaledValue(totalInterest, 6);
+
+    const pnl = preFeePnl - normalizedExitFee - Number(formattedInterest);
 
 
+
+    console.log(`Total Interest: $${formattedInterest}`);
 
     console.log(position.position.data);
     console.log(`Entry Price: ${normalizedPrice}`);
     console.log(`Pyth Price: ${pythPrice}`);
     console.log(`Size: $${normalizedSizeUsd}`);
     console.log(`Exit Fee: $${normalizedExitFee}`);
-    console.log(`Unrealized Interest: $${normalizedUnrealizedInterestUsd * timeSinceUpdateHours}`);
     console.log(`Asset Amount: ${assetAmount}`);
     console.log(`Pre-Fee Pnl: $${preFeePnl}`);
     console.log(`Pnl: $${pnl}`);

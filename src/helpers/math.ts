@@ -1,3 +1,5 @@
+import BN from "bn.js";
+
 /**
  * Applies slippage to a value
  * @param amount The base amount as a bigint
@@ -19,3 +21,41 @@ export function applySlippage(amount: bigint, percentage: number): bigint {
     // Apply the adjustment based on whether it's negative or positive slippage
     return isNegative ? amount - delta : amount + delta;
   }
+
+/**
+ * Formats a scaled integer value as a decimal string
+ * @param value The scaled integer value (as a bigint, BN, or string)
+ * @param decimals The number of decimal places (e.g., 6 for values scaled by 10^6)
+ * @returns A formatted string with the decimal point in the correct position
+ */
+export function formatScaledValue(value: bigint | BN | string, decimals: number): string {
+    // Convert to string if it's not already
+    const valueString = typeof value === 'string' ? value : value.toString();
+    
+    // If the string is less than 'decimals' characters, pad it with leading zeros
+    const paddedString = valueString.padStart(decimals + 1, '0');
+    
+    // Insert decimal point 'decimals' places from the right
+    const decimalIndex = paddedString.length - decimals;
+    
+    // Handle special case where the result would be "0."
+    if (decimalIndex === 0) {
+        return '0.' + paddedString;
+    }
+    
+    // Insert the decimal point
+    const formattedValue = 
+        paddedString.substring(0, decimalIndex) + '.' + paddedString.substring(decimalIndex);
+    
+    return formattedValue;
+}
+
+/**
+ * Formats a scaled integer value as a decimal number
+ * @param value The scaled integer value (as a bigint, BN, or string)
+ * @param decimals The number of decimal places (e.g., 6 for values scaled by 10^6)
+ * @returns A number with the correct decimal value
+ */
+export function parseScaledValue(value: bigint | BN | string, decimals: number = 6): number {
+    return parseFloat(formatScaledValue(value, decimals));
+}
