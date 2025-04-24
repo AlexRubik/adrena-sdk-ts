@@ -9,7 +9,7 @@ import { getPythPrice } from '../helpers/pyth';
 import { ADRENA_PROGRAM_ADDRESS, Custody } from '../../codama-generated';
 import { CollateralToken, PrincipalToken } from '../types';
 
-export async function openLongIxs(
+export async function getOpenLongIxs(
     owner: TransactionSigner,
     principalToken: PrincipalToken = 'JITOSOL',
     collateralToken: CollateralToken = 'USDC',

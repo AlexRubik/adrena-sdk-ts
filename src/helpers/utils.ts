@@ -29,7 +29,6 @@ export async function fetchPoolUtil(
             commitment: 'confirmed',
         }
     )
-    console.log("Pool PDA: ", poolPda[0]);
     return pool;
 }
 
@@ -55,6 +54,14 @@ export function getCustodyByMint(custodies: Account<Custody>[], mint: Address) {
         throw new Error("No custodies found");
     }
     return custodies.find(custody => custody.data.mint === mint);
+}
+
+export function getCustodyByAddress(custodies: Account<Custody>[], address: Address) {
+    // null check
+    if (custodies.length === 0 || !custodies || !custodies[0] || !custodies[0].address) {
+        throw new Error("No custodies found");
+    }
+    return custodies.find(custody => custody.address === address);
 }
 
 

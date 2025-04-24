@@ -1,5 +1,5 @@
 import { IInstruction, Rpc, SolanaRpcApi, TransactionSigner } from "@solana/kit";
-import { openLongIxs } from "../instructions/getOpenLongIxs";
+import { getOpenLongIxs } from "../instructions/getOpenLongIxs";
 import { sendTransactionWithJito } from "../helpers/jito";
 import { buildEditUserProfileIx, buildInitUserProfileIx, getBasicProfileData, hasUserProfile } from "../helpers/userProfile";
 import { ADRENA_LOOKUP_TABLE_ADDRESS, DEV_PDA } from "../helpers/constants";
@@ -56,7 +56,7 @@ export async function openMarketLong(
     }
 
     // get instructions to open a long position
-    const openLongIxns = await openLongIxs(
+    const openLongIxns = await getOpenLongIxs(
         params.wallet, 
         params.principalToken, 
         params.collateralToken, 
