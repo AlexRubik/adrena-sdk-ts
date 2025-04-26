@@ -2,8 +2,8 @@
   "name": "adrena-sdk-ts",
   "version": "1.0.0-beta.2",
   "description": "SDK for interacting with Adrena Protocol",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist"
   ],
@@ -14,6 +14,8 @@
   "keywords": [
     "adrena",
     "solana",
+    "perps",
+    "trading",
     "sdk"
   ],
   "author": "AlexRubik",

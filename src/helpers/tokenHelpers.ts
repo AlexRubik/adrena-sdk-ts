@@ -1,4 +1,4 @@
-import { AccountRole, address, Address, getAddressEncoder, getProgramDerivedAddress, IInstruction, Rpc, SolanaRpcApi } from "@solana/kit";
+import { AccountRole, address, Address, getAddressEncoder, getProgramDerivedAddress, Rpc, SolanaRpcApi } from "@solana/kit";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from "./constants";
 
 
