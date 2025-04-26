@@ -2,6 +2,7 @@ import { createKitClient } from "../clients/KitClient";
 import { closeLong } from "../core/closeLong";
 import { getPositionStatus } from "../core/positionStatus";
 import { checkTransactionConfirmed } from "../helpers/txnHelpers";
+import { PrincipalToken } from "../types";
 
 
 export async function runCloseLongExample() {
@@ -10,16 +11,18 @@ export async function runCloseLongExample() {
     const wallet = kitClient.wallet;
     const rpc = kitClient.rpc;
 
+    const principalToken: PrincipalToken = "JITOSOL";
+
     const closeLongResult = await closeLong({
         wallet,
         rpc,
-        principalToken: "JITOSOL",
+        principalToken,
     });
 
 
-    if (closeLongResult) {
+    if (closeLongResult.txSignature) {
         const isConfirmed = await checkTransactionConfirmed(
-            closeLongResult,
+            closeLongResult.txSignature,
             rpc
         );
 

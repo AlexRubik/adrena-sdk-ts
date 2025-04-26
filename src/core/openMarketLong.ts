@@ -103,6 +103,9 @@ export async function openMarketLong(
         [ADRENA_LOOKUP_TABLE_ADDRESS]
     );
 
-    return sendJitoResult;
+    return {
+        txSignature: sendJitoResult,
+        positionAddress: openLongIxns.positionAddress
+    };
 }
 

@@ -2,6 +2,7 @@ import { PrincipalToken } from "../types";
 import { addLimitOrder } from "../core/addLimitOrder";
 import { CollateralToken } from "../types";
 import { createKitClient } from "../clients/KitClient";
+import { checkTransactionConfirmed } from "../helpers/txnHelpers";
 
 
 export async function runLimitOrderExample() {
@@ -17,7 +18,7 @@ export async function runLimitOrderExample() {
     const side: "long" | "short" = "long"; // the side of the position
     const triggerPrice: number = 130; // the price at which the limit order will be triggered
     const limitPrice: number | null = null;
-    const result = await addLimitOrder(
+    const addLimitOrderResult = await addLimitOrder(
         {
             wallet,
             rpc,
@@ -31,5 +32,17 @@ export async function runLimitOrderExample() {
         }
     );
 
-    return result;
+    if (addLimitOrderResult.txSignature) {
+        const isConfirmed = await checkTransactionConfirmed(
+            addLimitOrderResult.txSignature,
+            rpc
+        );
+
+        if (isConfirmed) {
+            console.log("Transaction confirmed!");
+        } else {
+            console.log("Transaction not confirmed");
+        }
+    }
+
 }

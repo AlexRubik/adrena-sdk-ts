@@ -4,7 +4,7 @@ import { Address, Rpc, SolanaRpcApi } from "@solana/kit";
 import { getInitLimitOrderBookInstruction,
     InitLimitOrderBookInput
  } from "../../codama-generated/instructions/initLimitOrderBook";
-import { accountExists, findCustodyAddress, getCollateralEscrowPda, getCortexPda, getCustodyByMint, getLimitOrderBookPda, getPoolPda, getTransferAuthorityAddress } from "../helpers/utils";
+import { accountExists, findCustodyAddress, findPositionAddress, getCollateralEscrowPda, getCortexPda, getCustodyByMint, getLimitOrderBookPda, getPoolPda, getTransferAuthorityAddress } from "../helpers/utils";
 import { CollateralToken, PrincipalToken } from "../types";
 import { ASSOCIATED_TOKEN_PROGRAM_ID, BPS, PRICE_DECIMALS, PRINCIPAL_ADDRESSES, TOKEN_ADDRESSES } from "../helpers/constants";
 import { getAddLimitOrderInstruction } from "../../codama-generated";
@@ -45,6 +45,13 @@ export async function getAddLimitOrderIxs(params: AddLimitOrderParams) {
     
     const limitOrderBookPdaExists = await accountExists(limitOrderBook, params.rpc);
     console.log("limitOrderBookPdaExists:", limitOrderBookPdaExists);
+
+    const positionAddress = (await findPositionAddress(
+        pool,
+        params.wallet.address,
+        custody,
+        params.side
+    ))[0];
 
     const ixs: IInstruction[] = [];
 
@@ -109,5 +116,8 @@ export async function getAddLimitOrderIxs(params: AddLimitOrderParams) {
 
 
 
-    return ixs;
+    return {
+        ixs: ixs,
+        positionAddress: positionAddress
+    };
 }

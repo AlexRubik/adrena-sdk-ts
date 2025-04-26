@@ -9,6 +9,7 @@ import { hasUserProfile } from "../helpers/userProfile";
 import { buildInitUserProfileIx } from "../helpers/userProfile";
 import { getBasicProfileData } from "../helpers/userProfile";
 import { buildEditUserProfileIx } from "../helpers/userProfile";
+import { findPositionAddress } from "../helpers/utils";
 
 /**
  * Parameters for creating a limit order
@@ -43,7 +44,7 @@ export interface AddLimitOrderParams {
 }
 
 export async function addLimitOrder(params: AddLimitOrderParams) {
-  const ixs = await getAddLimitOrderIxs(params);
+  const { ixs, positionAddress } = await getAddLimitOrderIxs(params);
 
       // check if wallet has an adrena profile
     // if not, we are going to create one with
@@ -64,21 +65,25 @@ export async function addLimitOrder(params: AddLimitOrderParams) {
         }
     }
 
-  const result = await sendTransactionWithJito(
+  const txSignature = await sendTransactionWithJito(
     ixs,
     params.wallet,
     params.rpc,
     false,
     true,
     [ADRENA_LOOKUP_TABLE_ADDRESS]
-  )
+  );
 
-  if (result) {
-    console.log(`\nAttempted to add a limit order with the following parameters:`, params);
-    console.log(`-> https://solscan.io/tx/${result} <-`);
-  } else {
-    console.log(`Failed to add a limit order with the following parameters:`, params);
-  }
 
-  return result;
+    if (txSignature) {
+        console.log(`\nAttempted to add a limit order with the following parameters:`, params);
+        console.log(`-> https://solscan.io/tx/${txSignature} <-`);
+    } else {
+        console.log(`Failed to add a limit order with the following parameters:`, params);
+    }
+
+  return {
+    txSignature: txSignature,
+    positionAddress: positionAddress
+  };
 }

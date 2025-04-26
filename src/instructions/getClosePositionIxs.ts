@@ -66,7 +66,7 @@ export async function getClosePositionLongIxs(params: ClosePositionLongParams) {
         priceId = "BTC";
     }
 
-    // price with slippage, so if current price is 100, and you want to account for slippage of 1%, 
+    // price with slippage, so for a long, if current price is 100, and you want to account for slippage of 1%, 
     // then make close price 99
     const closePrice = params.price ? params.price : await getPythPrice(priceId);
 
@@ -93,7 +93,10 @@ export async function getClosePositionLongIxs(params: ClosePositionLongParams) {
 
     ixs.push(closeIx);
 
-    return ixs;
+    return {
+        ixs: ixs,
+        positionAddress: positionAddress
+    };
 }
 
 export async function getClosePositionShortIxs(params: ClosePositionShortParams) {
@@ -171,5 +174,8 @@ export async function getClosePositionShortIxs(params: ClosePositionShortParams)
 
     ixs.push(closeIx);
 
-    return ixs;
+    return {
+        ixs: ixs,
+        positionAddress: positionAddress
+    };
 }

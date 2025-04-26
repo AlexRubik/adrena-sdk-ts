@@ -15,7 +15,6 @@ export type GetPositionStatusParams = {
     rpc: Rpc<SolanaRpcApi>;
     principalToken: PrincipalToken;
     // collateralToken: CollateralToken;
-    side: 'long' | 'short';
     // pool: Account<Pool, string>;
     // custodies: Account<Custody, string>[];
     positionAddress: Address<string>;
@@ -25,7 +24,8 @@ export async function getPositionStatus(params: GetPositionStatusParams) {
 
 
     const position = await getPositionUtil(params.rpc, params.positionAddress);
-
+    const sideInt = position.position.data.side;
+    const side = sideInt === 1 ? 'long' : 'short';
 
     // updateTime: 1745422833n
     const updateTimeUnixSeconds = Number(position.position.data.updateTime);
@@ -57,7 +57,7 @@ export async function getPositionStatus(params: GetPositionStatusParams) {
     
     // Calculate PnL based on position side
     let preFeePnl;
-    if (params.side === 'long') {
+    if (side === 'long') {
         // For longs, use absolute value of (entry size - current value)
         preFeePnl = Math.abs(normalizedSizeUsd - assetAmount * pythPrice);
     } else {
@@ -67,7 +67,7 @@ export async function getPositionStatus(params: GetPositionStatusParams) {
     
     const totalInterest = calculateTotalInterest(position.position, position.collateralCustody);
 
-    const formattedInterest = formatScaledValue(totalInterest, 6); // TODO: cant hardcode 6 here
+    const formattedInterest = formatScaledValue(totalInterest, position.collateralCustody.data.decimals);
 
     const pnl = preFeePnl - normalizedExitFee - Number(formattedInterest);
 

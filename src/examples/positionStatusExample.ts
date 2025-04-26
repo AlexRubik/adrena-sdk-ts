@@ -44,11 +44,8 @@ export async function runPositionStatusExample(
         wallet,
         rpc,
         principalToken,
-        side,
         positionAddress
     });
 
     console.log("Position status:", positionStatus);
 }
-
-runPositionStatusExample();

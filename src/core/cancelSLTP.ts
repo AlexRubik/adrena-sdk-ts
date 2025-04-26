@@ -8,6 +8,7 @@ import { hasUserProfile } from "../helpers/userProfile";
 import { buildInitUserProfileIx } from "../helpers/userProfile";
 import { getBasicProfileData } from "../helpers/userProfile";
 import { buildEditUserProfileIx } from "../helpers/userProfile";
+import { checkTransactionConfirmed } from "../helpers/txnHelpers";
 
 
 // cancel stop loss and/or take profit limit triggers
@@ -73,7 +74,7 @@ export async function cancelSLTP(
     }
 
     if (ixns.length > 0) {
-        const sendJitoResult = await sendTransactionWithJito(
+        const txSignature = await sendTransactionWithJito(
             ixns,
             wallet,
             rpc,
@@ -81,7 +82,14 @@ export async function cancelSLTP(
             true,
             [ADRENA_LOOKUP_TABLE_ADDRESS]
         );
-        return sendJitoResult;
+
+
+        return {
+            txSignature: txSignature,
+            positionAddress: position
+        };
+          
+        
     } else {
         throw new Error("Bug somewhere, no ixns to send");
     }

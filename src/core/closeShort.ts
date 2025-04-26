@@ -6,8 +6,8 @@ import { ClosePositionShortParams, getClosePositionShortIxs } from "../instructi
 export async function closeShort(params: ClosePositionShortParams) {
     const closeShortIxs = await getClosePositionShortIxs(params);
 
-    const result = await sendTransactionWithJito(
-        closeShortIxs,
+    const txSignature = await sendTransactionWithJito(
+        closeShortIxs.ixs,
         params.wallet,
         params.rpc,
         true,
@@ -15,6 +15,9 @@ export async function closeShort(params: ClosePositionShortParams) {
         [ADRENA_LOOKUP_TABLE_ADDRESS]
     )
 
-    return result;
+    return {
+        txSignature: txSignature,
+        positionAddress: closeShortIxs.positionAddress
+    };
 
 }

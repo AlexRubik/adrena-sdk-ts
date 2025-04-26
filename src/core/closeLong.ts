@@ -7,8 +7,8 @@ export async function closeLong(params: ClosePositionLongParams) {
 
     const closeLongIxs = await getClosePositionLongIxs(params);
 
-    const result = await sendTransactionWithJito(
-        closeLongIxs,
+    const txSignature = await sendTransactionWithJito(
+        closeLongIxs.ixs,
         params.wallet,
         params.rpc,
         true,
@@ -16,6 +16,9 @@ export async function closeLong(params: ClosePositionLongParams) {
         [ADRENA_LOOKUP_TABLE_ADDRESS]
     )
 
-    return result;
+    return {
+        txSignature: txSignature,
+        positionAddress: closeLongIxs.positionAddress
+    };
 
 }

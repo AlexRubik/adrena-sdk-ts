@@ -31,20 +31,20 @@ export async function runOpenMarketLongExample() {
         collateralToken: positionObj.collateralToken,
         collateralAmount: positionObj.collateralAmount,
         leverage: positionObj.leverage,
-        stopLossPrice: positionObj.stopLossPrice, // optional
-        takeProfitPrice: positionObj.takeProfitPrice, // optional
+        stopLossPrice: positionObj.stopLossPrice, // optional / nullable
+        takeProfitPrice: positionObj.takeProfitPrice, // optional / nullable
     }
 
-    const txSignature = await openMarketLong(
-        params
-    );
+    const openMarketLongResult = await openMarketLong(params);
 
-    if (txSignature) {
+    if (openMarketLongResult && openMarketLongResult.txSignature) {
         console.log(`\nAttempted to open a market long position with the following parameters:`, params);
         console.log(`Position stats:`, positionObj);
-        console.log(`-> https://solscan.io/tx/${txSignature} <-`);
-        const confirmed = await checkTransactionConfirmed(txSignature, rpc);
+        console.log(`-> https://solscan.io/tx/${openMarketLongResult.txSignature} <-`);
+        const confirmed = await checkTransactionConfirmed(openMarketLongResult.txSignature, rpc);
         if (confirmed) {
+
+            // if tx is confirmed, get initial position status
             console.log("Transaction confirmed!");
 
             console.log("Getting position status...");
@@ -56,21 +56,13 @@ export async function runOpenMarketLongExample() {
                 throw new Error("Principal custody not found");
             }
 
-            const positionAddress = (await findPositionAddress(
-                pool.address,
-                wallet.address,
-                principalCustody.address,
-                "long"
-            ))[0];
-
-            console.log("Position address:", positionAddress);
+            console.log("Position address:", openMarketLongResult.positionAddress);
 
             const positionStatus = await getPositionStatus({
                 wallet,
                 rpc,
                 principalToken: positionObj.principalToken,
-                side: "long",
-                positionAddress
+                positionAddress: openMarketLongResult.positionAddress
             });
 
             console.log("Position status:", positionStatus);
