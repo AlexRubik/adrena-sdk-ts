@@ -12,6 +12,15 @@ export async function getPositionUtil(rpc: Rpc<SolanaRpcApi>, positionAddress: A
     const custodies = await loadCustodies(pool.data, rpc);
     const principalCustody = getCustodyByAddress(custodies, position.data.custody);
     const collateralCustody = getCustodyByAddress(custodies, position.data.collateralCustody);
+
+    if (!principalCustody) {
+        throw new Error("Principal custody not found");
+    }
+
+    if (!collateralCustody) {
+        throw new Error("Collateral custody not found");
+    }
+
     return {
         position,
         principalCustody,

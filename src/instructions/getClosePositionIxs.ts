@@ -5,6 +5,7 @@ import { CollateralToken, PrincipalToken } from "../types";
 import { DEV_PDA, PRICE_DECIMALS, PRINCIPAL_ADDRESSES } from "../helpers/constants";
 import { createAssociatedTokenAccountIx } from "../helpers/tokenHelpers";
 import { getPositionUtil } from "../helpers/position";
+import { getPythPrice } from "../helpers/pyth";
 
 export type ClosePositionLongParams = {
     wallet: TransactionSigner,
@@ -58,6 +59,17 @@ export async function getClosePositionLongIxs(params: ClosePositionLongParams) {
         "long"
     ))[0];
 
+    let priceId = params.principalToken as any;
+    if (priceId === "JITOSOL") {
+        priceId = "SOL";
+    } else if (priceId === "WBTC") {
+        priceId = "BTC";
+    }
+
+    // price with slippage, so if current price is 100, and you want to account for slippage of 1%, 
+    // then make close price 99
+    const closePrice = params.price ? params.price : await getPythPrice(priceId);
+
     const closeIx = getClosePositionLongInstruction(
         {
             caller: params.wallet,
@@ -72,7 +84,7 @@ export async function getClosePositionLongIxs(params: ClosePositionLongParams) {
             custodyTokenAccount: principalCustodyTokenAccount,
             receivingAccount: ataIxForPrincipal.associatedAccount,
             adrenaProgram: ADRENA_PROGRAM_ADDRESS,
-            price: params.price ? BigInt(Math.round(params.price * 10 ** PRICE_DECIMALS)) : null,
+            price: closePrice ? BigInt(Math.round(closePrice * 10 ** PRICE_DECIMALS)) : null,
             referrerProfile: DEV_PDA,
 
             
@@ -125,6 +137,15 @@ export async function getClosePositionShortIxs(params: ClosePositionShortParams)
         principalCustody.address,
         "short"
     ))[0];
+
+    let priceId = params.principalToken as any;
+    if (priceId === "JITOSOL") {
+        priceId = "SOL";
+    } else if (priceId === "WBTC") {
+        priceId = "BTC";
+    }
+
+    const closePrice = params.price ? params.price : await getPythPrice(priceId);
     
     const closeIx = getClosePositionShortInstruction(
         {
@@ -141,7 +162,7 @@ export async function getClosePositionShortIxs(params: ClosePositionShortParams)
             custodyTradeOracle: principalCustodyTradeOracle,
             receivingAccount: ataIxForPrincipal.associatedAccount,
             adrenaProgram: ADRENA_PROGRAM_ADDRESS,
-            price: params.price ? BigInt(Math.round(params.price * 10 ** PRICE_DECIMALS)) : null,
+            price: closePrice ? BigInt(Math.round(closePrice * 10 ** PRICE_DECIMALS)) : null,
             referrerProfile: DEV_PDA,
 
             

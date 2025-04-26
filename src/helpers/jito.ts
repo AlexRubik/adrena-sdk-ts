@@ -146,8 +146,10 @@ export async function sendTransactionWithJito(
 
     console.log("Wallet address:", wallet.address);
 
+    const desprateTip = desparate ? 0.005 : undefined;
+
     // Get Jito tip instruction
-    const jitoTipIxn = await getJitoTipIxn(wallet, desparate ? 0.005 : undefined);
+    const jitoTipIxn = await getJitoTipIxn(wallet, desprateTip, desprateTip);
 
     const transactionMessage = pipe(
         createTransactionMessage({ version: 0 }),

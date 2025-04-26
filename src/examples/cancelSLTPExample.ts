@@ -1,10 +1,10 @@
-import { createClient } from "../clients/KitClient";
+import { createKitClient } from "../clients/KitClient";
 import { PrincipalToken } from "../types";
 
 import { cancelSLTP } from "../core/cancelSLTP";
 
 export async function runCancelSLTPExample() {
-    const kitClient = await createClient();
+    const kitClient = await createKitClient();
     const wallet = kitClient.wallet;
     const rpc = kitClient.rpc;
 

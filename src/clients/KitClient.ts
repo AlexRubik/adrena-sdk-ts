@@ -20,7 +20,7 @@ export type KitClient = {
 
  
 let client: KitClient | undefined;
-export async function createClient(): Promise<KitClient> {
+export async function createKitClient(): Promise<KitClient> {
   if (!client) {
 
     const codec = getBase58Codec();

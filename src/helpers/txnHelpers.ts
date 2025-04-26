@@ -1,4 +1,4 @@
-import { Address, getComputeUnitEstimateForTransactionMessageFactory, SolanaRpcApi } from "@solana/kit";
+import { Address, createSolanaRpc, getComputeUnitEstimateForTransactionMessageFactory, Signature, SolanaRpcApi } from "@solana/kit";
 
 import { 
     GetMultipleAccountsApi,
@@ -76,4 +76,49 @@ export async function getCUEst(
         
         throw error;
     }
+}
+
+/**
+ * Waits for a transaction to be confirmed
+ * @param signature Transaction signature to check
+ * @param rpc RPC connection to use
+ * @param maxAttempts Maximum number of attempts (default 14)
+ * @param intervalSeconds Time between attempts in seconds (default 5)
+ * @returns True if confirmed, false if max attempts reached
+ */
+export async function checkTransactionConfirmed(
+    signature: Signature,
+    rpc: Rpc<SolanaRpcApi>,
+    maxAttempts: number = 6,
+    intervalSeconds: number = 5
+): Promise<boolean> {
+    let attempts = 0;
+    const UNIVERSAL_RPC = 'https://api.mainnet-beta.solana.com';
+
+    while (attempts < maxAttempts) {
+        try {
+            // Use universal RPC on 7th attempt
+            const currentRpc = attempts === 6 ? 
+                createSolanaRpc(UNIVERSAL_RPC) : 
+                rpc;
+
+            const statuses = await currentRpc.getSignatureStatuses([signature]).send();
+            console.log(`Transaction status (attempt ${attempts + 1}/${maxAttempts}${attempts === 6 ? ' using universal RPC' : ''}):`, statuses.value);
+            
+            if (statuses.value[0]?.confirmationStatus === 'confirmed' || statuses.value[0]?.confirmationStatus === 'finalized') {
+                return true;
+            }
+        } catch (error) {
+            console.error(`Error checking status (attempt ${attempts + 1}/${maxAttempts}):`, error);
+        }
+
+        attempts++;
+        if (attempts < maxAttempts) {
+            console.log(`Waiting ${intervalSeconds} seconds before next check...`);
+            await new Promise(resolve => setTimeout(resolve, intervalSeconds * 1000));
+        }
+    }
+
+    console.log(`Transaction not confirmed after ${maxAttempts} attempts`);
+    return false;
 }

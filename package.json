@@ -13,7 +13,8 @@
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "test": "ts-node src/helpers/gitApi.ts",
-    "open-long": "ts-node src/examples/openMarketLongExample.ts"
+    "open-long": "ts-node src/examples/openMarketLongExample.ts",
+    "position-status": "ts-node src/examples/positionStatusExample.ts"
   },
   "dependencies": {
     "@solana-program/compute-budget": "^0.7.0",
