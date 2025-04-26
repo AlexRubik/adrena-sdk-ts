@@ -12,9 +12,10 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
-    "test": "ts-node src/helpers/gitApi.ts",
+    "git-api": "ts-node src/helpers/gitApi.ts",
     "open-long": "ts-node src/examples/openMarketLongExample.ts",
-    "position-status": "ts-node src/examples/positionStatusExample.ts"
+    "position-status": "ts-node src/examples/positionStatusExample.ts",
+    "get-positions": "ts-node src/adrena-api/examples/getPositionsApiExample.ts"
   },
   "dependencies": {
     "@solana-program/compute-budget": "^0.7.0",
