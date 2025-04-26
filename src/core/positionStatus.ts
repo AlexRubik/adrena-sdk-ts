@@ -1,13 +1,9 @@
-import { Account, Address, address, KeyPairSigner, Rpc, SolanaRpcApi, TransactionSigner } from "@solana/kit";
-import { PRICE_DECIMALS, PRINCIPAL_ADDRESSES, TOKEN_ADDRESSES } from "../helpers/constants";
+import { Address, Rpc, SolanaRpcApi, TransactionSigner } from "@solana/kit";
+import { PRICE_DECIMALS } from "../helpers/constants";
 import { getPythPrice } from "../helpers/pyth";
-import { fetchPoolUtil, findPositionAddress, getCustodyByMint, getPoolPda, loadCustodies } from "../helpers/utils";
-import BN from "bn.js";
 import { formatScaledValue } from "../helpers/math";
-import { createKitClient } from "../clients/KitClient";
 import { calculateTotalInterest, getPositionUtil } from "../helpers/position";
-import { CollateralToken, PrincipalToken } from "../types";
-import { Custody, Pool } from "../../codama-generated";
+import { PrincipalToken } from "../types";
 
 
 export type GetPositionStatusParams = {
@@ -33,16 +29,10 @@ export async function getPositionStatus(params: GetPositionStatusParams) {
     const dateTimeOpen = new Date(openTimeUnixSeconds * 1000);
     const updateTime = new Date(updateTimeUnixSeconds * 1000);
 
-    // how long ago was the position updated?
-    const now = new Date();
-    const timeSinceUpdate = now.getTime() - updateTime.getTime();
-    const timeSinceUpdateSeconds = timeSinceUpdate / 1000;
-    // human readable time of time ago in hours and minutes
-    const timeSinceUpdateHours = Math.floor(timeSinceUpdateSeconds / 3600);
 
     const normalizedPrice = Number(position.position.data.price) / 10 ** PRICE_DECIMALS;
     const normalizedExitFee = Number(position.position.data.exitFeeUsd) / 10 ** 6;
-    const normalizedUnrealizedInterestUsd = Number(position.position.data.unrealizedInterestUsd) / 10 ** 6;
+    //const normalizedUnrealizedInterestUsd = Number(position.position.data.unrealizedInterestUsd) / 10 ** 6;
     const normalizedSizeUsd = Number(position.position.data.sizeUsd) / 10 ** 6;
     const assetAmount = normalizedSizeUsd / normalizedPrice;
 

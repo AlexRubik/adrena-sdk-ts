@@ -1,4 +1,4 @@
-import { AdrenaApi, SortField, SortOrder } from "..";
+import { AdrenaApi, SortField, SortOrder } from "../adrenaApiClient";
 
 
 export async function getPositionsApiExample() {

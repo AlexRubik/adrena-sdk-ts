@@ -4,8 +4,7 @@ import {
     GetMultipleAccountsApi,
     Rpc,
     fetchJsonParsedAccounts,
-    AddressesByLookupTableAddress,
-    IAccountLookupMeta
+    AddressesByLookupTableAddress
 } from "@solana/kit";
 
 interface FetchedAddressLookup {
@@ -40,6 +39,7 @@ export async function fetchLookupTables(
 export async function getCUEst(
     transactionMessage: any,
     rpc: Rpc<SolanaRpcApi>,
+    // @ts-ignore
     defaultUnits: number = 220000
 ) {
     try {

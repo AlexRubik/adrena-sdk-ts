@@ -2,7 +2,6 @@ import { Account, Address, Rpc, SolanaRpcApi } from "@solana/kit";
 import { ADRENA_PROGRAM_ADDRESS, Custody, fetchPosition, Position } from "../../codama-generated";
 import { fetchPoolUtil, getCustodyByAddress } from "./utils";
 import { loadCustodies } from "./utils";
-import { getCustodyByMint } from "./utils";
 import BN from 'bn.js';
 
 export async function getPositionUtil(rpc: Rpc<SolanaRpcApi>, positionAddress: Address) {

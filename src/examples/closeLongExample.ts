@@ -1,6 +1,5 @@
 import { createKitClient } from "../clients/KitClient";
 import { closeLong } from "../core/closeLong";
-import { getPositionStatus } from "../core/positionStatus";
 import { checkTransactionConfirmed } from "../helpers/txnHelpers";
 import { PrincipalToken } from "../types";
 

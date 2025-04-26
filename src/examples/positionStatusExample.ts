@@ -3,7 +3,7 @@ import { getPositionStatus } from "../core/positionStatus";
 import { PRINCIPAL_ADDRESSES } from "../helpers/constants";
 import { fetchPoolUtil, findPositionAddress, getCustodyByMint } from "../helpers/utils";
 import { loadCustodies } from "../helpers/utils";
-import { CollateralToken, PrincipalToken } from "../types";
+import { PrincipalToken } from "../types";
 import { runCloseLongExample } from "./closeLongExample";
 
 
@@ -27,7 +27,7 @@ export async function runPositionStatusExample(
     
 
     const principalCustody = getCustodyByMint(custodies, PRINCIPAL_ADDRESSES[principalToken].address);
-    const collateralToken: CollateralToken = "USDC"; // the token we are using as collateral
+    //const collateralToken: CollateralToken = "USDC"; // the token we are using as collateral
 
     if (!principalCustody) {
         throw new Error("Principal custody not found");

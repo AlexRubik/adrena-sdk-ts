@@ -1,10 +1,10 @@
 import { openMarketLong, OpenMarketLongParams } from "../core/openMarketLong";
 import { createKitClient } from "../clients/KitClient";
 import { PrincipalToken, CollateralToken } from "../types";
-import { BPS, PRINCIPAL_ADDRESSES } from "../helpers/constants";
+import { PRINCIPAL_ADDRESSES } from "../helpers/constants";
 import { checkTransactionConfirmed } from "../helpers/txnHelpers";
 import { getPositionStatus } from "../core/positionStatus";
-import { findPositionAddress, getCustodyByMint } from "../helpers/utils";
+import {  getCustodyByMint } from "../helpers/utils";
 import { loadCustodies } from "../helpers/utils";
 import { fetchPoolUtil } from "../helpers/utils";
 

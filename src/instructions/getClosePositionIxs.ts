@@ -1,10 +1,9 @@
 import { IInstruction, Rpc, SolanaRpcApi, TransactionSigner } from "@solana/kit";
 import { ADRENA_PROGRAM_ADDRESS, getClosePositionLongInstruction, getClosePositionShortInstruction } from "../../codama-generated";
-import { fetchPoolUtil, findCustodyTokenAccountAddress, findPositionAddress, getCortexPda, getCustodyByMint, getPoolPda, getTransferAuthorityAddress, loadCustodies } from "../helpers/utils";
+import { fetchPoolUtil, findCustodyTokenAccountAddress, findPositionAddress, getCortexPda, getCustodyByMint, getTransferAuthorityAddress, loadCustodies } from "../helpers/utils";
 import { CollateralToken, PrincipalToken } from "../types";
 import { DEV_PDA, PRICE_DECIMALS, PRINCIPAL_ADDRESSES } from "../helpers/constants";
 import { createAssociatedTokenAccountIx } from "../helpers/tokenHelpers";
-import { getPositionUtil } from "../helpers/position";
 import { getPythPrice } from "../helpers/pyth";
 
 export type ClosePositionLongParams = {

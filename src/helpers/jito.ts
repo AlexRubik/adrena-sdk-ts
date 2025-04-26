@@ -1,8 +1,7 @@
 import { getTransferSolInstruction } from "@solana-program/system";
 import { getSetComputeUnitLimitInstruction } from "@solana-program/compute-budget";
 import { 
-    address, 
-    Address, 
+    address,  
     appendTransactionMessageInstructions, 
     compressTransactionMessageUsingAddressLookupTables, 
     createTransactionMessage, 
@@ -133,6 +132,7 @@ export async function getJitoTipIxn(
   return instruction;
 }
 
+// @ts-ignore
 export async function sendTransactionWithJito(
     instructions: IInstruction[],
     wallet: TransactionSigner,

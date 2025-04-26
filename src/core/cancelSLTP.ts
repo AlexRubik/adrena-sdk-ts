@@ -8,7 +8,6 @@ import { hasUserProfile } from "../helpers/userProfile";
 import { buildInitUserProfileIx } from "../helpers/userProfile";
 import { getBasicProfileData } from "../helpers/userProfile";
 import { buildEditUserProfileIx } from "../helpers/userProfile";
-import { checkTransactionConfirmed } from "../helpers/txnHelpers";
 
 
 // cancel stop loss and/or take profit limit triggers

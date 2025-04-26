@@ -9,7 +9,6 @@ import { hasUserProfile } from "../helpers/userProfile";
 import { buildInitUserProfileIx } from "../helpers/userProfile";
 import { getBasicProfileData } from "../helpers/userProfile";
 import { buildEditUserProfileIx } from "../helpers/userProfile";
-import { findPositionAddress } from "../helpers/utils";
 
 /**
  * Parameters for creating a limit order

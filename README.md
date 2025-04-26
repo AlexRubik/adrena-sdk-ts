@@ -7,3 +7,24 @@ Adrena Links:
 - X: https://x.com/AdrenaProtocol
 - Discord: https://discord.gg/Z3UZAVA2ch
 - Docs: https://docs.adrena.xyz/
+
+
+## Configuration
+
+The Kit Client can be configured in two ways:
+
+1. Using environment variables:
+   - `PRIVATE_KEY_STR`: Your Solana private key
+   - `RPC_URL`: Solana RPC URL
+   - `WS_URL`: Solana WebSocket URL
+
+2. Passing configuration directly:
+   ```typescript
+   import { createKitClient } from 'adrena-sdk-ts';
+   
+   const client = await createKitClient({
+     privateKey: 'your-private-key',
+     rpcUrl: 'https://your-rpc-url.com',
+     wsUrl: 'wss://your-ws-url.com'
+   });
+   ```
