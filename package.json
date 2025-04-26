@@ -1,6 +1,6 @@
 {
   "name": "adrena-sdk-ts",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "description": "SDK for interacting with Adrena Protocol",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,7 +11,11 @@
     "type": "git",
     "url": "git+https://github.com/AlexRubik/adrena-sdk-ts.git"
   },
-  "keywords": ["adrena", "solana", "sdk"],
+  "keywords": [
+    "adrena",
+    "solana",
+    "sdk"
+  ],
   "author": "AlexRubik",
   "license": "MIT",
   "devDependencies": {
