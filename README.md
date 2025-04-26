@@ -1,3 +1,7 @@
+[![npm version](https://img.shields.io/npm/v/adrena-sdk-ts.svg)](https://www.npmjs.com/package/adrena-sdk-ts)
+[![npm downloads](https://img.shields.io/npm/dm/adrena-sdk-ts.svg)](https://www.npmjs.com/package/adrena-sdk-ts)
+[![npm bundle size](https://img.shields.io/bundlephobia/minzip/adrena-sdk-ts.svg)](https://bundlephobia.com/package/adrena-sdk-ts)
+
 In development...
 
 SDK for interacting with the Adrena Protocol using Typescript and [@solana/kit](https://github.com/anza-xyz/kit)
