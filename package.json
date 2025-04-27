@@ -4,6 +4,32 @@
   "description": "SDK for interacting with Adrena Protocol",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./core": {
+      "types": "./dist/src/core/index.d.ts",
+      "default": "./dist/src/core/index.js"
+    },
+    "./helpers": {
+      "types": "./dist/src/helpers/index.d.ts",
+      "default": "./dist/src/helpers/index.js"
+    },
+    "./instructions": {
+      "types": "./dist/src/instructions/index.d.ts",
+      "default": "./dist/src/instructions/index.js"
+    },
+    "./adrena-api": {
+      "types": "./dist/src/adrena-api/index.d.ts",
+      "default": "./dist/src/adrena-api/index.js"
+    },
+    "./clients": {
+      "types": "./dist/src/clients/index.d.ts",
+      "default": "./dist/src/clients/index.js"
+    }
+  },
   "files": [
     "dist"
   ],
