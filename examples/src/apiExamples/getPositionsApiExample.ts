@@ -1,6 +1,6 @@
 // Adrena API Documentation: https://datapi.adrena.xyz/swagger/static/index.html
 
-import { AdrenaApi, SortField, SortOrder } from "adrena-sdk-ts";
+import { AdrenaApi, SortField, SortOrder } from "adrena-sdk-ts/adrena-api";
 
 
 export async function getPositionsApiExample() {

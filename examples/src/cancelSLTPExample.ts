@@ -1,9 +1,12 @@
 import { 
-    createKitClient,
-    PrincipalToken,
-    cancelSLTP,
-    checkTransactionConfirmed
+    PrincipalToken
 } from "adrena-sdk-ts";
+
+import { createKitClient } from "adrena-sdk-ts/core";
+
+import { checkTransactionConfirmed } from "adrena-sdk-ts/helpers";
+
+import { cancelSLTP } from "adrena-sdk-ts/core";
 
 
 export async function runCancelSLTPExample() {
