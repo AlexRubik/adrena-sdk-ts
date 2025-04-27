@@ -18,7 +18,7 @@ Install the Adrena SDK and required dependencies:
 ### Using yarn
 ```bash
 # Install the SDK
-yarn add adrena-sdk-ts
+yarn add adrena-sdk-ts@beta
 
 # Install dotenv for environment variable management
 yarn add dotenv
@@ -27,7 +27,7 @@ yarn add dotenv
 ### Using npm
 ```bash
 # Install the SDK
-npm install adrena-sdk-ts
+npm install adrena-sdk-ts@beta
 
 # Install dotenv for environment variable management
 npm install dotenv

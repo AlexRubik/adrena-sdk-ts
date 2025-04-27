@@ -82,7 +82,7 @@ export async function getCUEst(
  * Waits for a transaction to be confirmed
  * @param signature Transaction signature to check
  * @param rpc RPC connection to use
- * @param maxAttempts Maximum number of attempts (default 14)
+ * @param maxAttempts Maximum number of attempts (default 6)
  * @param intervalSeconds Time between attempts in seconds (default 5)
  * @returns True if confirmed, false if max attempts reached
  */
