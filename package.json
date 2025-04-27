@@ -39,7 +39,9 @@
     "helpers.js",
     "helpers.d.ts",
     "instructions.js",
-    "instructions.d.ts"
+    "instructions.d.ts",
+    "clients.js",
+    "clients.d.ts"
   ],
   "repository": {
     "type": "git",
