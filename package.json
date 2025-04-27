@@ -31,7 +31,15 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "adrena-api.js",
+    "adrena-api.d.ts",
+    "core.js",
+    "core.d.ts",
+    "helpers.js",
+    "helpers.d.ts",
+    "instructions.js",
+    "instructions.d.ts"
   ],
   "repository": {
     "type": "git",
