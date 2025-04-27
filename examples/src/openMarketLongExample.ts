@@ -1,16 +1,15 @@
 import { 
-    openMarketLong, 
-    OpenMarketLongParams,
-    createKitClient,
     PrincipalToken,
     CollateralToken,
-    PRINCIPAL_ADDRESSES,
-    checkTransactionConfirmed,
-    getPositionStatus,
-    getCustodyByMint,
-    loadCustodies,
-    fetchPoolUtil
 } from "adrena-sdk-ts";
+import { createKitClient } from "adrena-sdk-ts/clients";
+import { checkTransactionConfirmed, PRINCIPAL_ADDRESSES } from "adrena-sdk-ts/helpers";
+import { getPositionStatus, openMarketLong, OpenMarketLongParams } from "adrena-sdk-ts/core";
+import { 
+    fetchPoolUtil,
+    loadCustodies,
+    getCustodyByMint
+} from "adrena-sdk-ts/helpers";
 
 export async function runOpenMarketLongExample() {
     const kitClient = await createKitClient();

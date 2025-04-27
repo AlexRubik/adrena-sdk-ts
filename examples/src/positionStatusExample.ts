@@ -1,15 +1,13 @@
+import { PrincipalToken } from "adrena-sdk-ts";
+import { getPositionStatus } from "adrena-sdk-ts/core";
+import { createKitClient } from "adrena-sdk-ts/clients";
 import { 
-    createKitClient,
-    getPositionStatus,
-    PRINCIPAL_ADDRESSES,
-    fetchPoolUtil,
-    findPositionAddress,
-    getCustodyByMint,
-    loadCustodies,
-    PrincipalToken,
-} from "adrena-sdk-ts";
-import { runCloseLongExample } from "./closeLongExample";
-
+    PRINCIPAL_ADDRESSES, 
+    fetchPoolUtil, 
+    findPositionAddress, 
+    loadCustodies, 
+    getCustodyByMint 
+} from "adrena-sdk-ts/helpers";
 
 export async function runPositionStatusExample(
     principalToken: PrincipalToken = "JITOSOL",
@@ -17,8 +15,6 @@ export async function runPositionStatusExample(
     side: "long" | "short" = "long",
 
 ) {
-
-    await runCloseLongExample();
 
 
     const kitClient = await createKitClient();

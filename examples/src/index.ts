@@ -1,7 +1,4 @@
-// import * as adrenaSDK from "adrena-sdk-ts";
 import * as adrenaSDK from "adrena-sdk-ts";
-
-import { cancelSLTP } from "adrena-sdk-ts";
 import dotenv from "dotenv";
 
 async function main() {

@@ -1,11 +1,6 @@
-import { 
-    PrincipalToken
-} from "adrena-sdk-ts";
-
-import { createKitClient } from "adrena-sdk-ts/core";
-
+import { PrincipalToken } from "adrena-sdk-ts";
+import { createKitClient } from "adrena-sdk-ts/clients";
 import { checkTransactionConfirmed } from "adrena-sdk-ts/helpers";
-
 import { cancelSLTP } from "adrena-sdk-ts/core";
 
 

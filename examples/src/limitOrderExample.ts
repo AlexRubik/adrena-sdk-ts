@@ -1,10 +1,8 @@
-import { 
-    PrincipalToken,
-    addLimitOrder,
-    CollateralToken,
-    createKitClient,
-    checkTransactionConfirmed
-} from "adrena-sdk-ts";
+import { PrincipalToken, CollateralToken } from "adrena-sdk-ts";
+import { addLimitOrder } from "adrena-sdk-ts/core";
+import { checkTransactionConfirmed } from "adrena-sdk-ts/helpers";
+import { createKitClient } from "adrena-sdk-ts/clients";
+
 
 
 export async function runLimitOrderExample() {

@@ -4,17 +4,12 @@ import { PRINCIPAL_ADDRESSES } from "../helpers/constants";
 import { fetchPoolUtil, findPositionAddress, getCustodyByMint } from "../helpers/utils";
 import { loadCustodies } from "../helpers/utils";
 import { PrincipalToken } from "../types";
-import { runCloseLongExample } from "./closeLongExample";
 
 
 export async function runPositionStatusExample(
     principalToken: PrincipalToken = "JITOSOL",
-
-    side: "long" | "short" = "long",
-
+    side: "long" | "short" = "long"
 ) {
-
-    await runCloseLongExample();
 
 
     const kitClient = await createKitClient();

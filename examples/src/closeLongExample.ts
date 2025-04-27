@@ -1,9 +1,7 @@
-import { 
-    createKitClient,
-    PrincipalToken,
-    closeLong,
-    checkTransactionConfirmed
-} from "adrena-sdk-ts";
+import { PrincipalToken } from "adrena-sdk-ts";
+import { closeLong } from "adrena-sdk-ts/core";
+import { createKitClient } from "adrena-sdk-ts/clients";
+import { checkTransactionConfirmed } from "adrena-sdk-ts/helpers";
 
 
 export async function runCloseLongExample() {
