@@ -13,24 +13,18 @@ Adrena Links:
 
 ## Installation
 
-Install the Adrena SDK and required dependencies:
+Install the Adrena SDK:
 
 ### Using yarn
 ```bash
 # Install the SDK
 yarn add adrena-sdk-ts@beta
-
-# Install dotenv for environment variable management
-yarn add dotenv
 ```
 
 ### Using npm
 ```bash
 # Install the SDK
 npm install adrena-sdk-ts@beta
-
-# Install dotenv for environment variable management
-npm install dotenv
 ```
 
 ## Configuration
