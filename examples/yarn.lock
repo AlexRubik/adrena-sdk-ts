@@ -625,10 +625,10 @@ acorn@^8.11.0, acorn@^8.4.1:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.14.1.tgz#721d5dc10f7d5b5609a891773d47731796935dfb"
   integrity sha512-OvQ/2pUDKmgfCg++xsTX1wGxfTaszcHVcTctW4UJB4hibJx2HXxxO5UmVgyjMa+ZDsiaf5wWLXYpRWMmBI0QHg==
 
-adrena-sdk-ts@^1.0.0-beta.11:
-  version "1.0.0-beta.11"
-  resolved "https://registry.yarnpkg.com/adrena-sdk-ts/-/adrena-sdk-ts-1.0.0-beta.11.tgz#e1745747290eeb164e1d8472416109a26ac20695"
-  integrity sha512-uWxISjjfcjLBmqVKU7WBZHVcmvpgDzUSahn1p/ojUVz2wHY6KP7g8kO7vw+QKDYD6wzFsxWtqf/mvjnZbVbsoA==
+adrena-sdk-ts@^1.0.0-beta.12:
+  version "1.0.0-beta.12"
+  resolved "https://registry.yarnpkg.com/adrena-sdk-ts/-/adrena-sdk-ts-1.0.0-beta.12.tgz#24f6c0e23b2bdda30c59bdb324b71d3ddf87ed99"
+  integrity sha512-zn4xpfY6q1SKsmvqwJweNi2JSBSdWH/kpg5rZuUFSJDjCEWVQcNANGsShitQc0xc89lJR5fAuXd1f1odSKsbQA==
   dependencies:
     "@solana-program/compute-budget" "^0.7.0"
     "@solana-program/system" "^0.7.0"
