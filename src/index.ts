@@ -12,6 +12,7 @@ export * from './types';
 export async function main() {
     // This can be empty or contain initialization logic
     console.log('Adrena SDK initialized');
+
 }
 
-
+main();

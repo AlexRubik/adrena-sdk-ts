@@ -2,7 +2,7 @@ import { IInstruction, Rpc, SolanaRpcApi, TransactionSigner } from "@solana/kit"
 import { ADRENA_PROGRAM_ADDRESS, getClosePositionLongInstruction, getClosePositionShortInstruction } from "../../codama-generated";
 import { fetchPoolUtil, findCustodyTokenAccountAddress, findPositionAddress, getCortexPda, getCustodyByMint, getTransferAuthorityAddress, loadCustodies } from "../helpers/utils";
 import { CollateralToken, PrincipalToken } from "../types";
-import { DEV_PDA, PRICE_DECIMALS, PRINCIPAL_ADDRESSES } from "../helpers/constants";
+import { DEV_PDA, PRICE_DECIMALS, PRINCIPAL_ADDRESSES, TOKEN_ADDRESSES } from "../helpers/constants";
 import { createAssociatedTokenAccountIx } from "../helpers/tokenHelpers";
 import { getPythPrice } from "../helpers/pyth";
 
@@ -102,7 +102,7 @@ export async function getClosePositionShortIxs(params: ClosePositionShortParams)
 
     const ixs: IInstruction[] = [];
 
-    const collateralTokenMint = PRINCIPAL_ADDRESSES[params.collateralToken];
+    const collateralTokenMint = TOKEN_ADDRESSES[params.collateralToken];
     const principalTokenMint = PRINCIPAL_ADDRESSES[params.principalToken];
     const ataIxForPrincipal = await createAssociatedTokenAccountIx(
         params.wallet.address, 

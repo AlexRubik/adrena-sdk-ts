@@ -1,13 +1,13 @@
 import { IInstruction, Rpc, SolanaRpcApi, TransactionSigner } from "@solana/kit";
-import { getOpenLongIxs } from "../instructions/getOpenLongIxs";
+import { getOpenShortIxs } from "../instructions/getOpenShortIxs";
 import { sendTransactionWithJito } from "../helpers/jito";
 import { buildEditUserProfileIx, buildInitUserProfileIx, getBasicProfileData, hasUserProfile } from "../helpers/userProfile";
 import { ADRENA_LOOKUP_TABLE_ADDRESS, DEV_PDA } from "../helpers/constants";
 import { CollateralToken, PrincipalToken } from "../types";
-import { getSetStopLossLongIx } from "../instructions/getStopLossLongIx";
-import { getTakeProfitLongIx } from "../instructions/getTakeProfitLongIx";
+import { getSetStopLossShortIx } from "../instructions/getStopLossShortIx";
+import { getTakeProfitShortIx } from "../instructions/getTakeProfitShortIx";
 
-export interface OpenMarketLongParams {
+export interface OpenMarketShortParams {
     wallet: TransactionSigner;
     rpc: Rpc<SolanaRpcApi>;
     principalToken: PrincipalToken;
@@ -19,9 +19,9 @@ export interface OpenMarketLongParams {
 }
 
 /**
- * Opens a market long position with the specified parameters
+ * Opens a market short position with the specified parameters
  * 
- * @param params - The parameters for opening a market long position
+ * @param params - The parameters for opening a market short position
  * @param params.wallet - The wallet to use for the transaction
  * @param params.rpc - The RPC client to use for the transaction
  * @param params.principalToken - The token to trade (e.g., 'JITOSOL')
@@ -32,8 +32,8 @@ export interface OpenMarketLongParams {
  * @param params.takeProfitPrice - Optional take profit limit price
  * @returns Promise resolving to the transaction signature and position address
  */
-export async function openMarketLong(
-    params: OpenMarketLongParams
+export async function openMarketShort(
+    params: OpenMarketShortParams
 ) {
     // array that we will push instructions to
     const ixns: IInstruction[] = [];
@@ -41,7 +41,6 @@ export async function openMarketLong(
     // check if wallet has an adrena profile
     // if not, we are going to create one with
     const hasProfile = await hasUserProfile(params.wallet.address, params.rpc);
-
 
     if (!hasProfile || !hasProfile.exists) {
         // wallet has no profile, get instruction to create one
@@ -55,8 +54,8 @@ export async function openMarketLong(
         }
     }
 
-    // get instructions to open a long position
-    const openLongIxns = await getOpenLongIxs(
+    // get instructions to open a short position
+    const openShortIxns = await getOpenShortIxs(
         params.wallet, 
         params.principalToken, 
         params.collateralToken, 
@@ -64,33 +63,33 @@ export async function openMarketLong(
         params.leverage, 
         params.rpc
     );
-    ixns.push(...openLongIxns.ixns);
+    ixns.push(...openShortIxns.ixns);
 
     // Add stop loss if provided
     if (params.stopLossPrice !== undefined) {
-        const setStopLossLongIx = await getSetStopLossLongIx({
+        const setStopLossShortIx = await getSetStopLossShortIx({
             owner: params.wallet,
-            cortex: openLongIxns.cortex,
-            pool: openLongIxns.pool,
-            position: openLongIxns.positionAddress,
-            custody: openLongIxns.principalCustodyObj.address,
+            cortex: openShortIxns.cortex,
+            pool: openShortIxns.pool,
+            position: openShortIxns.positionAddress,
+            custody: openShortIxns.principalCustodyObj.address,
             stopLossLimitPrice: params.stopLossPrice,
             closePositionPrice: null
         });
-        ixns.push(setStopLossLongIx);
+        ixns.push(setStopLossShortIx);
     }
 
     // Add take profit if provided
     if (params.takeProfitPrice !== undefined) {
-        const takeProfitLongIx = await getTakeProfitLongIx({
+        const takeProfitShortIx = await getTakeProfitShortIx({
             owner: params.wallet,
-            cortex: openLongIxns.cortex,
-            pool: openLongIxns.pool,
-            position: openLongIxns.positionAddress,
-            custody: openLongIxns.principalCustodyObj.address,
+            cortex: openShortIxns.cortex,
+            pool: openShortIxns.pool,
+            position: openShortIxns.positionAddress,
+            custody: openShortIxns.principalCustodyObj.address,
             takeProfitLimitPrice: params.takeProfitPrice,
         });
-        ixns.push(takeProfitLongIx);
+        ixns.push(takeProfitShortIx);
     }
 
     // send transaction with jito
@@ -105,7 +104,6 @@ export async function openMarketLong(
 
     return {
         txSignature: sendJitoResult,
-        positionAddress: openLongIxns.positionAddress
+        positionAddress: openShortIxns.positionAddress
     };
 }
-

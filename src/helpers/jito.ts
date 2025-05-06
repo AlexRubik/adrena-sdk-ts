@@ -161,7 +161,7 @@ export async function sendTransactionWithJito(
     );
     console.log("Transaction message created");
 
-    const computeUnitsEstimate = await getCUEst(transactionMessage, rpc);
+    const computeUnitsEstimate = send ? await getCUEst(transactionMessage, rpc) : 500000;
     console.log("Setting compute units to ", computeUnitsEstimate);
 
     // Only add compute unit limit, no price instruction
