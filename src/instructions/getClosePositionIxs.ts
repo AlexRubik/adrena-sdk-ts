@@ -94,7 +94,8 @@ export async function getClosePositionLongIxs(params: ClosePositionLongParams) {
                 signature: new Uint8Array(oraclePrices.signatureByteArray),
                 recoveryId: oraclePrices.recoveryId
             } : null,
-            percentage: new BN(1000000), // 100 * 10000 = 100% in BPS with 2 more decimals
+            // percentage allows us to partially close a position
+            percentage: new BN(1000000), // This is the percentage of the position to close, 100 * 10000 = 100% in BPS with 2 more decimals
             custodyTokenAccount: principalCustodyTokenAccount,
             receivingAccount: ataIxForPrincipal.associatedAccount,
             adrenaProgram: ADRENA_PROGRAM_ADDRESS,
@@ -173,9 +174,7 @@ export async function getClosePositionShortIxs(params: ClosePositionShortParams)
             transferAuthority: transferAuthAddress,
             position: positionAddress,
             pool: poolPda,
-            collateralCustody: collateralCustody.address, // TODO: remove the ignores and fix things
-
-            collateralCustodyOracle: collateralCustodyOracle,
+            collateralCustody: collateralCustody.address,
             collateralCustodyTokenAccount: collateralCustodyTokenAccount,
             custody: principalCustody.address,
             oracle: oraclePda,
