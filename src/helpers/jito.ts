@@ -172,17 +172,51 @@ export async function sendTransactionWithJito(
 
     // Add lookup tables if provided
     if (lutAddresses) {
+        console.log("Adding lookup tables");
         const lutAccounts = await fetchLookupTables(lutAddresses.map(address), rpc);
         DEBUG ? console.log("LUT accounts:", lutAccounts) : null;
         finalTransactionMessage = compressTransactionMessageUsingAddressLookupTables(
             finalTransactionMessage,
             lutAccounts
         );
+        console.log("Lookup tables added");
     }
 
-    const signedTxn = await signTransactionMessageWithSigners(finalTransactionMessage);
-    const base64Txn = getBase64EncodedWireTransaction(signedTxn);
+    // log only problematic instructions
+    finalTransactionMessage.instructions.forEach((ixn, index) => {
+        let hasProblem = false;
+        let problemDetails = [];
+        
+        if (!ixn.accounts) {
+            hasProblem = true;
+            problemDetails.push('No accounts defined');
+        } else {
+            ixn.accounts.forEach((acc, accIndex) => {
+                if (typeof acc.address === 'object' && acc.address !== null) {
+                    hasProblem = true;
+                    problemDetails.push(`Account ${accIndex}: address is object instead of string`);
+                }
+            });
+        }
+        
+        if (hasProblem) {
+            console.log(`PROBLEMATIC INSTRUCTION ${index}:`, {
+                programAddress: ixn.programAddress,
+                problemDetails,
+                accounts: ixn.accounts?.map((acc, accIndex) => ({
+                    index: accIndex,
+                    address: typeof acc.address === 'object' ? 'OBJECT: ' + JSON.stringify(acc.address) : acc.address,
+                    role: acc.role
+                }))
+            });
+        }
+    });
 
+    console.log("Signing transaction");
+    const signedTxn = await signTransactionMessageWithSigners(finalTransactionMessage);
+    console.log("Transaction signed");
+    const base64Txn = getBase64EncodedWireTransaction(signedTxn);
+    console.log("Base64 transaction created");
     console.log(`Base64 transaction:\n${base64Txn}\n`);
 
     console.log(`Paste this long base64 string into this transaction inspector to simulate/analyze the transaction:`);

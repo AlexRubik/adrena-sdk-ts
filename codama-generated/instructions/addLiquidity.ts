@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   getU64Decoder,
@@ -26,6 +28,8 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
@@ -34,6 +38,12 @@ import {
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const ADD_LIQUIDITY_DISCRIMINATOR = new Uint8Array([
   181, 157, 89, 67, 143, 182, 52, 72,
@@ -55,7 +65,7 @@ export type AddLiquidityInstruction<
   TAccountCortex extends string | IAccountMeta<string> = string,
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountCustody extends string | IAccountMeta<string> = string,
-  TAccountCustodyOracle extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TAccountCustodyTokenAccount extends string | IAccountMeta<string> = string,
   TAccountLpTokenMint extends string | IAccountMeta<string> = string,
   TAccountTokenProgram extends
@@ -92,9 +102,9 @@ export type AddLiquidityInstruction<
       TAccountCustody extends string
         ? WritableAccount<TAccountCustody>
         : TAccountCustody,
-      TAccountCustodyOracle extends string
-        ? ReadonlyAccount<TAccountCustodyOracle>
-        : TAccountCustodyOracle,
+      TAccountOracle extends string
+        ? WritableAccount<TAccountOracle>
+        : TAccountOracle,
       TAccountCustodyTokenAccount extends string
         ? WritableAccount<TAccountCustodyTokenAccount>
         : TAccountCustodyTokenAccount,
@@ -115,11 +125,13 @@ export type AddLiquidityInstructionData = {
   discriminator: ReadonlyUint8Array;
   amountIn: bigint;
   minLpAmountOut: bigint;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
 export type AddLiquidityInstructionDataArgs = {
   amountIn: number | bigint;
   minLpAmountOut: number | bigint;
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
 };
 
 export function getAddLiquidityInstructionDataEncoder(): Encoder<AddLiquidityInstructionDataArgs> {
@@ -128,6 +140,7 @@ export function getAddLiquidityInstructionDataEncoder(): Encoder<AddLiquidityIns
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['amountIn', getU64Encoder()],
       ['minLpAmountOut', getU64Encoder()],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
     ]),
     (value) => ({ ...value, discriminator: ADD_LIQUIDITY_DISCRIMINATOR })
   );
@@ -138,6 +151,7 @@ export function getAddLiquidityInstructionDataDecoder(): Decoder<AddLiquidityIns
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['amountIn', getU64Decoder()],
     ['minLpAmountOut', getU64Decoder()],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -160,7 +174,7 @@ export type AddLiquidityInput<
   TAccountCortex extends string = string,
   TAccountPool extends string = string,
   TAccountCustody extends string = string,
-  TAccountCustodyOracle extends string = string,
+  TAccountOracle extends string = string,
   TAccountCustodyTokenAccount extends string = string,
   TAccountLpTokenMint extends string = string,
   TAccountTokenProgram extends string = string,
@@ -183,7 +197,7 @@ export type AddLiquidityInput<
   /** #8 */
   custody: Address<TAccountCustody>;
   /** #9 */
-  custodyOracle: Address<TAccountCustodyOracle>;
+  oracle: Address<TAccountOracle>;
   /** #10 */
   custodyTokenAccount: Address<TAccountCustodyTokenAccount>;
   /** #11 */
@@ -194,6 +208,7 @@ export type AddLiquidityInput<
   adrenaProgram: Address<TAccountAdrenaProgram>;
   amountIn: AddLiquidityInstructionDataArgs['amountIn'];
   minLpAmountOut: AddLiquidityInstructionDataArgs['minLpAmountOut'];
+  oraclePrices: AddLiquidityInstructionDataArgs['oraclePrices'];
 };
 
 export function getAddLiquidityInstruction<
@@ -205,7 +220,7 @@ export function getAddLiquidityInstruction<
   TAccountCortex extends string,
   TAccountPool extends string,
   TAccountCustody extends string,
-  TAccountCustodyOracle extends string,
+  TAccountOracle extends string,
   TAccountCustodyTokenAccount extends string,
   TAccountLpTokenMint extends string,
   TAccountTokenProgram extends string,
@@ -221,7 +236,7 @@ export function getAddLiquidityInstruction<
     TAccountCortex,
     TAccountPool,
     TAccountCustody,
-    TAccountCustodyOracle,
+    TAccountOracle,
     TAccountCustodyTokenAccount,
     TAccountLpTokenMint,
     TAccountTokenProgram,
@@ -238,7 +253,7 @@ export function getAddLiquidityInstruction<
   TAccountCortex,
   TAccountPool,
   TAccountCustody,
-  TAccountCustodyOracle,
+  TAccountOracle,
   TAccountCustodyTokenAccount,
   TAccountLpTokenMint,
   TAccountTokenProgram,
@@ -260,7 +275,7 @@ export function getAddLiquidityInstruction<
     cortex: { value: input.cortex ?? null, isWritable: true },
     pool: { value: input.pool ?? null, isWritable: true },
     custody: { value: input.custody ?? null, isWritable: true },
-    custodyOracle: { value: input.custodyOracle ?? null, isWritable: false },
+    oracle: { value: input.oracle ?? null, isWritable: true },
     custodyTokenAccount: {
       value: input.custodyTokenAccount ?? null,
       isWritable: true,
@@ -294,7 +309,7 @@ export function getAddLiquidityInstruction<
       getAccountMeta(accounts.cortex),
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.custody),
-      getAccountMeta(accounts.custodyOracle),
+      getAccountMeta(accounts.oracle),
       getAccountMeta(accounts.custodyTokenAccount),
       getAccountMeta(accounts.lpTokenMint),
       getAccountMeta(accounts.tokenProgram),
@@ -314,7 +329,7 @@ export function getAddLiquidityInstruction<
     TAccountCortex,
     TAccountPool,
     TAccountCustody,
-    TAccountCustodyOracle,
+    TAccountOracle,
     TAccountCustodyTokenAccount,
     TAccountLpTokenMint,
     TAccountTokenProgram,
@@ -347,7 +362,7 @@ export type ParsedAddLiquidityInstruction<
     /** #8 */
     custody: TAccountMetas[7];
     /** #9 */
-    custodyOracle: TAccountMetas[8];
+    oracle: TAccountMetas[8];
     /** #10 */
     custodyTokenAccount: TAccountMetas[9];
     /** #11 */
@@ -389,7 +404,7 @@ export function parseAddLiquidityInstruction<
       cortex: getNextAccount(),
       pool: getNextAccount(),
       custody: getNextAccount(),
-      custodyOracle: getNextAccount(),
+      oracle: getNextAccount(),
       custodyTokenAccount: getNextAccount(),
       lpTokenMint: getNextAccount(),
       tokenProgram: getNextAccount(),

@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   getU32Decoder,
@@ -28,6 +30,8 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlySignerAccount,
   type ReadonlyUint8Array,
@@ -37,6 +41,12 @@ import {
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const OPEN_POSITION_LONG_DISCRIMINATOR = new Uint8Array([
   224, 114, 146, 60, 127, 166, 244, 56,
@@ -59,8 +69,7 @@ export type OpenPositionLongInstruction<
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountPosition extends string | IAccountMeta<string> = string,
   TAccountCustody extends string | IAccountMeta<string> = string,
-  TAccountCustodyOracle extends string | IAccountMeta<string> = string,
-  TAccountCustodyTradeOracle extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TAccountCustodyTokenAccount extends string | IAccountMeta<string> = string,
   TAccountSystemProgram extends
     | string
@@ -103,12 +112,9 @@ export type OpenPositionLongInstruction<
       TAccountCustody extends string
         ? WritableAccount<TAccountCustody>
         : TAccountCustody,
-      TAccountCustodyOracle extends string
-        ? ReadonlyAccount<TAccountCustodyOracle>
-        : TAccountCustodyOracle,
-      TAccountCustodyTradeOracle extends string
-        ? ReadonlyAccount<TAccountCustodyTradeOracle>
-        : TAccountCustodyTradeOracle,
+      TAccountOracle extends string
+        ? WritableAccount<TAccountOracle>
+        : TAccountOracle,
       TAccountCustodyTokenAccount extends string
         ? WritableAccount<TAccountCustodyTokenAccount>
         : TAccountCustodyTokenAccount,
@@ -130,12 +136,14 @@ export type OpenPositionLongInstructionData = {
   price: bigint;
   collateral: bigint;
   leverage: number;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
 export type OpenPositionLongInstructionDataArgs = {
   price: number | bigint;
   collateral: number | bigint;
   leverage: number;
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
 };
 
 export function getOpenPositionLongInstructionDataEncoder(): Encoder<OpenPositionLongInstructionDataArgs> {
@@ -145,6 +153,7 @@ export function getOpenPositionLongInstructionDataEncoder(): Encoder<OpenPositio
       ['price', getU64Encoder()],
       ['collateral', getU64Encoder()],
       ['leverage', getU32Encoder()],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
     ]),
     (value) => ({ ...value, discriminator: OPEN_POSITION_LONG_DISCRIMINATOR })
   );
@@ -156,6 +165,7 @@ export function getOpenPositionLongInstructionDataDecoder(): Decoder<OpenPositio
     ['price', getU64Decoder()],
     ['collateral', getU64Decoder()],
     ['leverage', getU32Decoder()],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -179,8 +189,7 @@ export type OpenPositionLongInput<
   TAccountPool extends string = string,
   TAccountPosition extends string = string,
   TAccountCustody extends string = string,
-  TAccountCustodyOracle extends string = string,
-  TAccountCustodyTradeOracle extends string = string,
+  TAccountOracle extends string = string,
   TAccountCustodyTokenAccount extends string = string,
   TAccountSystemProgram extends string = string,
   TAccountTokenProgram extends string = string,
@@ -209,20 +218,19 @@ export type OpenPositionLongInput<
   /** #9 */
   custody: Address<TAccountCustody>;
   /** #10 */
-  custodyOracle: Address<TAccountCustodyOracle>;
+  oracle: Address<TAccountOracle>;
   /** #11 */
-  custodyTradeOracle: Address<TAccountCustodyTradeOracle>;
-  /** #12 */
   custodyTokenAccount: Address<TAccountCustodyTokenAccount>;
-  /** #13 */
+  /** #12 */
   systemProgram?: Address<TAccountSystemProgram>;
-  /** #14 */
+  /** #13 */
   tokenProgram?: Address<TAccountTokenProgram>;
-  /** #15 */
+  /** #14 */
   adrenaProgram: Address<TAccountAdrenaProgram>;
   price: OpenPositionLongInstructionDataArgs['price'];
   collateral: OpenPositionLongInstructionDataArgs['collateral'];
   leverage: OpenPositionLongInstructionDataArgs['leverage'];
+  oraclePrices: OpenPositionLongInstructionDataArgs['oraclePrices'];
 };
 
 export function getOpenPositionLongInstruction<
@@ -235,8 +243,7 @@ export function getOpenPositionLongInstruction<
   TAccountPool extends string,
   TAccountPosition extends string,
   TAccountCustody extends string,
-  TAccountCustodyOracle extends string,
-  TAccountCustodyTradeOracle extends string,
+  TAccountOracle extends string,
   TAccountCustodyTokenAccount extends string,
   TAccountSystemProgram extends string,
   TAccountTokenProgram extends string,
@@ -253,8 +260,7 @@ export function getOpenPositionLongInstruction<
     TAccountPool,
     TAccountPosition,
     TAccountCustody,
-    TAccountCustodyOracle,
-    TAccountCustodyTradeOracle,
+    TAccountOracle,
     TAccountCustodyTokenAccount,
     TAccountSystemProgram,
     TAccountTokenProgram,
@@ -272,8 +278,7 @@ export function getOpenPositionLongInstruction<
   TAccountPool,
   TAccountPosition,
   TAccountCustody,
-  TAccountCustodyOracle,
-  TAccountCustodyTradeOracle,
+  TAccountOracle,
   TAccountCustodyTokenAccount,
   TAccountSystemProgram,
   TAccountTokenProgram,
@@ -296,11 +301,7 @@ export function getOpenPositionLongInstruction<
     pool: { value: input.pool ?? null, isWritable: true },
     position: { value: input.position ?? null, isWritable: true },
     custody: { value: input.custody ?? null, isWritable: true },
-    custodyOracle: { value: input.custodyOracle ?? null, isWritable: false },
-    custodyTradeOracle: {
-      value: input.custodyTradeOracle ?? null,
-      isWritable: false,
-    },
+    oracle: { value: input.oracle ?? null, isWritable: true },
     custodyTokenAccount: {
       value: input.custodyTokenAccount ?? null,
       isWritable: true,
@@ -339,8 +340,7 @@ export function getOpenPositionLongInstruction<
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.position),
       getAccountMeta(accounts.custody),
-      getAccountMeta(accounts.custodyOracle),
-      getAccountMeta(accounts.custodyTradeOracle),
+      getAccountMeta(accounts.oracle),
       getAccountMeta(accounts.custodyTokenAccount),
       getAccountMeta(accounts.systemProgram),
       getAccountMeta(accounts.tokenProgram),
@@ -361,8 +361,7 @@ export function getOpenPositionLongInstruction<
     TAccountPool,
     TAccountPosition,
     TAccountCustody,
-    TAccountCustodyOracle,
-    TAccountCustodyTradeOracle,
+    TAccountOracle,
     TAccountCustodyTokenAccount,
     TAccountSystemProgram,
     TAccountTokenProgram,
@@ -402,17 +401,15 @@ export type ParsedOpenPositionLongInstruction<
     /** #9 */
     custody: TAccountMetas[8];
     /** #10 */
-    custodyOracle: TAccountMetas[9];
+    oracle: TAccountMetas[9];
     /** #11 */
-    custodyTradeOracle: TAccountMetas[10];
+    custodyTokenAccount: TAccountMetas[10];
     /** #12 */
-    custodyTokenAccount: TAccountMetas[11];
+    systemProgram: TAccountMetas[11];
     /** #13 */
-    systemProgram: TAccountMetas[12];
+    tokenProgram: TAccountMetas[12];
     /** #14 */
-    tokenProgram: TAccountMetas[13];
-    /** #15 */
-    adrenaProgram: TAccountMetas[14];
+    adrenaProgram: TAccountMetas[13];
   };
   data: OpenPositionLongInstructionData;
 };
@@ -425,7 +422,7 @@ export function parseOpenPositionLongInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedOpenPositionLongInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 15) {
+  if (instruction.accounts.length < 14) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -447,8 +444,7 @@ export function parseOpenPositionLongInstruction<
       pool: getNextAccount(),
       position: getNextAccount(),
       custody: getNextAccount(),
-      custodyOracle: getNextAccount(),
-      custodyTradeOracle: getNextAccount(),
+      oracle: getNextAccount(),
       custodyTokenAccount: getNextAccount(),
       systemProgram: getNextAccount(),
       tokenProgram: getNextAccount(),

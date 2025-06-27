@@ -102,7 +102,10 @@ export async function buildInitUserProfileIx(wallet: TransactionSigner) {
         referrerProfile,
         systemProgram,
         title,
-        user: wallet,
+        user: wallet.address,
+        caller: wallet,
+        team: 0,
+        continent: 0,
         userNickname: userNicknamePda[0],
         userProfile: userPda[0],
     }
@@ -123,6 +126,8 @@ export async function buildEditUserProfileIx(wallet: TransactionSigner) {
     const ix = getEditUserProfileInstruction({
         payer: wallet,
         user: wallet,
+        team: 0,
+        continent: 0,
         userProfile: userPda[0],
         profilePicture,
         wallpaper,

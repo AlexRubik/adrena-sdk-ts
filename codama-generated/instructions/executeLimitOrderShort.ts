@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   getU64Decoder,
@@ -26,6 +28,8 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
@@ -34,6 +38,12 @@ import {
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const EXECUTE_LIMIT_ORDER_SHORT_DISCRIMINATOR = new Uint8Array([
   160, 217, 227, 39, 232, 61, 21, 253,
@@ -51,11 +61,8 @@ export type ExecuteLimitOrderShortInstruction<
   TAccountCaller extends string | IAccountMeta<string> = string,
   TAccountCollateralEscrow extends string | IAccountMeta<string> = string,
   TAccountCustody extends string | IAccountMeta<string> = string,
-  TAccountCustodyTradeOracle extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TAccountCollateralCustody extends string | IAccountMeta<string> = string,
-  TAccountCollateralCustodyOracle extends
-    | string
-    | IAccountMeta<string> = string,
   TAccountCollateralCustodyTokenAccount extends
     | string
     | IAccountMeta<string> = string,
@@ -89,15 +96,12 @@ export type ExecuteLimitOrderShortInstruction<
       TAccountCustody extends string
         ? WritableAccount<TAccountCustody>
         : TAccountCustody,
-      TAccountCustodyTradeOracle extends string
-        ? ReadonlyAccount<TAccountCustodyTradeOracle>
-        : TAccountCustodyTradeOracle,
+      TAccountOracle extends string
+        ? WritableAccount<TAccountOracle>
+        : TAccountOracle,
       TAccountCollateralCustody extends string
         ? WritableAccount<TAccountCollateralCustody>
         : TAccountCollateralCustody,
-      TAccountCollateralCustodyOracle extends string
-        ? ReadonlyAccount<TAccountCollateralCustodyOracle>
-        : TAccountCollateralCustodyOracle,
       TAccountCollateralCustodyTokenAccount extends string
         ? WritableAccount<TAccountCollateralCustodyTokenAccount>
         : TAccountCollateralCustodyTokenAccount,
@@ -132,15 +136,20 @@ export type ExecuteLimitOrderShortInstruction<
 export type ExecuteLimitOrderShortInstructionData = {
   discriminator: ReadonlyUint8Array;
   id: bigint;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
-export type ExecuteLimitOrderShortInstructionDataArgs = { id: number | bigint };
+export type ExecuteLimitOrderShortInstructionDataArgs = {
+  id: number | bigint;
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
+};
 
 export function getExecuteLimitOrderShortInstructionDataEncoder(): Encoder<ExecuteLimitOrderShortInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['id', getU64Encoder()],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
     ]),
     (value) => ({
       ...value,
@@ -153,6 +162,7 @@ export function getExecuteLimitOrderShortInstructionDataDecoder(): Decoder<Execu
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['id', getU64Decoder()],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -171,9 +181,8 @@ export type ExecuteLimitOrderShortInput<
   TAccountCaller extends string = string,
   TAccountCollateralEscrow extends string = string,
   TAccountCustody extends string = string,
-  TAccountCustodyTradeOracle extends string = string,
+  TAccountOracle extends string = string,
   TAccountCollateralCustody extends string = string,
-  TAccountCollateralCustodyOracle extends string = string,
   TAccountCollateralCustodyTokenAccount extends string = string,
   TAccountTransferAuthority extends string = string,
   TAccountCortex extends string = string,
@@ -193,30 +202,29 @@ export type ExecuteLimitOrderShortInput<
   /** #4 */
   custody: Address<TAccountCustody>;
   /** #5 */
-  custodyTradeOracle: Address<TAccountCustodyTradeOracle>;
+  oracle: Address<TAccountOracle>;
   /** #6 */
   collateralCustody: Address<TAccountCollateralCustody>;
   /** #7 */
-  collateralCustodyOracle: Address<TAccountCollateralCustodyOracle>;
-  /** #8 */
   collateralCustodyTokenAccount: Address<TAccountCollateralCustodyTokenAccount>;
-  /** #9 */
+  /** #8 */
   transferAuthority: Address<TAccountTransferAuthority>;
-  /** #10 */
+  /** #9 */
   cortex: Address<TAccountCortex>;
-  /** #11 */
+  /** #10 */
   pool: Address<TAccountPool>;
-  /** #12 */
+  /** #11 */
   position: Address<TAccountPosition>;
-  /** #13 */
+  /** #12 */
   limitOrderBook: Address<TAccountLimitOrderBook>;
-  /** #14 */
+  /** #13 */
   systemProgram?: Address<TAccountSystemProgram>;
-  /** #15 */
+  /** #14 */
   tokenProgram?: Address<TAccountTokenProgram>;
-  /** #16 */
+  /** #15 */
   adrenaProgram: Address<TAccountAdrenaProgram>;
   id: ExecuteLimitOrderShortInstructionDataArgs['id'];
+  oraclePrices: ExecuteLimitOrderShortInstructionDataArgs['oraclePrices'];
 };
 
 export function getExecuteLimitOrderShortInstruction<
@@ -224,9 +232,8 @@ export function getExecuteLimitOrderShortInstruction<
   TAccountCaller extends string,
   TAccountCollateralEscrow extends string,
   TAccountCustody extends string,
-  TAccountCustodyTradeOracle extends string,
+  TAccountOracle extends string,
   TAccountCollateralCustody extends string,
-  TAccountCollateralCustodyOracle extends string,
   TAccountCollateralCustodyTokenAccount extends string,
   TAccountTransferAuthority extends string,
   TAccountCortex extends string,
@@ -243,9 +250,8 @@ export function getExecuteLimitOrderShortInstruction<
     TAccountCaller,
     TAccountCollateralEscrow,
     TAccountCustody,
-    TAccountCustodyTradeOracle,
+    TAccountOracle,
     TAccountCollateralCustody,
-    TAccountCollateralCustodyOracle,
     TAccountCollateralCustodyTokenAccount,
     TAccountTransferAuthority,
     TAccountCortex,
@@ -263,9 +269,8 @@ export function getExecuteLimitOrderShortInstruction<
   TAccountCaller,
   TAccountCollateralEscrow,
   TAccountCustody,
-  TAccountCustodyTradeOracle,
+  TAccountOracle,
   TAccountCollateralCustody,
-  TAccountCollateralCustodyOracle,
   TAccountCollateralCustodyTokenAccount,
   TAccountTransferAuthority,
   TAccountCortex,
@@ -288,17 +293,10 @@ export function getExecuteLimitOrderShortInstruction<
       isWritable: true,
     },
     custody: { value: input.custody ?? null, isWritable: true },
-    custodyTradeOracle: {
-      value: input.custodyTradeOracle ?? null,
-      isWritable: false,
-    },
+    oracle: { value: input.oracle ?? null, isWritable: true },
     collateralCustody: {
       value: input.collateralCustody ?? null,
       isWritable: true,
-    },
-    collateralCustodyOracle: {
-      value: input.collateralCustodyOracle ?? null,
-      isWritable: false,
     },
     collateralCustodyTokenAccount: {
       value: input.collateralCustodyTokenAccount ?? null,
@@ -341,9 +339,8 @@ export function getExecuteLimitOrderShortInstruction<
       getAccountMeta(accounts.caller),
       getAccountMeta(accounts.collateralEscrow),
       getAccountMeta(accounts.custody),
-      getAccountMeta(accounts.custodyTradeOracle),
+      getAccountMeta(accounts.oracle),
       getAccountMeta(accounts.collateralCustody),
-      getAccountMeta(accounts.collateralCustodyOracle),
       getAccountMeta(accounts.collateralCustodyTokenAccount),
       getAccountMeta(accounts.transferAuthority),
       getAccountMeta(accounts.cortex),
@@ -364,9 +361,8 @@ export function getExecuteLimitOrderShortInstruction<
     TAccountCaller,
     TAccountCollateralEscrow,
     TAccountCustody,
-    TAccountCustodyTradeOracle,
+    TAccountOracle,
     TAccountCollateralCustody,
-    TAccountCollateralCustodyOracle,
     TAccountCollateralCustodyTokenAccount,
     TAccountTransferAuthority,
     TAccountCortex,
@@ -396,29 +392,27 @@ export type ParsedExecuteLimitOrderShortInstruction<
     /** #4 */
     custody: TAccountMetas[3];
     /** #5 */
-    custodyTradeOracle: TAccountMetas[4];
+    oracle: TAccountMetas[4];
     /** #6 */
     collateralCustody: TAccountMetas[5];
     /** #7 */
-    collateralCustodyOracle: TAccountMetas[6];
+    collateralCustodyTokenAccount: TAccountMetas[6];
     /** #8 */
-    collateralCustodyTokenAccount: TAccountMetas[7];
+    transferAuthority: TAccountMetas[7];
     /** #9 */
-    transferAuthority: TAccountMetas[8];
+    cortex: TAccountMetas[8];
     /** #10 */
-    cortex: TAccountMetas[9];
+    pool: TAccountMetas[9];
     /** #11 */
-    pool: TAccountMetas[10];
+    position: TAccountMetas[10];
     /** #12 */
-    position: TAccountMetas[11];
+    limitOrderBook: TAccountMetas[11];
     /** #13 */
-    limitOrderBook: TAccountMetas[12];
+    systemProgram: TAccountMetas[12];
     /** #14 */
-    systemProgram: TAccountMetas[13];
+    tokenProgram: TAccountMetas[13];
     /** #15 */
-    tokenProgram: TAccountMetas[14];
-    /** #16 */
-    adrenaProgram: TAccountMetas[15];
+    adrenaProgram: TAccountMetas[14];
   };
   data: ExecuteLimitOrderShortInstructionData;
 };
@@ -431,7 +425,7 @@ export function parseExecuteLimitOrderShortInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedExecuteLimitOrderShortInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 16) {
+  if (instruction.accounts.length < 15) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -448,9 +442,8 @@ export function parseExecuteLimitOrderShortInstruction<
       caller: getNextAccount(),
       collateralEscrow: getNextAccount(),
       custody: getNextAccount(),
-      custodyTradeOracle: getNextAccount(),
+      oracle: getNextAccount(),
       collateralCustody: getNextAccount(),
-      collateralCustodyOracle: getNextAccount(),
       collateralCustodyTokenAccount: getNextAccount(),
       transferAuthority: getNextAccount(),
       cortex: getNextAccount(),

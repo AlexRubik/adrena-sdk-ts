@@ -95,8 +95,8 @@
     // "noImplicitThis": true,                           /* Enable error reporting when 'this' is given the type 'any'. */
     // "useUnknownInCatchVariables": true,               /* Default catch clause variables as 'unknown' instead of 'any'. */
     // "alwaysStrict": true,                             /* Ensure 'use strict' is always emitted. */
-    "noUnusedLocals": true,                           /* Error on unused local variables */
-    "noUnusedParameters": true,                       /* Error on unused parameters */
+    "noUnusedLocals": false,                           /* Error on unused local variables */
+    "noUnusedParameters": false,                       /* Error on unused parameters */
     // "exactOptionalPropertyTypes": true,               /* Interpret optional property types as written, rather than adding 'undefined'. */
     "noImplicitReturns": true,                        /* Error on implicit returns */
     // "noFallthroughCasesInSwitch": true,               /* Enable error reporting for fallthrough cases in switch statements. */

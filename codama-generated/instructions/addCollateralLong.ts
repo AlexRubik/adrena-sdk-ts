@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   getU64Decoder,
@@ -26,6 +28,8 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
@@ -34,6 +38,12 @@ import {
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const ADD_COLLATERAL_LONG_DISCRIMINATOR = new Uint8Array([
   101, 191, 243, 208, 154, 22, 72, 19,
@@ -54,8 +64,7 @@ export type AddCollateralLongInstruction<
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountPosition extends string | IAccountMeta<string> = string,
   TAccountCustody extends string | IAccountMeta<string> = string,
-  TAccountCustodyOracle extends string | IAccountMeta<string> = string,
-  TAccountCustodyTradeOracle extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TAccountCustodyTokenAccount extends string | IAccountMeta<string> = string,
   TAccountTokenProgram extends
     | string
@@ -88,12 +97,9 @@ export type AddCollateralLongInstruction<
       TAccountCustody extends string
         ? WritableAccount<TAccountCustody>
         : TAccountCustody,
-      TAccountCustodyOracle extends string
-        ? ReadonlyAccount<TAccountCustodyOracle>
-        : TAccountCustodyOracle,
-      TAccountCustodyTradeOracle extends string
-        ? ReadonlyAccount<TAccountCustodyTradeOracle>
-        : TAccountCustodyTradeOracle,
+      TAccountOracle extends string
+        ? WritableAccount<TAccountOracle>
+        : TAccountOracle,
       TAccountCustodyTokenAccount extends string
         ? WritableAccount<TAccountCustodyTokenAccount>
         : TAccountCustodyTokenAccount,
@@ -110,10 +116,12 @@ export type AddCollateralLongInstruction<
 export type AddCollateralLongInstructionData = {
   discriminator: ReadonlyUint8Array;
   collateral: bigint;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
 export type AddCollateralLongInstructionDataArgs = {
   collateral: number | bigint;
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
 };
 
 export function getAddCollateralLongInstructionDataEncoder(): Encoder<AddCollateralLongInstructionDataArgs> {
@@ -121,6 +129,7 @@ export function getAddCollateralLongInstructionDataEncoder(): Encoder<AddCollate
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['collateral', getU64Encoder()],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
     ]),
     (value) => ({ ...value, discriminator: ADD_COLLATERAL_LONG_DISCRIMINATOR })
   );
@@ -130,6 +139,7 @@ export function getAddCollateralLongInstructionDataDecoder(): Decoder<AddCollate
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['collateral', getU64Decoder()],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -151,8 +161,7 @@ export type AddCollateralLongInput<
   TAccountPool extends string = string,
   TAccountPosition extends string = string,
   TAccountCustody extends string = string,
-  TAccountCustodyOracle extends string = string,
-  TAccountCustodyTradeOracle extends string = string,
+  TAccountOracle extends string = string,
   TAccountCustodyTokenAccount extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAdrenaProgram extends string = string,
@@ -172,16 +181,15 @@ export type AddCollateralLongInput<
   /** #7 */
   custody: Address<TAccountCustody>;
   /** #8 */
-  custodyOracle: Address<TAccountCustodyOracle>;
+  oracle: Address<TAccountOracle>;
   /** #9 */
-  custodyTradeOracle: Address<TAccountCustodyTradeOracle>;
-  /** #10 */
   custodyTokenAccount: Address<TAccountCustodyTokenAccount>;
-  /** #11 */
+  /** #10 */
   tokenProgram?: Address<TAccountTokenProgram>;
-  /** #12 */
+  /** #11 */
   adrenaProgram: Address<TAccountAdrenaProgram>;
   collateral: AddCollateralLongInstructionDataArgs['collateral'];
+  oraclePrices: AddCollateralLongInstructionDataArgs['oraclePrices'];
 };
 
 export function getAddCollateralLongInstruction<
@@ -192,8 +200,7 @@ export function getAddCollateralLongInstruction<
   TAccountPool extends string,
   TAccountPosition extends string,
   TAccountCustody extends string,
-  TAccountCustodyOracle extends string,
-  TAccountCustodyTradeOracle extends string,
+  TAccountOracle extends string,
   TAccountCustodyTokenAccount extends string,
   TAccountTokenProgram extends string,
   TAccountAdrenaProgram extends string,
@@ -207,8 +214,7 @@ export function getAddCollateralLongInstruction<
     TAccountPool,
     TAccountPosition,
     TAccountCustody,
-    TAccountCustodyOracle,
-    TAccountCustodyTradeOracle,
+    TAccountOracle,
     TAccountCustodyTokenAccount,
     TAccountTokenProgram,
     TAccountAdrenaProgram
@@ -223,8 +229,7 @@ export function getAddCollateralLongInstruction<
   TAccountPool,
   TAccountPosition,
   TAccountCustody,
-  TAccountCustodyOracle,
-  TAccountCustodyTradeOracle,
+  TAccountOracle,
   TAccountCustodyTokenAccount,
   TAccountTokenProgram,
   TAccountAdrenaProgram
@@ -244,11 +249,7 @@ export function getAddCollateralLongInstruction<
     pool: { value: input.pool ?? null, isWritable: true },
     position: { value: input.position ?? null, isWritable: true },
     custody: { value: input.custody ?? null, isWritable: true },
-    custodyOracle: { value: input.custodyOracle ?? null, isWritable: false },
-    custodyTradeOracle: {
-      value: input.custodyTradeOracle ?? null,
-      isWritable: false,
-    },
+    oracle: { value: input.oracle ?? null, isWritable: true },
     custodyTokenAccount: {
       value: input.custodyTokenAccount ?? null,
       isWritable: true,
@@ -280,8 +281,7 @@ export function getAddCollateralLongInstruction<
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.position),
       getAccountMeta(accounts.custody),
-      getAccountMeta(accounts.custodyOracle),
-      getAccountMeta(accounts.custodyTradeOracle),
+      getAccountMeta(accounts.oracle),
       getAccountMeta(accounts.custodyTokenAccount),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.adrenaProgram),
@@ -299,8 +299,7 @@ export function getAddCollateralLongInstruction<
     TAccountPool,
     TAccountPosition,
     TAccountCustody,
-    TAccountCustodyOracle,
-    TAccountCustodyTradeOracle,
+    TAccountOracle,
     TAccountCustodyTokenAccount,
     TAccountTokenProgram,
     TAccountAdrenaProgram
@@ -330,15 +329,13 @@ export type ParsedAddCollateralLongInstruction<
     /** #7 */
     custody: TAccountMetas[6];
     /** #8 */
-    custodyOracle: TAccountMetas[7];
+    oracle: TAccountMetas[7];
     /** #9 */
-    custodyTradeOracle: TAccountMetas[8];
+    custodyTokenAccount: TAccountMetas[8];
     /** #10 */
-    custodyTokenAccount: TAccountMetas[9];
+    tokenProgram: TAccountMetas[9];
     /** #11 */
-    tokenProgram: TAccountMetas[10];
-    /** #12 */
-    adrenaProgram: TAccountMetas[11];
+    adrenaProgram: TAccountMetas[10];
   };
   data: AddCollateralLongInstructionData;
 };
@@ -351,7 +348,7 @@ export function parseAddCollateralLongInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedAddCollateralLongInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 12) {
+  if (instruction.accounts.length < 11) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -371,8 +368,7 @@ export function parseAddCollateralLongInstruction<
       pool: getNextAccount(),
       position: getNextAccount(),
       custody: getNextAccount(),
-      custodyOracle: getNextAccount(),
-      custodyTradeOracle: getNextAccount(),
+      oracle: getNextAccount(),
       custodyTokenAccount: getNextAccount(),
       tokenProgram: getNextAccount(),
       adrenaProgram: getNextAccount(),

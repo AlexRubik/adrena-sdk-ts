@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   getU64Decoder,
@@ -25,11 +27,19 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const GET_SWAP_AMOUNT_AND_FEES_DISCRIMINATOR = new Uint8Array([
   247, 121, 40, 99, 35, 82, 100, 32,
@@ -46,11 +56,8 @@ export type GetSwapAmountAndFeesInstruction<
   TAccountCortex extends string | IAccountMeta<string> = string,
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountReceivingCustody extends string | IAccountMeta<string> = string,
-  TAccountReceivingCustodyOracle extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TAccountDispensingCustody extends string | IAccountMeta<string> = string,
-  TAccountDispensingCustodyOracle extends
-    | string
-    | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
   IInstructionWithData<Uint8Array> &
@@ -65,15 +72,12 @@ export type GetSwapAmountAndFeesInstruction<
       TAccountReceivingCustody extends string
         ? ReadonlyAccount<TAccountReceivingCustody>
         : TAccountReceivingCustody,
-      TAccountReceivingCustodyOracle extends string
-        ? ReadonlyAccount<TAccountReceivingCustodyOracle>
-        : TAccountReceivingCustodyOracle,
+      TAccountOracle extends string
+        ? ReadonlyAccount<TAccountOracle>
+        : TAccountOracle,
       TAccountDispensingCustody extends string
         ? ReadonlyAccount<TAccountDispensingCustody>
         : TAccountDispensingCustody,
-      TAccountDispensingCustodyOracle extends string
-        ? ReadonlyAccount<TAccountDispensingCustodyOracle>
-        : TAccountDispensingCustodyOracle,
       ...TRemainingAccounts,
     ]
   >;
@@ -81,10 +85,12 @@ export type GetSwapAmountAndFeesInstruction<
 export type GetSwapAmountAndFeesInstructionData = {
   discriminator: ReadonlyUint8Array;
   amountIn: bigint;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
 export type GetSwapAmountAndFeesInstructionDataArgs = {
   amountIn: number | bigint;
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
 };
 
 export function getGetSwapAmountAndFeesInstructionDataEncoder(): Encoder<GetSwapAmountAndFeesInstructionDataArgs> {
@@ -92,6 +98,7 @@ export function getGetSwapAmountAndFeesInstructionDataEncoder(): Encoder<GetSwap
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['amountIn', getU64Encoder()],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
     ]),
     (value) => ({
       ...value,
@@ -104,6 +111,7 @@ export function getGetSwapAmountAndFeesInstructionDataDecoder(): Decoder<GetSwap
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['amountIn', getU64Decoder()],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -121,9 +129,8 @@ export type GetSwapAmountAndFeesInput<
   TAccountCortex extends string = string,
   TAccountPool extends string = string,
   TAccountReceivingCustody extends string = string,
-  TAccountReceivingCustodyOracle extends string = string,
+  TAccountOracle extends string = string,
   TAccountDispensingCustody extends string = string,
-  TAccountDispensingCustodyOracle extends string = string,
 > = {
   /** #1 */
   cortex: Address<TAccountCortex>;
@@ -132,30 +139,27 @@ export type GetSwapAmountAndFeesInput<
   /** #3 */
   receivingCustody: Address<TAccountReceivingCustody>;
   /** #4 */
-  receivingCustodyOracle: Address<TAccountReceivingCustodyOracle>;
+  oracle: Address<TAccountOracle>;
   /** #5 */
   dispensingCustody: Address<TAccountDispensingCustody>;
-  /** #6 */
-  dispensingCustodyOracle: Address<TAccountDispensingCustodyOracle>;
   amountIn: GetSwapAmountAndFeesInstructionDataArgs['amountIn'];
+  oraclePrices: GetSwapAmountAndFeesInstructionDataArgs['oraclePrices'];
 };
 
 export function getGetSwapAmountAndFeesInstruction<
   TAccountCortex extends string,
   TAccountPool extends string,
   TAccountReceivingCustody extends string,
-  TAccountReceivingCustodyOracle extends string,
+  TAccountOracle extends string,
   TAccountDispensingCustody extends string,
-  TAccountDispensingCustodyOracle extends string,
   TProgramAddress extends Address = typeof ADRENA_PROGRAM_ADDRESS,
 >(
   input: GetSwapAmountAndFeesInput<
     TAccountCortex,
     TAccountPool,
     TAccountReceivingCustody,
-    TAccountReceivingCustodyOracle,
-    TAccountDispensingCustody,
-    TAccountDispensingCustodyOracle
+    TAccountOracle,
+    TAccountDispensingCustody
   >,
   config?: { programAddress?: TProgramAddress }
 ): GetSwapAmountAndFeesInstruction<
@@ -163,9 +167,8 @@ export function getGetSwapAmountAndFeesInstruction<
   TAccountCortex,
   TAccountPool,
   TAccountReceivingCustody,
-  TAccountReceivingCustodyOracle,
-  TAccountDispensingCustody,
-  TAccountDispensingCustodyOracle
+  TAccountOracle,
+  TAccountDispensingCustody
 > {
   // Program address.
   const programAddress = config?.programAddress ?? ADRENA_PROGRAM_ADDRESS;
@@ -178,16 +181,9 @@ export function getGetSwapAmountAndFeesInstruction<
       value: input.receivingCustody ?? null,
       isWritable: false,
     },
-    receivingCustodyOracle: {
-      value: input.receivingCustodyOracle ?? null,
-      isWritable: false,
-    },
+    oracle: { value: input.oracle ?? null, isWritable: false },
     dispensingCustody: {
       value: input.dispensingCustody ?? null,
-      isWritable: false,
-    },
-    dispensingCustodyOracle: {
-      value: input.dispensingCustodyOracle ?? null,
       isWritable: false,
     },
   };
@@ -205,9 +201,8 @@ export function getGetSwapAmountAndFeesInstruction<
       getAccountMeta(accounts.cortex),
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.receivingCustody),
-      getAccountMeta(accounts.receivingCustodyOracle),
+      getAccountMeta(accounts.oracle),
       getAccountMeta(accounts.dispensingCustody),
-      getAccountMeta(accounts.dispensingCustodyOracle),
     ],
     programAddress,
     data: getGetSwapAmountAndFeesInstructionDataEncoder().encode(
@@ -218,9 +213,8 @@ export function getGetSwapAmountAndFeesInstruction<
     TAccountCortex,
     TAccountPool,
     TAccountReceivingCustody,
-    TAccountReceivingCustodyOracle,
-    TAccountDispensingCustody,
-    TAccountDispensingCustodyOracle
+    TAccountOracle,
+    TAccountDispensingCustody
   >;
 
   return instruction;
@@ -239,11 +233,9 @@ export type ParsedGetSwapAmountAndFeesInstruction<
     /** #3 */
     receivingCustody: TAccountMetas[2];
     /** #4 */
-    receivingCustodyOracle: TAccountMetas[3];
+    oracle: TAccountMetas[3];
     /** #5 */
     dispensingCustody: TAccountMetas[4];
-    /** #6 */
-    dispensingCustodyOracle: TAccountMetas[5];
   };
   data: GetSwapAmountAndFeesInstructionData;
 };
@@ -256,7 +248,7 @@ export function parseGetSwapAmountAndFeesInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedGetSwapAmountAndFeesInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 6) {
+  if (instruction.accounts.length < 5) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -272,9 +264,8 @@ export function parseGetSwapAmountAndFeesInstruction<
       cortex: getNextAccount(),
       pool: getNextAccount(),
       receivingCustody: getNextAccount(),
-      receivingCustodyOracle: getNextAccount(),
+      oracle: getNextAccount(),
       dispensingCustody: getNextAccount(),
-      dispensingCustodyOracle: getNextAccount(),
     },
     data: getGetSwapAmountAndFeesInstructionDataDecoder().decode(
       instruction.data

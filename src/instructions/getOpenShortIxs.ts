@@ -1,10 +1,10 @@
 import { Account, Address, IInstruction, TransactionSigner } from "@solana/kit";
 import { Rpc } from "@solana/kit";
-import { PrincipalToken } from "../types";
+import { ChaosLabsPricesExtended, PrincipalToken } from "../types";
 import { SolanaRpcApi } from "@solana/kit";
 import { getOpenOrIncreasePositionWithSwapShortInstruction } from "../../codama-generated/instructions/openOrIncreasePositionWithSwapShort";
 import { CollateralToken } from "../types";
-import { fetchPoolUtil, getCortexPda, getCustodyByMint, getTransferAuthorityAddress, loadCustodies } from "../helpers/utils";
+import { fetchPoolUtil, getCortexPda, getCustodyByMint, getOraclePda, getTransferAuthorityAddress, loadCustodies } from "../helpers/utils";
 import { findCustodyAddress } from "../helpers/utils";
 import { findCustodyTokenAccountAddress } from "../helpers/utils";
 import { BPS, PRICE_DECIMALS, TOKEN_ADDRESSES, PRINCIPAL_ADDRESSES, ADRENA_PROGRAM_ID, TOKEN_PROGRAM_ID, SYSTEM_PROGRAM_ID } from "../helpers/constants";
@@ -14,6 +14,7 @@ import { Custody } from "../../codama-generated/accounts/custody";
 import { findATAAddress } from "../helpers/tokenHelpers";
 import { createAssociatedTokenAccountIx } from "../helpers/tokenHelpers";
 import { ADRENA_PROGRAM_ADDRESS } from "../../codama-generated/programs/adrena";
+import DataApiClient from "../clients/DataApiClient";
 
 export async function getOpenShortIxs(
     owner: TransactionSigner,
@@ -58,6 +59,7 @@ export async function getOpenShortIxs(
 
     const transferAuthAddress = (await getTransferAuthorityAddress())[0];
     const cortexPda = (await getCortexPda())[0];
+    const oraclePda = (await getOraclePda())[0];
 
     const custodies = await loadCustodies(pool.data, rpc);
 
@@ -102,6 +104,9 @@ export async function getOpenShortIxs(
 
     const priceAsBigInt = BigInt(Math.floor(priceWithSlippage * 10 ** PRICE_DECIMALS));
 
+    const oraclePrices: ChaosLabsPricesExtended | null =
+    await DataApiClient.getChaosLabsPrices();
+
     const openShortIx = getOpenOrIncreasePositionWithSwapShortInstruction(
         {
             owner: owner,
@@ -109,14 +114,12 @@ export async function getOpenShortIxs(
             fundingAccount: fundingAccount,
             collateralAccount: collateralAccount,
             receivingCustody: receivingCustodyAddress,
-            receivingCustodyOracle: receivingCustodyOracle,
+            oracle: oraclePda,
             receivingCustodyTokenAccount: receivingCustodyTokenAccount,
-            principalCustody: principalCustodyAddress,
-            principalCustodyTradeOracle: principalCustodyTradeOracle,
-            principalCustodyTokenAccount: principalCustodyTokenAccount,
             collateralCustody: collateralCustodyAddress,
-            collateralCustodyOracle: collateralCustodyOracle,
             collateralCustodyTokenAccount: collateralCustodyTokenAccount,
+            principalCustody: principalCustodyAddress,
+            principalCustodyTokenAccount: principalCustodyTokenAccount,
             transferAuthority: transferAuthAddress,
             cortex: cortexPda,
             pool: poolPda,
@@ -128,6 +131,15 @@ export async function getOpenShortIxs(
                 price: priceAsBigInt,
                 collateral: bigIntCollateralAmount,
                 leverage: bigIntLeverage,
+                oraclePrices: oraclePrices ? {
+                    prices: oraclePrices.prices.map(price => ({
+                        feedId: price.feedId,
+                        price: price.price.toNumber(),
+                        timestamp: price.timestamp.toNumber()
+                    })),
+                    signature: new Uint8Array(oraclePrices.signatureByteArray),
+                    recoveryId: oraclePrices.recoveryId
+                } : null
             }
         }
     );

@@ -8,6 +8,8 @@
 
 import {
   combineCodec,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   getU32Decoder,
@@ -17,18 +19,28 @@ import {
   type Codec,
   type Decoder,
   type Encoder,
+  type Option,
+  type OptionOrNullable,
 } from '@solana/kit';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '.';
 
 export type OpenPositionWithSwapParams = {
   price: bigint;
   collateral: bigint;
   leverage: number;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
 export type OpenPositionWithSwapParamsArgs = {
   price: number | bigint;
   collateral: number | bigint;
   leverage: number;
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
 };
 
 export function getOpenPositionWithSwapParamsEncoder(): Encoder<OpenPositionWithSwapParamsArgs> {
@@ -36,6 +48,7 @@ export function getOpenPositionWithSwapParamsEncoder(): Encoder<OpenPositionWith
     ['price', getU64Encoder()],
     ['collateral', getU64Encoder()],
     ['leverage', getU32Encoder()],
+    ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
   ]);
 }
 
@@ -44,6 +57,7 @@ export function getOpenPositionWithSwapParamsDecoder(): Decoder<OpenPositionWith
     ['price', getU64Decoder()],
     ['collateral', getU64Decoder()],
     ['leverage', getU32Decoder()],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 

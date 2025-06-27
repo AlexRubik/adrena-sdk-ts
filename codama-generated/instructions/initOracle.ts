@@ -10,10 +10,10 @@ import {
   combineCodec,
   fixDecoderSize,
   fixEncoderSize,
+  getArrayDecoder,
+  getArrayEncoder,
   getBytesDecoder,
   getBytesEncoder,
-  getOptionDecoder,
-  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   transformEncoder,
@@ -26,9 +26,8 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
-  type Option,
-  type OptionOrNullable,
   type ReadonlyAccount,
+  type ReadonlySignerAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
   type WritableAccount,
@@ -37,34 +36,41 @@ import {
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 import {
-  getChaosLabsBatchPricesDecoder,
-  getChaosLabsBatchPricesEncoder,
-  type ChaosLabsBatchPrices,
-  type ChaosLabsBatchPricesArgs,
+  getOraclePricesSetupDecoder,
+  getOraclePricesSetupEncoder,
+  type OraclePricesSetup,
+  type OraclePricesSetupArgs,
 } from '../types';
 
-export const UPDATE_POOL_AUM_DISCRIMINATOR = new Uint8Array([
-  10, 125, 230, 234, 157, 184, 236, 241,
+export const INIT_ORACLE_DISCRIMINATOR = new Uint8Array([
+  78, 100, 33, 183, 96, 207, 60, 91,
 ]);
 
-export function getUpdatePoolAumDiscriminatorBytes() {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(
-    UPDATE_POOL_AUM_DISCRIMINATOR
-  );
+export function getInitOracleDiscriminatorBytes() {
+  return fixEncoderSize(getBytesEncoder(), 8).encode(INIT_ORACLE_DISCRIMINATOR);
 }
 
-export type UpdatePoolAumInstruction<
+export type InitOracleInstruction<
   TProgram extends string = typeof ADRENA_PROGRAM_ADDRESS,
+  TAccountAdmin extends string | IAccountMeta<string> = string,
   TAccountPayer extends string | IAccountMeta<string> = string,
   TAccountCortex extends string | IAccountMeta<string> = string,
-  TAccountPool extends string | IAccountMeta<string> = string,
   TAccountOracle extends string | IAccountMeta<string> = string,
-  TAccountLpTokenMint extends string | IAccountMeta<string> = string,
+  TAccountSystemProgram extends
+    | string
+    | IAccountMeta<string> = '11111111111111111111111111111111',
+  TAccountTokenProgram extends
+    | string
+    | IAccountMeta<string> = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
   IInstructionWithData<Uint8Array> &
   IInstructionWithAccounts<
     [
+      TAccountAdmin extends string
+        ? ReadonlySignerAccount<TAccountAdmin> &
+            IAccountSignerMeta<TAccountAdmin>
+        : TAccountAdmin,
       TAccountPayer extends string
         ? WritableSignerAccount<TAccountPayer> &
             IAccountSignerMeta<TAccountPayer>
@@ -72,109 +78,116 @@ export type UpdatePoolAumInstruction<
       TAccountCortex extends string
         ? ReadonlyAccount<TAccountCortex>
         : TAccountCortex,
-      TAccountPool extends string
-        ? WritableAccount<TAccountPool>
-        : TAccountPool,
       TAccountOracle extends string
         ? WritableAccount<TAccountOracle>
         : TAccountOracle,
-      TAccountLpTokenMint extends string
-        ? ReadonlyAccount<TAccountLpTokenMint>
-        : TAccountLpTokenMint,
+      TAccountSystemProgram extends string
+        ? ReadonlyAccount<TAccountSystemProgram>
+        : TAccountSystemProgram,
+      TAccountTokenProgram extends string
+        ? ReadonlyAccount<TAccountTokenProgram>
+        : TAccountTokenProgram,
       ...TRemainingAccounts,
     ]
   >;
 
-export type UpdatePoolAumInstructionData = {
+export type InitOracleInstructionData = {
   discriminator: ReadonlyUint8Array;
-  oraclePrices: Option<ChaosLabsBatchPrices>;
+  oraclePrices: Array<OraclePricesSetup>;
 };
 
-export type UpdatePoolAumInstructionDataArgs = {
-  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
+export type InitOracleInstructionDataArgs = {
+  oraclePrices: Array<OraclePricesSetupArgs>;
 };
 
-export function getUpdatePoolAumInstructionDataEncoder(): Encoder<UpdatePoolAumInstructionDataArgs> {
+export function getInitOracleInstructionDataEncoder(): Encoder<InitOracleInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
-      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
+      ['oraclePrices', getArrayEncoder(getOraclePricesSetupEncoder())],
     ]),
-    (value) => ({ ...value, discriminator: UPDATE_POOL_AUM_DISCRIMINATOR })
+    (value) => ({ ...value, discriminator: INIT_ORACLE_DISCRIMINATOR })
   );
 }
 
-export function getUpdatePoolAumInstructionDataDecoder(): Decoder<UpdatePoolAumInstructionData> {
+export function getInitOracleInstructionDataDecoder(): Decoder<InitOracleInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
-    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
+    ['oraclePrices', getArrayDecoder(getOraclePricesSetupDecoder())],
   ]);
 }
 
-export function getUpdatePoolAumInstructionDataCodec(): Codec<
-  UpdatePoolAumInstructionDataArgs,
-  UpdatePoolAumInstructionData
+export function getInitOracleInstructionDataCodec(): Codec<
+  InitOracleInstructionDataArgs,
+  InitOracleInstructionData
 > {
   return combineCodec(
-    getUpdatePoolAumInstructionDataEncoder(),
-    getUpdatePoolAumInstructionDataDecoder()
+    getInitOracleInstructionDataEncoder(),
+    getInitOracleInstructionDataDecoder()
   );
 }
 
-export type UpdatePoolAumInput<
+export type InitOracleInput<
+  TAccountAdmin extends string = string,
   TAccountPayer extends string = string,
   TAccountCortex extends string = string,
-  TAccountPool extends string = string,
   TAccountOracle extends string = string,
-  TAccountLpTokenMint extends string = string,
+  TAccountSystemProgram extends string = string,
+  TAccountTokenProgram extends string = string,
 > = {
   /** #1 */
-  payer: TransactionSigner<TAccountPayer>;
+  admin: TransactionSigner<TAccountAdmin>;
   /** #2 */
-  cortex: Address<TAccountCortex>;
+  payer: TransactionSigner<TAccountPayer>;
   /** #3 */
-  pool: Address<TAccountPool>;
+  cortex: Address<TAccountCortex>;
   /** #4 */
   oracle: Address<TAccountOracle>;
   /** #5 */
-  lpTokenMint: Address<TAccountLpTokenMint>;
-  oraclePrices: UpdatePoolAumInstructionDataArgs['oraclePrices'];
+  systemProgram?: Address<TAccountSystemProgram>;
+  /** #6 */
+  tokenProgram?: Address<TAccountTokenProgram>;
+  oraclePrices: InitOracleInstructionDataArgs['oraclePrices'];
 };
 
-export function getUpdatePoolAumInstruction<
+export function getInitOracleInstruction<
+  TAccountAdmin extends string,
   TAccountPayer extends string,
   TAccountCortex extends string,
-  TAccountPool extends string,
   TAccountOracle extends string,
-  TAccountLpTokenMint extends string,
+  TAccountSystemProgram extends string,
+  TAccountTokenProgram extends string,
   TProgramAddress extends Address = typeof ADRENA_PROGRAM_ADDRESS,
 >(
-  input: UpdatePoolAumInput<
+  input: InitOracleInput<
+    TAccountAdmin,
     TAccountPayer,
     TAccountCortex,
-    TAccountPool,
     TAccountOracle,
-    TAccountLpTokenMint
+    TAccountSystemProgram,
+    TAccountTokenProgram
   >,
   config?: { programAddress?: TProgramAddress }
-): UpdatePoolAumInstruction<
+): InitOracleInstruction<
   TProgramAddress,
+  TAccountAdmin,
   TAccountPayer,
   TAccountCortex,
-  TAccountPool,
   TAccountOracle,
-  TAccountLpTokenMint
+  TAccountSystemProgram,
+  TAccountTokenProgram
 > {
   // Program address.
   const programAddress = config?.programAddress ?? ADRENA_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
+    admin: { value: input.admin ?? null, isWritable: false },
     payer: { value: input.payer ?? null, isWritable: true },
     cortex: { value: input.cortex ?? null, isWritable: false },
-    pool: { value: input.pool ?? null, isWritable: true },
     oracle: { value: input.oracle ?? null, isWritable: true },
-    lpTokenMint: { value: input.lpTokenMint ?? null, isWritable: false },
+    systemProgram: { value: input.systemProgram ?? null, isWritable: false },
+    tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -184,60 +197,74 @@ export function getUpdatePoolAumInstruction<
   // Original args.
   const args = { ...input };
 
+  // Resolve default values.
+  if (!accounts.systemProgram.value) {
+    accounts.systemProgram.value =
+      '11111111111111111111111111111111' as Address<'11111111111111111111111111111111'>;
+  }
+  if (!accounts.tokenProgram.value) {
+    accounts.tokenProgram.value =
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA' as Address<'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'>;
+  }
+
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
     accounts: [
+      getAccountMeta(accounts.admin),
       getAccountMeta(accounts.payer),
       getAccountMeta(accounts.cortex),
-      getAccountMeta(accounts.pool),
       getAccountMeta(accounts.oracle),
-      getAccountMeta(accounts.lpTokenMint),
+      getAccountMeta(accounts.systemProgram),
+      getAccountMeta(accounts.tokenProgram),
     ],
     programAddress,
-    data: getUpdatePoolAumInstructionDataEncoder().encode(
-      args as UpdatePoolAumInstructionDataArgs
+    data: getInitOracleInstructionDataEncoder().encode(
+      args as InitOracleInstructionDataArgs
     ),
-  } as UpdatePoolAumInstruction<
+  } as InitOracleInstruction<
     TProgramAddress,
+    TAccountAdmin,
     TAccountPayer,
     TAccountCortex,
-    TAccountPool,
     TAccountOracle,
-    TAccountLpTokenMint
+    TAccountSystemProgram,
+    TAccountTokenProgram
   >;
 
   return instruction;
 }
 
-export type ParsedUpdatePoolAumInstruction<
+export type ParsedInitOracleInstruction<
   TProgram extends string = typeof ADRENA_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
     /** #1 */
-    payer: TAccountMetas[0];
+    admin: TAccountMetas[0];
     /** #2 */
-    cortex: TAccountMetas[1];
+    payer: TAccountMetas[1];
     /** #3 */
-    pool: TAccountMetas[2];
+    cortex: TAccountMetas[2];
     /** #4 */
     oracle: TAccountMetas[3];
     /** #5 */
-    lpTokenMint: TAccountMetas[4];
+    systemProgram: TAccountMetas[4];
+    /** #6 */
+    tokenProgram: TAccountMetas[5];
   };
-  data: UpdatePoolAumInstructionData;
+  data: InitOracleInstructionData;
 };
 
-export function parseUpdatePoolAumInstruction<
+export function parseInitOracleInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedUpdatePoolAumInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 5) {
+): ParsedInitOracleInstruction<TProgram, TAccountMetas> {
+  if (instruction.accounts.length < 6) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -250,12 +277,13 @@ export function parseUpdatePoolAumInstruction<
   return {
     programAddress: instruction.programAddress,
     accounts: {
+      admin: getNextAccount(),
       payer: getNextAccount(),
       cortex: getNextAccount(),
-      pool: getNextAccount(),
       oracle: getNextAccount(),
-      lpTokenMint: getNextAccount(),
+      systemProgram: getNextAccount(),
+      tokenProgram: getNextAccount(),
     },
-    data: getUpdatePoolAumInstructionDataDecoder().decode(instruction.data),
+    data: getInitOracleInstructionDataDecoder().decode(instruction.data),
   };
 }

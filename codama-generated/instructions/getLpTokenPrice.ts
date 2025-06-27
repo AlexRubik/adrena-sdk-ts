@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   transformEncoder,
@@ -23,11 +25,20 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
+  type WritableAccount,
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const GET_LP_TOKEN_PRICE_DISCRIMINATOR = new Uint8Array([
   71, 172, 21, 25, 176, 168, 60, 10,
@@ -44,6 +55,7 @@ export type GetLpTokenPriceInstruction<
   TAccountCortex extends string | IAccountMeta<string> = string,
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountLpTokenMint extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
   IInstructionWithData<Uint8Array> &
@@ -53,24 +65,33 @@ export type GetLpTokenPriceInstruction<
         ? ReadonlyAccount<TAccountCortex>
         : TAccountCortex,
       TAccountPool extends string
-        ? ReadonlyAccount<TAccountPool>
+        ? WritableAccount<TAccountPool>
         : TAccountPool,
       TAccountLpTokenMint extends string
         ? ReadonlyAccount<TAccountLpTokenMint>
         : TAccountLpTokenMint,
+      TAccountOracle extends string
+        ? WritableAccount<TAccountOracle>
+        : TAccountOracle,
       ...TRemainingAccounts,
     ]
   >;
 
 export type GetLpTokenPriceInstructionData = {
   discriminator: ReadonlyUint8Array;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
-export type GetLpTokenPriceInstructionDataArgs = {};
+export type GetLpTokenPriceInstructionDataArgs = {
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
+};
 
 export function getGetLpTokenPriceInstructionDataEncoder(): Encoder<GetLpTokenPriceInstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([['discriminator', fixEncoderSize(getBytesEncoder(), 8)]]),
+    getStructEncoder([
+      ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
+    ]),
     (value) => ({ ...value, discriminator: GET_LP_TOKEN_PRICE_DISCRIMINATOR })
   );
 }
@@ -78,6 +99,7 @@ export function getGetLpTokenPriceInstructionDataEncoder(): Encoder<GetLpTokenPr
 export function getGetLpTokenPriceInstructionDataDecoder(): Decoder<GetLpTokenPriceInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -95,6 +117,7 @@ export type GetLpTokenPriceInput<
   TAccountCortex extends string = string,
   TAccountPool extends string = string,
   TAccountLpTokenMint extends string = string,
+  TAccountOracle extends string = string,
 > = {
   /** #1 */
   cortex: Address<TAccountCortex>;
@@ -102,25 +125,31 @@ export type GetLpTokenPriceInput<
   pool: Address<TAccountPool>;
   /** #3 */
   lpTokenMint: Address<TAccountLpTokenMint>;
+  /** #4 */
+  oracle: Address<TAccountOracle>;
+  oraclePrices: GetLpTokenPriceInstructionDataArgs['oraclePrices'];
 };
 
 export function getGetLpTokenPriceInstruction<
   TAccountCortex extends string,
   TAccountPool extends string,
   TAccountLpTokenMint extends string,
+  TAccountOracle extends string,
   TProgramAddress extends Address = typeof ADRENA_PROGRAM_ADDRESS,
 >(
   input: GetLpTokenPriceInput<
     TAccountCortex,
     TAccountPool,
-    TAccountLpTokenMint
+    TAccountLpTokenMint,
+    TAccountOracle
   >,
   config?: { programAddress?: TProgramAddress }
 ): GetLpTokenPriceInstruction<
   TProgramAddress,
   TAccountCortex,
   TAccountPool,
-  TAccountLpTokenMint
+  TAccountLpTokenMint,
+  TAccountOracle
 > {
   // Program address.
   const programAddress = config?.programAddress ?? ADRENA_PROGRAM_ADDRESS;
@@ -128,13 +157,17 @@ export function getGetLpTokenPriceInstruction<
   // Original accounts.
   const originalAccounts = {
     cortex: { value: input.cortex ?? null, isWritable: false },
-    pool: { value: input.pool ?? null, isWritable: false },
+    pool: { value: input.pool ?? null, isWritable: true },
     lpTokenMint: { value: input.lpTokenMint ?? null, isWritable: false },
+    oracle: { value: input.oracle ?? null, isWritable: true },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
     ResolvedAccount
   >;
+
+  // Original args.
+  const args = { ...input };
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
@@ -142,14 +175,18 @@ export function getGetLpTokenPriceInstruction<
       getAccountMeta(accounts.cortex),
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.lpTokenMint),
+      getAccountMeta(accounts.oracle),
     ],
     programAddress,
-    data: getGetLpTokenPriceInstructionDataEncoder().encode({}),
+    data: getGetLpTokenPriceInstructionDataEncoder().encode(
+      args as GetLpTokenPriceInstructionDataArgs
+    ),
   } as GetLpTokenPriceInstruction<
     TProgramAddress,
     TAccountCortex,
     TAccountPool,
-    TAccountLpTokenMint
+    TAccountLpTokenMint,
+    TAccountOracle
   >;
 
   return instruction;
@@ -167,6 +204,8 @@ export type ParsedGetLpTokenPriceInstruction<
     pool: TAccountMetas[1];
     /** #3 */
     lpTokenMint: TAccountMetas[2];
+    /** #4 */
+    oracle: TAccountMetas[3];
   };
   data: GetLpTokenPriceInstructionData;
 };
@@ -179,7 +218,7 @@ export function parseGetLpTokenPriceInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedGetLpTokenPriceInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 3) {
+  if (instruction.accounts.length < 4) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -195,6 +234,7 @@ export function parseGetLpTokenPriceInstruction<
       cortex: getNextAccount(),
       pool: getNextAccount(),
       lpTokenMint: getNextAccount(),
+      oracle: getNextAccount(),
     },
     data: getGetLpTokenPriceInstructionDataDecoder().decode(instruction.data),
   };

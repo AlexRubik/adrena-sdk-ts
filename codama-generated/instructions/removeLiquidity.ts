@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   getU64Decoder,
@@ -26,6 +28,8 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
@@ -34,6 +38,12 @@ import {
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const REMOVE_LIQUIDITY_DISCRIMINATOR = new Uint8Array([
   80, 85, 209, 72, 24, 206, 177, 108,
@@ -54,7 +64,7 @@ export type RemoveLiquidityInstruction<
   TAccountCortex extends string | IAccountMeta<string> = string,
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountCustody extends string | IAccountMeta<string> = string,
-  TAccountCustodyOracle extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TAccountCustodyTokenAccount extends string | IAccountMeta<string> = string,
   TAccountLpTokenMint extends string | IAccountMeta<string> = string,
   TAccountTokenProgram extends
@@ -88,9 +98,9 @@ export type RemoveLiquidityInstruction<
       TAccountCustody extends string
         ? WritableAccount<TAccountCustody>
         : TAccountCustody,
-      TAccountCustodyOracle extends string
-        ? ReadonlyAccount<TAccountCustodyOracle>
-        : TAccountCustodyOracle,
+      TAccountOracle extends string
+        ? WritableAccount<TAccountOracle>
+        : TAccountOracle,
       TAccountCustodyTokenAccount extends string
         ? WritableAccount<TAccountCustodyTokenAccount>
         : TAccountCustodyTokenAccount,
@@ -111,11 +121,13 @@ export type RemoveLiquidityInstructionData = {
   discriminator: ReadonlyUint8Array;
   lpAmountIn: bigint;
   minAmountOut: bigint;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
 export type RemoveLiquidityInstructionDataArgs = {
   lpAmountIn: number | bigint;
   minAmountOut: number | bigint;
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
 };
 
 export function getRemoveLiquidityInstructionDataEncoder(): Encoder<RemoveLiquidityInstructionDataArgs> {
@@ -124,6 +136,7 @@ export function getRemoveLiquidityInstructionDataEncoder(): Encoder<RemoveLiquid
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['lpAmountIn', getU64Encoder()],
       ['minAmountOut', getU64Encoder()],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
     ]),
     (value) => ({ ...value, discriminator: REMOVE_LIQUIDITY_DISCRIMINATOR })
   );
@@ -134,6 +147,7 @@ export function getRemoveLiquidityInstructionDataDecoder(): Decoder<RemoveLiquid
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['lpAmountIn', getU64Decoder()],
     ['minAmountOut', getU64Decoder()],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -155,7 +169,7 @@ export type RemoveLiquidityInput<
   TAccountCortex extends string = string,
   TAccountPool extends string = string,
   TAccountCustody extends string = string,
-  TAccountCustodyOracle extends string = string,
+  TAccountOracle extends string = string,
   TAccountCustodyTokenAccount extends string = string,
   TAccountLpTokenMint extends string = string,
   TAccountTokenProgram extends string = string,
@@ -176,7 +190,7 @@ export type RemoveLiquidityInput<
   /** #7 */
   custody: Address<TAccountCustody>;
   /** #8 */
-  custodyOracle: Address<TAccountCustodyOracle>;
+  oracle: Address<TAccountOracle>;
   /** #9 */
   custodyTokenAccount: Address<TAccountCustodyTokenAccount>;
   /** #10 */
@@ -187,6 +201,7 @@ export type RemoveLiquidityInput<
   adrenaProgram: Address<TAccountAdrenaProgram>;
   lpAmountIn: RemoveLiquidityInstructionDataArgs['lpAmountIn'];
   minAmountOut: RemoveLiquidityInstructionDataArgs['minAmountOut'];
+  oraclePrices: RemoveLiquidityInstructionDataArgs['oraclePrices'];
 };
 
 export function getRemoveLiquidityInstruction<
@@ -197,7 +212,7 @@ export function getRemoveLiquidityInstruction<
   TAccountCortex extends string,
   TAccountPool extends string,
   TAccountCustody extends string,
-  TAccountCustodyOracle extends string,
+  TAccountOracle extends string,
   TAccountCustodyTokenAccount extends string,
   TAccountLpTokenMint extends string,
   TAccountTokenProgram extends string,
@@ -212,7 +227,7 @@ export function getRemoveLiquidityInstruction<
     TAccountCortex,
     TAccountPool,
     TAccountCustody,
-    TAccountCustodyOracle,
+    TAccountOracle,
     TAccountCustodyTokenAccount,
     TAccountLpTokenMint,
     TAccountTokenProgram,
@@ -228,7 +243,7 @@ export function getRemoveLiquidityInstruction<
   TAccountCortex,
   TAccountPool,
   TAccountCustody,
-  TAccountCustodyOracle,
+  TAccountOracle,
   TAccountCustodyTokenAccount,
   TAccountLpTokenMint,
   TAccountTokenProgram,
@@ -252,7 +267,7 @@ export function getRemoveLiquidityInstruction<
     cortex: { value: input.cortex ?? null, isWritable: true },
     pool: { value: input.pool ?? null, isWritable: true },
     custody: { value: input.custody ?? null, isWritable: true },
-    custodyOracle: { value: input.custodyOracle ?? null, isWritable: false },
+    oracle: { value: input.oracle ?? null, isWritable: true },
     custodyTokenAccount: {
       value: input.custodyTokenAccount ?? null,
       isWritable: true,
@@ -285,7 +300,7 @@ export function getRemoveLiquidityInstruction<
       getAccountMeta(accounts.cortex),
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.custody),
-      getAccountMeta(accounts.custodyOracle),
+      getAccountMeta(accounts.oracle),
       getAccountMeta(accounts.custodyTokenAccount),
       getAccountMeta(accounts.lpTokenMint),
       getAccountMeta(accounts.tokenProgram),
@@ -304,7 +319,7 @@ export function getRemoveLiquidityInstruction<
     TAccountCortex,
     TAccountPool,
     TAccountCustody,
-    TAccountCustodyOracle,
+    TAccountOracle,
     TAccountCustodyTokenAccount,
     TAccountLpTokenMint,
     TAccountTokenProgram,
@@ -335,7 +350,7 @@ export type ParsedRemoveLiquidityInstruction<
     /** #7 */
     custody: TAccountMetas[6];
     /** #8 */
-    custodyOracle: TAccountMetas[7];
+    oracle: TAccountMetas[7];
     /** #9 */
     custodyTokenAccount: TAccountMetas[8];
     /** #10 */
@@ -376,7 +391,7 @@ export function parseRemoveLiquidityInstruction<
       cortex: getNextAccount(),
       pool: getNextAccount(),
       custody: getNextAccount(),
-      custodyOracle: getNextAccount(),
+      oracle: getNextAccount(),
       custodyTokenAccount: getNextAccount(),
       lpTokenMint: getNextAccount(),
       tokenProgram: getNextAccount(),

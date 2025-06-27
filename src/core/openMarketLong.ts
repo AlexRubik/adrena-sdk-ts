@@ -45,9 +45,11 @@ export async function openMarketLong(
 
     if (!hasProfile || !hasProfile.exists) {
         // wallet has no profile, get instruction to create one
+        console.log("Adding ix for creating user profile");
         const initProfileIx = await buildInitUserProfileIx(params.wallet);
         ixns.push(initProfileIx);
     } else if (hasProfile.pda) {
+        console.log("Adding ix for editing user profile");
         const profileData = await getBasicProfileData(hasProfile.pda, params.rpc);
         if (profileData.userProfile.data.referrerProfile !== DEV_PDA) {
             const editProfileIx = await buildEditUserProfileIx(params.wallet);

@@ -10,8 +10,6 @@ import {
   combineCodec,
   fixDecoderSize,
   fixEncoderSize,
-  getAddressDecoder,
-  getAddressEncoder,
   getArrayDecoder,
   getArrayEncoder,
   getBooleanDecoder,
@@ -42,6 +40,8 @@ import {
   getBorrowRateParamsEncoder,
   getFeesDecoder,
   getFeesEncoder,
+  getLimitedStringDecoder,
+  getLimitedStringEncoder,
   getPricingParamsDecoder,
   getPricingParamsEncoder,
   getTokenRatiosDecoder,
@@ -50,6 +50,8 @@ import {
   type BorrowRateParamsArgs,
   type Fees,
   type FeesArgs,
+  type LimitedString,
+  type LimitedStringArgs,
   type PricingParams,
   type PricingParamsArgs,
   type TokenRatios,
@@ -97,8 +99,8 @@ export type SetCustodyConfigInstruction<
 export type SetCustodyConfigInstructionData = {
   discriminator: ReadonlyUint8Array;
   isStable: boolean;
-  oracle: Address;
-  tradeOracle: Address;
+  oracle: LimitedString;
+  tradeOracle: LimitedString;
   pricing: PricingParams;
   fees: Fees;
   borrowRate: BorrowRateParams;
@@ -107,8 +109,8 @@ export type SetCustodyConfigInstructionData = {
 
 export type SetCustodyConfigInstructionDataArgs = {
   isStable: boolean;
-  oracle: Address;
-  tradeOracle: Address;
+  oracle: LimitedStringArgs;
+  tradeOracle: LimitedStringArgs;
   pricing: PricingParamsArgs;
   fees: FeesArgs;
   borrowRate: BorrowRateParamsArgs;
@@ -120,8 +122,8 @@ export function getSetCustodyConfigInstructionDataEncoder(): Encoder<SetCustodyC
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['isStable', getBooleanEncoder()],
-      ['oracle', getAddressEncoder()],
-      ['tradeOracle', getAddressEncoder()],
+      ['oracle', getLimitedStringEncoder()],
+      ['tradeOracle', getLimitedStringEncoder()],
       ['pricing', getPricingParamsEncoder()],
       ['fees', getFeesEncoder()],
       ['borrowRate', getBorrowRateParamsEncoder()],
@@ -135,8 +137,8 @@ export function getSetCustodyConfigInstructionDataDecoder(): Decoder<SetCustodyC
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['isStable', getBooleanDecoder()],
-    ['oracle', getAddressDecoder()],
-    ['tradeOracle', getAddressDecoder()],
+    ['oracle', getLimitedStringDecoder()],
+    ['tradeOracle', getLimitedStringDecoder()],
     ['pricing', getPricingParamsDecoder()],
     ['fees', getFeesDecoder()],
     ['borrowRate', getBorrowRateParamsDecoder()],

@@ -15,9 +15,9 @@ codama.accept(renderJavaScriptVisitor('codama-generated', {
 }
 
 
-// function main() {
-//     runCodama();
+function main() {
+    runCodama();
 
-// }
+}
 
-// main();
+main();

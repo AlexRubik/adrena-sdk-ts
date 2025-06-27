@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   getU64Decoder,
@@ -25,11 +27,19 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const GET_LIQUIDATION_PRICE_DISCRIMINATOR = new Uint8Array([
   73, 174, 119, 65, 149, 5, 73, 239,
@@ -48,9 +58,7 @@ export type GetLiquidationPriceInstruction<
   TAccountPosition extends string | IAccountMeta<string> = string,
   TAccountCustody extends string | IAccountMeta<string> = string,
   TAccountCollateralCustody extends string | IAccountMeta<string> = string,
-  TAccountCollateralCustodyOracle extends
-    | string
-    | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
   IInstructionWithData<Uint8Array> &
@@ -71,9 +79,9 @@ export type GetLiquidationPriceInstruction<
       TAccountCollateralCustody extends string
         ? ReadonlyAccount<TAccountCollateralCustody>
         : TAccountCollateralCustody,
-      TAccountCollateralCustodyOracle extends string
-        ? ReadonlyAccount<TAccountCollateralCustodyOracle>
-        : TAccountCollateralCustodyOracle,
+      TAccountOracle extends string
+        ? ReadonlyAccount<TAccountOracle>
+        : TAccountOracle,
       ...TRemainingAccounts,
     ]
   >;
@@ -82,11 +90,13 @@ export type GetLiquidationPriceInstructionData = {
   discriminator: ReadonlyUint8Array;
   addCollateral: bigint;
   removeCollateral: bigint;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
 export type GetLiquidationPriceInstructionDataArgs = {
   addCollateral: number | bigint;
   removeCollateral: number | bigint;
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
 };
 
 export function getGetLiquidationPriceInstructionDataEncoder(): Encoder<GetLiquidationPriceInstructionDataArgs> {
@@ -95,6 +105,7 @@ export function getGetLiquidationPriceInstructionDataEncoder(): Encoder<GetLiqui
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['addCollateral', getU64Encoder()],
       ['removeCollateral', getU64Encoder()],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
     ]),
     (value) => ({
       ...value,
@@ -108,6 +119,7 @@ export function getGetLiquidationPriceInstructionDataDecoder(): Decoder<GetLiqui
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['addCollateral', getU64Decoder()],
     ['removeCollateral', getU64Decoder()],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -127,7 +139,7 @@ export type GetLiquidationPriceInput<
   TAccountPosition extends string = string,
   TAccountCustody extends string = string,
   TAccountCollateralCustody extends string = string,
-  TAccountCollateralCustodyOracle extends string = string,
+  TAccountOracle extends string = string,
 > = {
   /** #1 */
   cortex: Address<TAccountCortex>;
@@ -140,9 +152,10 @@ export type GetLiquidationPriceInput<
   /** #5 */
   collateralCustody: Address<TAccountCollateralCustody>;
   /** #6 */
-  collateralCustodyOracle: Address<TAccountCollateralCustodyOracle>;
+  oracle: Address<TAccountOracle>;
   addCollateral: GetLiquidationPriceInstructionDataArgs['addCollateral'];
   removeCollateral: GetLiquidationPriceInstructionDataArgs['removeCollateral'];
+  oraclePrices: GetLiquidationPriceInstructionDataArgs['oraclePrices'];
 };
 
 export function getGetLiquidationPriceInstruction<
@@ -151,7 +164,7 @@ export function getGetLiquidationPriceInstruction<
   TAccountPosition extends string,
   TAccountCustody extends string,
   TAccountCollateralCustody extends string,
-  TAccountCollateralCustodyOracle extends string,
+  TAccountOracle extends string,
   TProgramAddress extends Address = typeof ADRENA_PROGRAM_ADDRESS,
 >(
   input: GetLiquidationPriceInput<
@@ -160,7 +173,7 @@ export function getGetLiquidationPriceInstruction<
     TAccountPosition,
     TAccountCustody,
     TAccountCollateralCustody,
-    TAccountCollateralCustodyOracle
+    TAccountOracle
   >,
   config?: { programAddress?: TProgramAddress }
 ): GetLiquidationPriceInstruction<
@@ -170,7 +183,7 @@ export function getGetLiquidationPriceInstruction<
   TAccountPosition,
   TAccountCustody,
   TAccountCollateralCustody,
-  TAccountCollateralCustodyOracle
+  TAccountOracle
 > {
   // Program address.
   const programAddress = config?.programAddress ?? ADRENA_PROGRAM_ADDRESS;
@@ -185,10 +198,7 @@ export function getGetLiquidationPriceInstruction<
       value: input.collateralCustody ?? null,
       isWritable: false,
     },
-    collateralCustodyOracle: {
-      value: input.collateralCustodyOracle ?? null,
-      isWritable: false,
-    },
+    oracle: { value: input.oracle ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
@@ -206,7 +216,7 @@ export function getGetLiquidationPriceInstruction<
       getAccountMeta(accounts.position),
       getAccountMeta(accounts.custody),
       getAccountMeta(accounts.collateralCustody),
-      getAccountMeta(accounts.collateralCustodyOracle),
+      getAccountMeta(accounts.oracle),
     ],
     programAddress,
     data: getGetLiquidationPriceInstructionDataEncoder().encode(
@@ -219,7 +229,7 @@ export function getGetLiquidationPriceInstruction<
     TAccountPosition,
     TAccountCustody,
     TAccountCollateralCustody,
-    TAccountCollateralCustodyOracle
+    TAccountOracle
   >;
 
   return instruction;
@@ -242,7 +252,7 @@ export type ParsedGetLiquidationPriceInstruction<
     /** #5 */
     collateralCustody: TAccountMetas[4];
     /** #6 */
-    collateralCustodyOracle: TAccountMetas[5];
+    oracle: TAccountMetas[5];
   };
   data: GetLiquidationPriceInstructionData;
 };
@@ -273,7 +283,7 @@ export function parseGetLiquidationPriceInstruction<
       position: getNextAccount(),
       custody: getNextAccount(),
       collateralCustody: getNextAccount(),
-      collateralCustodyOracle: getNextAccount(),
+      oracle: getNextAccount(),
     },
     data: getGetLiquidationPriceInstructionDataDecoder().decode(
       instruction.data

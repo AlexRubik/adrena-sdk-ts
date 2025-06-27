@@ -69,7 +69,8 @@
     "git-api": "ts-node src/helpers/gitApi.ts",
     "open-long": "ts-node src/examples/openMarketLongExample.ts",
     "position-status": "ts-node src/examples/positionStatusExample.ts",
-    "get-positions": "ts-node src/adrena-api/examples/getPositionsApiExample.ts"
+    "get-positions": "ts-node src/adrena-api/examples/getPositionsApiExample.ts",
+    "codama": "ts-node src/runCodama.ts"
   },
   "dependencies": {
     "@solana-program/compute-budget": "^0.7.0",

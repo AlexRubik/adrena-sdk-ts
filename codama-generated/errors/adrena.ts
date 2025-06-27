@@ -166,6 +166,26 @@ export const ADRENA_ERROR__INVALID_VERSION = 0x17b9; // 6073
 export const ADRENA_ERROR__INVALID_VEST_VERSION = 0x17ba; // 6074
 /** MissingOrInvalidReferrerAccount: Missing or invalid referrer account */
 export const ADRENA_ERROR__MISSING_OR_INVALID_REFERRER_ACCOUNT = 0x17bb; // 6075
+/** WallpaperNotUnlocked: The requested wallpaper has not been unlocked by this user */
+export const ADRENA_ERROR__WALLPAPER_NOT_UNLOCKED = 0x17bc; // 6076
+/** ProfilePictureNotUnlocked: The requested profile picture has not been unlocked by this user */
+export const ADRENA_ERROR__PROFILE_PICTURE_NOT_UNLOCKED = 0x17bd; // 6077
+/** TitleNotUnlocked: The requested title has not been unlocked by this user */
+export const ADRENA_ERROR__TITLE_NOT_UNLOCKED = 0x17be; // 6078
+/** InvalidAchievement: Invalid achievement ID */
+export const ADRENA_ERROR__INVALID_ACHIEVEMENT = 0x17bf; // 6079
+/** UserNicknameInvalidFormat: User nickname expected format: Monster followed by digits */
+export const ADRENA_ERROR__USER_NICKNAME_INVALID_FORMAT = 0x17c0; // 6080
+/** InvalidContinentOrTeam: Continent or Team is invalid */
+export const ADRENA_ERROR__INVALID_CONTINENT_OR_TEAM = 0x17c1; // 6081
+/** TeamImmutable: The team can not be changed after being already set */
+export const ADRENA_ERROR__TEAM_IMMUTABLE = 0x17c2; // 6082
+/** InvalidSigner: Invalid signer */
+export const ADRENA_ERROR__INVALID_SIGNER = 0x17c3; // 6083
+/** MissingOraclePrice: Missing at least one oracle price */
+export const ADRENA_ERROR__MISSING_ORACLE_PRICE = 0x17c4; // 6084
+/** InvalidOracleSignature: Invalid oracle signature */
+export const ADRENA_ERROR__INVALID_ORACLE_SIGNATURE = 0x17c5; // 6085
 
 export type AdrenaError =
   | typeof ADRENA_ERROR__BUCKET_MINT_LIMIT
@@ -180,10 +200,12 @@ export type AdrenaError =
   | typeof ADRENA_ERROR__INSUFFICIENT_BUCKET_RESERVE
   | typeof ADRENA_ERROR__INSUFFICIENT_COLLATERAL
   | typeof ADRENA_ERROR__INVALID_ACCOUNT_DATA
+  | typeof ADRENA_ERROR__INVALID_ACHIEVEMENT
   | typeof ADRENA_ERROR__INVALID_ADRENA_CONFIG
   | typeof ADRENA_ERROR__INVALID_BUCKET_NAME
   | typeof ADRENA_ERROR__INVALID_CALLER
   | typeof ADRENA_ERROR__INVALID_COLLATERAL_CUSTODY
+  | typeof ADRENA_ERROR__INVALID_CONTINENT_OR_TEAM
   | typeof ADRENA_ERROR__INVALID_CORTEX_STATE
   | typeof ADRENA_ERROR__INVALID_CUSTODY
   | typeof ADRENA_ERROR__INVALID_CUSTODY_ACCOUNT
@@ -197,11 +219,13 @@ export type AdrenaError =
   | typeof ADRENA_ERROR__INVALID_LOCK_DURATION
   | typeof ADRENA_ERROR__INVALID_ORACLE_ACCOUNT
   | typeof ADRENA_ERROR__INVALID_ORACLE_PRICE
+  | typeof ADRENA_ERROR__INVALID_ORACLE_SIGNATURE
   | typeof ADRENA_ERROR__INVALID_ORACLE_STATE
   | typeof ADRENA_ERROR__INVALID_POOL_CONFIG
   | typeof ADRENA_ERROR__INVALID_POOL_LIQUIDITY_STATE
   | typeof ADRENA_ERROR__INVALID_POOL_STATE
   | typeof ADRENA_ERROR__INVALID_POSITION_STATE
+  | typeof ADRENA_ERROR__INVALID_SIGNER
   | typeof ADRENA_ERROR__INVALID_STAKE_STATE
   | typeof ADRENA_ERROR__INVALID_STAKING_LOCKING_TIME
   | typeof ADRENA_ERROR__INVALID_STAKING_ROUND_STATE
@@ -224,6 +248,7 @@ export type AdrenaError =
   | typeof ADRENA_ERROR__MAX_UTILIZATION
   | typeof ADRENA_ERROR__MIN_LEVERAGE
   | typeof ADRENA_ERROR__MISSING_CLOSE_POSITION_PRICE
+  | typeof ADRENA_ERROR__MISSING_ORACLE_PRICE
   | typeof ADRENA_ERROR__MISSING_OR_INVALID_REFERRER_ACCOUNT
   | typeof ADRENA_ERROR__PERMISSIONLESS_ORACLE_MALFORMED_ED25519_DATA
   | typeof ADRENA_ERROR__PERMISSIONLESS_ORACLE_MESSAGE_MISMATCH
@@ -234,16 +259,21 @@ export type AdrenaError =
   | typeof ADRENA_ERROR__POSITION_AMOUNT_LIMIT
   | typeof ADRENA_ERROR__POSITION_NOT_IN_LIQUIDATION_RANGE
   | typeof ADRENA_ERROR__POSITION_TOO_YOUNG
+  | typeof ADRENA_ERROR__PROFILE_PICTURE_NOT_UNLOCKED
   | typeof ADRENA_ERROR__PYTH_PRICE_EXPONENT_TOO_LARGE_INCURRING_PRECISION_LOSS
   | typeof ADRENA_ERROR__STAKE_NOT_ESTABLISHED
   | typeof ADRENA_ERROR__STALE_ORACLE_PRICE
+  | typeof ADRENA_ERROR__TEAM_IMMUTABLE
+  | typeof ADRENA_ERROR__TITLE_NOT_UNLOCKED
   | typeof ADRENA_ERROR__TOKEN_RATIO_OUT_OF_RANGE
   | typeof ADRENA_ERROR__UNRESOLVED_STAKE
   | typeof ADRENA_ERROR__UNSUPPORTED_ORACLE
   | typeof ADRENA_ERROR__UNSUPPORTED_TOKEN
+  | typeof ADRENA_ERROR__USER_NICKNAME_INVALID_FORMAT
   | typeof ADRENA_ERROR__USER_NICKNAME_TOO_LONG
   | typeof ADRENA_ERROR__USER_NICKNAME_TOO_SHORT
-  | typeof ADRENA_ERROR__USER_STAKE_NOT_FOUND;
+  | typeof ADRENA_ERROR__USER_STAKE_NOT_FOUND
+  | typeof ADRENA_ERROR__WALLPAPER_NOT_UNLOCKED;
 
 let adrenaErrorMessages: Record<AdrenaError, string> | undefined;
 if (process.env.NODE_ENV !== 'production') {
@@ -260,10 +290,12 @@ if (process.env.NODE_ENV !== 'production') {
     [ADRENA_ERROR__INSUFFICIENT_BUCKET_RESERVE]: `The bucket does not contain enough token for reserving this allocation`,
     [ADRENA_ERROR__INSUFFICIENT_COLLATERAL]: `The minimum amount of collateral posted to open a position is not met`,
     [ADRENA_ERROR__INVALID_ACCOUNT_DATA]: `Invalid account data`,
+    [ADRENA_ERROR__INVALID_ACHIEVEMENT]: `Invalid achievement ID`,
     [ADRENA_ERROR__INVALID_ADRENA_CONFIG]: `Invalid adrena config`,
     [ADRENA_ERROR__INVALID_BUCKET_NAME]: `Invalid bucket name`,
     [ADRENA_ERROR__INVALID_CALLER]: `The instruction must be call with a specific account as caller`,
     [ADRENA_ERROR__INVALID_COLLATERAL_CUSTODY]: `Invalid collateral custody`,
+    [ADRENA_ERROR__INVALID_CONTINENT_OR_TEAM]: `Continent or Team is invalid`,
     [ADRENA_ERROR__INVALID_CORTEX_STATE]: `Invalid cortex state`,
     [ADRENA_ERROR__INVALID_CUSTODY]: `Invalid custody`,
     [ADRENA_ERROR__INVALID_CUSTODY_ACCOUNT]: `Invalid custody account`,
@@ -277,11 +309,13 @@ if (process.env.NODE_ENV !== 'production') {
     [ADRENA_ERROR__INVALID_LOCK_DURATION]: `The provided lock duration isn't valid`,
     [ADRENA_ERROR__INVALID_ORACLE_ACCOUNT]: `Invalid oracle account`,
     [ADRENA_ERROR__INVALID_ORACLE_PRICE]: `Invalid oracle price`,
+    [ADRENA_ERROR__INVALID_ORACLE_SIGNATURE]: `Invalid oracle signature`,
     [ADRENA_ERROR__INVALID_ORACLE_STATE]: `Invalid oracle state`,
     [ADRENA_ERROR__INVALID_POOL_CONFIG]: `Invalid pool config`,
     [ADRENA_ERROR__INVALID_POOL_LIQUIDITY_STATE]: `Invalid pool liquidity state`,
     [ADRENA_ERROR__INVALID_POOL_STATE]: `Invalid pool state`,
     [ADRENA_ERROR__INVALID_POSITION_STATE]: `Invalid position state`,
+    [ADRENA_ERROR__INVALID_SIGNER]: `Invalid signer`,
     [ADRENA_ERROR__INVALID_STAKE_STATE]: `Invalid stake state`,
     [ADRENA_ERROR__INVALID_STAKING_LOCKING_TIME]: `Invalid staking locking time`,
     [ADRENA_ERROR__INVALID_STAKING_ROUND_STATE]: `Invalid staking round state`,
@@ -304,6 +338,7 @@ if (process.env.NODE_ENV !== 'production') {
     [ADRENA_ERROR__MAX_UTILIZATION]: `Token utilization limit exceeded`,
     [ADRENA_ERROR__MIN_LEVERAGE]: `Position leverage under minimum`,
     [ADRENA_ERROR__MISSING_CLOSE_POSITION_PRICE]: `The close position price is mandatory`,
+    [ADRENA_ERROR__MISSING_ORACLE_PRICE]: `Missing at least one oracle price`,
     [ADRENA_ERROR__MISSING_OR_INVALID_REFERRER_ACCOUNT]: `Missing or invalid referrer account`,
     [ADRENA_ERROR__PERMISSIONLESS_ORACLE_MALFORMED_ED25519_DATA]: `Ed25519 signature verification data does not match expected format`,
     [ADRENA_ERROR__PERMISSIONLESS_ORACLE_MESSAGE_MISMATCH]: `Signed message does not match instruction params`,
@@ -314,16 +349,21 @@ if (process.env.NODE_ENV !== 'production') {
     [ADRENA_ERROR__POSITION_AMOUNT_LIMIT]: `Position amount limit exceeded`,
     [ADRENA_ERROR__POSITION_NOT_IN_LIQUIDATION_RANGE]: `The position is not in liquidation range`,
     [ADRENA_ERROR__POSITION_TOO_YOUNG]: `A position cannot be close right after open, a slight delay is enforced`,
+    [ADRENA_ERROR__PROFILE_PICTURE_NOT_UNLOCKED]: `The requested profile picture has not been unlocked by this user`,
     [ADRENA_ERROR__PYTH_PRICE_EXPONENT_TOO_LARGE_INCURRING_PRECISION_LOSS]: `The exponent used for pyth price lead to high precision loss`,
     [ADRENA_ERROR__STAKE_NOT_ESTABLISHED]: `The stake isn't established yet`,
     [ADRENA_ERROR__STALE_ORACLE_PRICE]: `Stale oracle price`,
+    [ADRENA_ERROR__TEAM_IMMUTABLE]: `The team can not be changed after being already set`,
+    [ADRENA_ERROR__TITLE_NOT_UNLOCKED]: `The requested title has not been unlocked by this user`,
     [ADRENA_ERROR__TOKEN_RATIO_OUT_OF_RANGE]: `Token ratio out of range`,
     [ADRENA_ERROR__UNRESOLVED_STAKE]: `Stake is not resolved`,
     [ADRENA_ERROR__UNSUPPORTED_ORACLE]: `Unsupported price oracle`,
     [ADRENA_ERROR__UNSUPPORTED_TOKEN]: `Token is not supported`,
+    [ADRENA_ERROR__USER_NICKNAME_INVALID_FORMAT]: `User nickname expected format: Monster followed by digits`,
     [ADRENA_ERROR__USER_NICKNAME_TOO_LONG]: `User nickname exceed 24 characters`,
     [ADRENA_ERROR__USER_NICKNAME_TOO_SHORT]: `User nickname is less than 3 characters`,
     [ADRENA_ERROR__USER_STAKE_NOT_FOUND]: `The user stake account specified could not be found`,
+    [ADRENA_ERROR__WALLPAPER_NOT_UNLOCKED]: `The requested wallpaper has not been unlocked by this user`,
   };
 }
 

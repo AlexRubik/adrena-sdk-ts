@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   transformEncoder,
@@ -23,11 +25,20 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
+  type WritableAccount,
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const GET_ASSETS_UNDER_MANAGEMENT_DISCRIMINATOR = new Uint8Array([
   44, 3, 161, 69, 174, 75, 137, 162,
@@ -43,6 +54,7 @@ export type GetAssetsUnderManagementInstruction<
   TProgram extends string = typeof ADRENA_PROGRAM_ADDRESS,
   TAccountCortex extends string | IAccountMeta<string> = string,
   TAccountPool extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
   IInstructionWithData<Uint8Array> &
@@ -54,19 +66,28 @@ export type GetAssetsUnderManagementInstruction<
       TAccountPool extends string
         ? ReadonlyAccount<TAccountPool>
         : TAccountPool,
+      TAccountOracle extends string
+        ? WritableAccount<TAccountOracle>
+        : TAccountOracle,
       ...TRemainingAccounts,
     ]
   >;
 
 export type GetAssetsUnderManagementInstructionData = {
   discriminator: ReadonlyUint8Array;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
-export type GetAssetsUnderManagementInstructionDataArgs = {};
+export type GetAssetsUnderManagementInstructionDataArgs = {
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
+};
 
 export function getGetAssetsUnderManagementInstructionDataEncoder(): Encoder<GetAssetsUnderManagementInstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([['discriminator', fixEncoderSize(getBytesEncoder(), 8)]]),
+    getStructEncoder([
+      ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
+    ]),
     (value) => ({
       ...value,
       discriminator: GET_ASSETS_UNDER_MANAGEMENT_DISCRIMINATOR,
@@ -77,6 +98,7 @@ export function getGetAssetsUnderManagementInstructionDataEncoder(): Encoder<Get
 export function getGetAssetsUnderManagementInstructionDataDecoder(): Decoder<GetAssetsUnderManagementInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -93,24 +115,34 @@ export function getGetAssetsUnderManagementInstructionDataCodec(): Codec<
 export type GetAssetsUnderManagementInput<
   TAccountCortex extends string = string,
   TAccountPool extends string = string,
+  TAccountOracle extends string = string,
 > = {
   /** #1 */
   cortex: Address<TAccountCortex>;
   /** #2 */
   pool: Address<TAccountPool>;
+  /** #3 */
+  oracle: Address<TAccountOracle>;
+  oraclePrices: GetAssetsUnderManagementInstructionDataArgs['oraclePrices'];
 };
 
 export function getGetAssetsUnderManagementInstruction<
   TAccountCortex extends string,
   TAccountPool extends string,
+  TAccountOracle extends string,
   TProgramAddress extends Address = typeof ADRENA_PROGRAM_ADDRESS,
 >(
-  input: GetAssetsUnderManagementInput<TAccountCortex, TAccountPool>,
+  input: GetAssetsUnderManagementInput<
+    TAccountCortex,
+    TAccountPool,
+    TAccountOracle
+  >,
   config?: { programAddress?: TProgramAddress }
 ): GetAssetsUnderManagementInstruction<
   TProgramAddress,
   TAccountCortex,
-  TAccountPool
+  TAccountPool,
+  TAccountOracle
 > {
   // Program address.
   const programAddress = config?.programAddress ?? ADRENA_PROGRAM_ADDRESS;
@@ -119,21 +151,32 @@ export function getGetAssetsUnderManagementInstruction<
   const originalAccounts = {
     cortex: { value: input.cortex ?? null, isWritable: false },
     pool: { value: input.pool ?? null, isWritable: false },
+    oracle: { value: input.oracle ?? null, isWritable: true },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
     ResolvedAccount
   >;
 
+  // Original args.
+  const args = { ...input };
+
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
-    accounts: [getAccountMeta(accounts.cortex), getAccountMeta(accounts.pool)],
+    accounts: [
+      getAccountMeta(accounts.cortex),
+      getAccountMeta(accounts.pool),
+      getAccountMeta(accounts.oracle),
+    ],
     programAddress,
-    data: getGetAssetsUnderManagementInstructionDataEncoder().encode({}),
+    data: getGetAssetsUnderManagementInstructionDataEncoder().encode(
+      args as GetAssetsUnderManagementInstructionDataArgs
+    ),
   } as GetAssetsUnderManagementInstruction<
     TProgramAddress,
     TAccountCortex,
-    TAccountPool
+    TAccountPool,
+    TAccountOracle
   >;
 
   return instruction;
@@ -149,6 +192,8 @@ export type ParsedGetAssetsUnderManagementInstruction<
     cortex: TAccountMetas[0];
     /** #2 */
     pool: TAccountMetas[1];
+    /** #3 */
+    oracle: TAccountMetas[2];
   };
   data: GetAssetsUnderManagementInstructionData;
 };
@@ -161,7 +206,7 @@ export function parseGetAssetsUnderManagementInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedGetAssetsUnderManagementInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 2) {
+  if (instruction.accounts.length < 3) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -176,6 +221,7 @@ export function parseGetAssetsUnderManagementInstruction<
     accounts: {
       cortex: getNextAccount(),
       pool: getNextAccount(),
+      oracle: getNextAccount(),
     },
     data: getGetAssetsUnderManagementInstructionDataDecoder().decode(
       instruction.data

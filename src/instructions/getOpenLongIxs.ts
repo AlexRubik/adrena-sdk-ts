@@ -3,11 +3,12 @@ import {
     getOpenOrIncreasePositionWithSwapLongInstruction
 } from '../../codama-generated/instructions/openOrIncreasePositionWithSwapLong';
 import { ADRENA_PROGRAM_ID, BPS, PRICE_DECIMALS, PRINCIPAL_ADDRESSES, SYSTEM_PROGRAM_ID, TOKEN_ADDRESSES, TOKEN_PROGRAM_ID } from '../helpers/constants';
-import { fetchPoolUtil, findCustodyAddress, findCustodyTokenAccountAddress, findPositionAddress, getCortexPda, getCustodyByMint, getTransferAuthorityAddress, loadCustodies } from '../helpers/utils';
+import { fetchPoolUtil, findCustodyAddress, findCustodyTokenAccountAddress, findPositionAddress, getCortexPda, getCustodyByMint, getOraclePda, getTransferAuthorityAddress, loadCustodies } from '../helpers/utils';
 import { createAssociatedTokenAccountIx, findATAAddress } from '../helpers/tokenHelpers';
 import { getPythPrice } from '../helpers/pyth';
 import { ADRENA_PROGRAM_ADDRESS, Custody } from '../../codama-generated';
-import { CollateralToken, PrincipalToken } from '../types';
+import { ChaosLabsPricesExtended, CollateralToken, PrincipalToken } from '../types';
+import DataApiClient from '../clients/DataApiClient';
 
 export async function getOpenLongIxs(
     owner: TransactionSigner,
@@ -40,6 +41,7 @@ export async function getOpenLongIxs(
         rpc
     );
     if (!ataIxForPrincipal.ataExists && ataIxForPrincipal.ix) {
+        console.log("Adding ix for creating associated token account for principal");
         ixns.push(ataIxForPrincipal.ix);
     }
 
@@ -52,6 +54,7 @@ export async function getOpenLongIxs(
 
     const transferAuthAddress = (await getTransferAuthorityAddress())[0];
     const cortexPda = (await getCortexPda())[0];
+    const oraclePda = (await getOraclePda())[0];
 
     const custodies = await loadCustodies(pool.data, rpc);
 
@@ -73,8 +76,7 @@ export async function getOpenLongIxs(
     if (!principalCustodyObj) {
         throw new Error("No principal custody found");
     }
-    const principalCustodyOracle = principalCustodyObj.data.oracle;
-    const principalCustodyTradeOracle = principalCustodyObj.data.tradeOracle;
+
     const principalCustodyTokenAccount = (await findCustodyTokenAccountAddress(poolPda, principalMint))[0];
 
     // position -----------------------------------------------------------------------
@@ -85,6 +87,9 @@ export async function getOpenLongIxs(
     const priceWithSlippage = price * 1.003; // 0.3% slippage
 
     const priceAsBigInt = BigInt(Math.floor(priceWithSlippage * 10 ** PRICE_DECIMALS));
+
+    const oraclePrices: ChaosLabsPricesExtended | null =
+    await DataApiClient.getChaosLabsPrices();
     
 
     const openLongIx = getOpenOrIncreasePositionWithSwapLongInstruction(
@@ -94,16 +99,14 @@ export async function getOpenLongIxs(
             fundingAccount: fundingAccount,
             collateralAccount: collateralAccount,
             receivingCustody: receivingCustodyAddress,
-            receivingCustodyOracle: receivingCustodyOracle,
             receivingCustodyTokenAccount: receivingCustodyTokenAccount,
             principalCustody: principalCustodyAddress,
-            principalCustodyOracle: principalCustodyOracle,
-            principalCustodyTradeOracle: principalCustodyTradeOracle,
             principalCustodyTokenAccount: principalCustodyTokenAccount,
             transferAuthority: transferAuthAddress,
             cortex: cortexPda,
             pool: poolPda,
             position: positionAddress,
+            oracle: oraclePda,
             systemProgram: SYSTEM_PROGRAM_ID,
             tokenProgram: TOKEN_PROGRAM_ID,
             adrenaProgram: ADRENA_PROGRAM_ID,
@@ -111,6 +114,15 @@ export async function getOpenLongIxs(
                 price: priceAsBigInt,
                 collateral: bigIntCollateralAmount,
                 leverage: bigIntLeverage,
+                oraclePrices: oraclePrices ? {
+                    prices: oraclePrices.prices.map(price => ({
+                        feedId: price.feedId,
+                        price: price.price.toNumber(),
+                        timestamp: price.timestamp.toNumber()
+                    })),
+                    signature: new Uint8Array(oraclePrices.signatureByteArray),
+                    recoveryId: oraclePrices.recoveryId
+                } : null
             }
         });
 

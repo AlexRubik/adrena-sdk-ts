@@ -42,6 +42,8 @@ import {
   getBorrowRateParamsEncoder,
   getFeesDecoder,
   getFeesEncoder,
+  getLimitedStringDecoder,
+  getLimitedStringEncoder,
   getPricingParamsDecoder,
   getPricingParamsEncoder,
   getTokenRatiosDecoder,
@@ -50,6 +52,8 @@ import {
   type BorrowRateParamsArgs,
   type Fees,
   type FeesArgs,
+  type LimitedString,
+  type LimitedStringArgs,
   type PricingParams,
   type PricingParamsArgs,
   type TokenRatios,
@@ -73,8 +77,7 @@ export type AddCustodyInstruction<
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountCustody extends string | IAccountMeta<string> = string,
   TAccountCustodyTokenAccount extends string | IAccountMeta<string> = string,
-  TAccountCustodyOracle extends string | IAccountMeta<string> = string,
-  TAccountCustodyTradeOracle extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TAccountCustodyTokenMint extends string | IAccountMeta<string> = string,
   TAccountSystemProgram extends
     | string
@@ -113,12 +116,9 @@ export type AddCustodyInstruction<
       TAccountCustodyTokenAccount extends string
         ? WritableAccount<TAccountCustodyTokenAccount>
         : TAccountCustodyTokenAccount,
-      TAccountCustodyOracle extends string
-        ? ReadonlyAccount<TAccountCustodyOracle>
-        : TAccountCustodyOracle,
-      TAccountCustodyTradeOracle extends string
-        ? ReadonlyAccount<TAccountCustodyTradeOracle>
-        : TAccountCustodyTradeOracle,
+      TAccountOracle extends string
+        ? WritableAccount<TAccountOracle>
+        : TAccountOracle,
       TAccountCustodyTokenMint extends string
         ? ReadonlyAccount<TAccountCustodyTokenMint>
         : TAccountCustodyTokenMint,
@@ -144,6 +144,8 @@ export type AddCustodyInstructionData = {
   fees: Fees;
   borrowRate: BorrowRateParams;
   ratios: Array<TokenRatios>;
+  oracle: LimitedString;
+  tradeOracle: LimitedString;
 };
 
 export type AddCustodyInstructionDataArgs = {
@@ -154,6 +156,8 @@ export type AddCustodyInstructionDataArgs = {
   fees: FeesArgs;
   borrowRate: BorrowRateParamsArgs;
   ratios: Array<TokenRatiosArgs>;
+  oracle: LimitedStringArgs;
+  tradeOracle: LimitedStringArgs;
 };
 
 export function getAddCustodyInstructionDataEncoder(): Encoder<AddCustodyInstructionDataArgs> {
@@ -167,6 +171,8 @@ export function getAddCustodyInstructionDataEncoder(): Encoder<AddCustodyInstruc
       ['fees', getFeesEncoder()],
       ['borrowRate', getBorrowRateParamsEncoder()],
       ['ratios', getArrayEncoder(getTokenRatiosEncoder(), { size: 8 })],
+      ['oracle', getLimitedStringEncoder()],
+      ['tradeOracle', getLimitedStringEncoder()],
     ]),
     (value) => ({ ...value, discriminator: ADD_CUSTODY_DISCRIMINATOR })
   );
@@ -182,6 +188,8 @@ export function getAddCustodyInstructionDataDecoder(): Decoder<AddCustodyInstruc
     ['fees', getFeesDecoder()],
     ['borrowRate', getBorrowRateParamsDecoder()],
     ['ratios', getArrayDecoder(getTokenRatiosDecoder(), { size: 8 })],
+    ['oracle', getLimitedStringDecoder()],
+    ['tradeOracle', getLimitedStringDecoder()],
   ]);
 }
 
@@ -203,8 +211,7 @@ export type AddCustodyInput<
   TAccountPool extends string = string,
   TAccountCustody extends string = string,
   TAccountCustodyTokenAccount extends string = string,
-  TAccountCustodyOracle extends string = string,
-  TAccountCustodyTradeOracle extends string = string,
+  TAccountOracle extends string = string,
   TAccountCustodyTokenMint extends string = string,
   TAccountSystemProgram extends string = string,
   TAccountTokenProgram extends string = string,
@@ -225,16 +232,14 @@ export type AddCustodyInput<
   /** #7 */
   custodyTokenAccount: Address<TAccountCustodyTokenAccount>;
   /** #8 */
-  custodyOracle: Address<TAccountCustodyOracle>;
+  oracle: Address<TAccountOracle>;
   /** #9 */
-  custodyTradeOracle: Address<TAccountCustodyTradeOracle>;
-  /** #10 */
   custodyTokenMint: Address<TAccountCustodyTokenMint>;
-  /** #11 */
+  /** #10 */
   systemProgram?: Address<TAccountSystemProgram>;
-  /** #12 */
+  /** #11 */
   tokenProgram?: Address<TAccountTokenProgram>;
-  /** #13 */
+  /** #12 */
   rent?: Address<TAccountRent>;
   isStable: AddCustodyInstructionDataArgs['isStable'];
   pricing: AddCustodyInstructionDataArgs['pricing'];
@@ -243,6 +248,8 @@ export type AddCustodyInput<
   fees: AddCustodyInstructionDataArgs['fees'];
   borrowRate: AddCustodyInstructionDataArgs['borrowRate'];
   ratios: AddCustodyInstructionDataArgs['ratios'];
+  oracleArg: AddCustodyInstructionDataArgs['oracle'];
+  tradeOracle: AddCustodyInstructionDataArgs['tradeOracle'];
 };
 
 export function getAddCustodyInstruction<
@@ -253,8 +260,7 @@ export function getAddCustodyInstruction<
   TAccountPool extends string,
   TAccountCustody extends string,
   TAccountCustodyTokenAccount extends string,
-  TAccountCustodyOracle extends string,
-  TAccountCustodyTradeOracle extends string,
+  TAccountOracle extends string,
   TAccountCustodyTokenMint extends string,
   TAccountSystemProgram extends string,
   TAccountTokenProgram extends string,
@@ -269,8 +275,7 @@ export function getAddCustodyInstruction<
     TAccountPool,
     TAccountCustody,
     TAccountCustodyTokenAccount,
-    TAccountCustodyOracle,
-    TAccountCustodyTradeOracle,
+    TAccountOracle,
     TAccountCustodyTokenMint,
     TAccountSystemProgram,
     TAccountTokenProgram,
@@ -286,8 +291,7 @@ export function getAddCustodyInstruction<
   TAccountPool,
   TAccountCustody,
   TAccountCustodyTokenAccount,
-  TAccountCustodyOracle,
-  TAccountCustodyTradeOracle,
+  TAccountOracle,
   TAccountCustodyTokenMint,
   TAccountSystemProgram,
   TAccountTokenProgram,
@@ -311,11 +315,7 @@ export function getAddCustodyInstruction<
       value: input.custodyTokenAccount ?? null,
       isWritable: true,
     },
-    custodyOracle: { value: input.custodyOracle ?? null, isWritable: false },
-    custodyTradeOracle: {
-      value: input.custodyTradeOracle ?? null,
-      isWritable: false,
-    },
+    oracle: { value: input.oracle ?? null, isWritable: true },
     custodyTokenMint: {
       value: input.custodyTokenMint ?? null,
       isWritable: false,
@@ -330,7 +330,7 @@ export function getAddCustodyInstruction<
   >;
 
   // Original args.
-  const args = { ...input };
+  const args = { ...input, oracle: input.oracleArg };
 
   // Resolve default values.
   if (!accounts.systemProgram.value) {
@@ -356,8 +356,7 @@ export function getAddCustodyInstruction<
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.custody),
       getAccountMeta(accounts.custodyTokenAccount),
-      getAccountMeta(accounts.custodyOracle),
-      getAccountMeta(accounts.custodyTradeOracle),
+      getAccountMeta(accounts.oracle),
       getAccountMeta(accounts.custodyTokenMint),
       getAccountMeta(accounts.systemProgram),
       getAccountMeta(accounts.tokenProgram),
@@ -376,8 +375,7 @@ export function getAddCustodyInstruction<
     TAccountPool,
     TAccountCustody,
     TAccountCustodyTokenAccount,
-    TAccountCustodyOracle,
-    TAccountCustodyTradeOracle,
+    TAccountOracle,
     TAccountCustodyTokenMint,
     TAccountSystemProgram,
     TAccountTokenProgram,
@@ -408,17 +406,15 @@ export type ParsedAddCustodyInstruction<
     /** #7 */
     custodyTokenAccount: TAccountMetas[6];
     /** #8 */
-    custodyOracle: TAccountMetas[7];
+    oracle: TAccountMetas[7];
     /** #9 */
-    custodyTradeOracle: TAccountMetas[8];
+    custodyTokenMint: TAccountMetas[8];
     /** #10 */
-    custodyTokenMint: TAccountMetas[9];
+    systemProgram: TAccountMetas[9];
     /** #11 */
-    systemProgram: TAccountMetas[10];
+    tokenProgram: TAccountMetas[10];
     /** #12 */
-    tokenProgram: TAccountMetas[11];
-    /** #13 */
-    rent: TAccountMetas[12];
+    rent: TAccountMetas[11];
   };
   data: AddCustodyInstructionData;
 };
@@ -431,7 +427,7 @@ export function parseAddCustodyInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedAddCustodyInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 13) {
+  if (instruction.accounts.length < 12) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -451,8 +447,7 @@ export function parseAddCustodyInstruction<
       pool: getNextAccount(),
       custody: getNextAccount(),
       custodyTokenAccount: getNextAccount(),
-      custodyOracle: getNextAccount(),
-      custodyTradeOracle: getNextAccount(),
+      oracle: getNextAccount(),
       custodyTokenMint: getNextAccount(),
       systemProgram: getNextAccount(),
       tokenProgram: getNextAccount(),

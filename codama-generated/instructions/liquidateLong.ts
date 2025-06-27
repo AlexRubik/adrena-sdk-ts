@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   transformEncoder,
@@ -24,6 +26,8 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
@@ -32,6 +36,12 @@ import {
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const LIQUIDATE_LONG_DISCRIMINATOR = new Uint8Array([
   132, 118, 230, 137, 241, 193, 136, 93,
@@ -52,8 +62,7 @@ export type LiquidateLongInstruction<
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountPosition extends string | IAccountMeta<string> = string,
   TAccountCustody extends string | IAccountMeta<string> = string,
-  TAccountCustodyOracle extends string | IAccountMeta<string> = string,
-  TAccountCustodyTradeOracle extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TAccountCustodyTokenAccount extends string | IAccountMeta<string> = string,
   TAccountUserProfile extends string | IAccountMeta<string> = string,
   TAccountReferrerProfile extends string | IAccountMeta<string> = string,
@@ -88,12 +97,9 @@ export type LiquidateLongInstruction<
       TAccountCustody extends string
         ? WritableAccount<TAccountCustody>
         : TAccountCustody,
-      TAccountCustodyOracle extends string
-        ? ReadonlyAccount<TAccountCustodyOracle>
-        : TAccountCustodyOracle,
-      TAccountCustodyTradeOracle extends string
-        ? ReadonlyAccount<TAccountCustodyTradeOracle>
-        : TAccountCustodyTradeOracle,
+      TAccountOracle extends string
+        ? WritableAccount<TAccountOracle>
+        : TAccountOracle,
       TAccountCustodyTokenAccount extends string
         ? WritableAccount<TAccountCustodyTokenAccount>
         : TAccountCustodyTokenAccount,
@@ -115,13 +121,19 @@ export type LiquidateLongInstruction<
 
 export type LiquidateLongInstructionData = {
   discriminator: ReadonlyUint8Array;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
-export type LiquidateLongInstructionDataArgs = {};
+export type LiquidateLongInstructionDataArgs = {
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
+};
 
 export function getLiquidateLongInstructionDataEncoder(): Encoder<LiquidateLongInstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([['discriminator', fixEncoderSize(getBytesEncoder(), 8)]]),
+    getStructEncoder([
+      ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
+    ]),
     (value) => ({ ...value, discriminator: LIQUIDATE_LONG_DISCRIMINATOR })
   );
 }
@@ -129,6 +141,7 @@ export function getLiquidateLongInstructionDataEncoder(): Encoder<LiquidateLongI
 export function getLiquidateLongInstructionDataDecoder(): Decoder<LiquidateLongInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -150,8 +163,7 @@ export type LiquidateLongInput<
   TAccountPool extends string = string,
   TAccountPosition extends string = string,
   TAccountCustody extends string = string,
-  TAccountCustodyOracle extends string = string,
-  TAccountCustodyTradeOracle extends string = string,
+  TAccountOracle extends string = string,
   TAccountCustodyTokenAccount extends string = string,
   TAccountUserProfile extends string = string,
   TAccountReferrerProfile extends string = string,
@@ -173,19 +185,18 @@ export type LiquidateLongInput<
   /** #7 */
   custody: Address<TAccountCustody>;
   /** #8 */
-  custodyOracle: Address<TAccountCustodyOracle>;
+  oracle: Address<TAccountOracle>;
   /** #9 */
-  custodyTradeOracle: Address<TAccountCustodyTradeOracle>;
-  /** #10 */
   custodyTokenAccount: Address<TAccountCustodyTokenAccount>;
-  /** #11 */
+  /** #10 */
   userProfile?: Address<TAccountUserProfile>;
-  /** #12 */
+  /** #11 */
   referrerProfile?: Address<TAccountReferrerProfile>;
-  /** #13 */
+  /** #12 */
   tokenProgram?: Address<TAccountTokenProgram>;
-  /** #14 */
+  /** #13 */
   adrenaProgram: Address<TAccountAdrenaProgram>;
+  oraclePrices: LiquidateLongInstructionDataArgs['oraclePrices'];
 };
 
 export function getLiquidateLongInstruction<
@@ -196,8 +207,7 @@ export function getLiquidateLongInstruction<
   TAccountPool extends string,
   TAccountPosition extends string,
   TAccountCustody extends string,
-  TAccountCustodyOracle extends string,
-  TAccountCustodyTradeOracle extends string,
+  TAccountOracle extends string,
   TAccountCustodyTokenAccount extends string,
   TAccountUserProfile extends string,
   TAccountReferrerProfile extends string,
@@ -213,8 +223,7 @@ export function getLiquidateLongInstruction<
     TAccountPool,
     TAccountPosition,
     TAccountCustody,
-    TAccountCustodyOracle,
-    TAccountCustodyTradeOracle,
+    TAccountOracle,
     TAccountCustodyTokenAccount,
     TAccountUserProfile,
     TAccountReferrerProfile,
@@ -231,8 +240,7 @@ export function getLiquidateLongInstruction<
   TAccountPool,
   TAccountPosition,
   TAccountCustody,
-  TAccountCustodyOracle,
-  TAccountCustodyTradeOracle,
+  TAccountOracle,
   TAccountCustodyTokenAccount,
   TAccountUserProfile,
   TAccountReferrerProfile,
@@ -257,11 +265,7 @@ export function getLiquidateLongInstruction<
     pool: { value: input.pool ?? null, isWritable: true },
     position: { value: input.position ?? null, isWritable: true },
     custody: { value: input.custody ?? null, isWritable: true },
-    custodyOracle: { value: input.custodyOracle ?? null, isWritable: false },
-    custodyTradeOracle: {
-      value: input.custodyTradeOracle ?? null,
-      isWritable: false,
-    },
+    oracle: { value: input.oracle ?? null, isWritable: true },
     custodyTokenAccount: {
       value: input.custodyTokenAccount ?? null,
       isWritable: true,
@@ -275,6 +279,9 @@ export function getLiquidateLongInstruction<
     keyof typeof originalAccounts,
     ResolvedAccount
   >;
+
+  // Original args.
+  const args = { ...input };
 
   // Resolve default values.
   if (!accounts.tokenProgram.value) {
@@ -292,8 +299,7 @@ export function getLiquidateLongInstruction<
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.position),
       getAccountMeta(accounts.custody),
-      getAccountMeta(accounts.custodyOracle),
-      getAccountMeta(accounts.custodyTradeOracle),
+      getAccountMeta(accounts.oracle),
       getAccountMeta(accounts.custodyTokenAccount),
       getAccountMeta(accounts.userProfile),
       getAccountMeta(accounts.referrerProfile),
@@ -301,7 +307,9 @@ export function getLiquidateLongInstruction<
       getAccountMeta(accounts.adrenaProgram),
     ],
     programAddress,
-    data: getLiquidateLongInstructionDataEncoder().encode({}),
+    data: getLiquidateLongInstructionDataEncoder().encode(
+      args as LiquidateLongInstructionDataArgs
+    ),
   } as LiquidateLongInstruction<
     TProgramAddress,
     TAccountSigner,
@@ -311,8 +319,7 @@ export function getLiquidateLongInstruction<
     TAccountPool,
     TAccountPosition,
     TAccountCustody,
-    TAccountCustodyOracle,
-    TAccountCustodyTradeOracle,
+    TAccountOracle,
     TAccountCustodyTokenAccount,
     TAccountUserProfile,
     TAccountReferrerProfile,
@@ -344,19 +351,17 @@ export type ParsedLiquidateLongInstruction<
     /** #7 */
     custody: TAccountMetas[6];
     /** #8 */
-    custodyOracle: TAccountMetas[7];
+    oracle: TAccountMetas[7];
     /** #9 */
-    custodyTradeOracle: TAccountMetas[8];
+    custodyTokenAccount: TAccountMetas[8];
     /** #10 */
-    custodyTokenAccount: TAccountMetas[9];
+    userProfile?: TAccountMetas[9] | undefined;
     /** #11 */
-    userProfile?: TAccountMetas[10] | undefined;
+    referrerProfile?: TAccountMetas[10] | undefined;
     /** #12 */
-    referrerProfile?: TAccountMetas[11] | undefined;
+    tokenProgram: TAccountMetas[11];
     /** #13 */
-    tokenProgram: TAccountMetas[12];
-    /** #14 */
-    adrenaProgram: TAccountMetas[13];
+    adrenaProgram: TAccountMetas[12];
   };
   data: LiquidateLongInstructionData;
 };
@@ -369,7 +374,7 @@ export function parseLiquidateLongInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedLiquidateLongInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 14) {
+  if (instruction.accounts.length < 13) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -395,8 +400,7 @@ export function parseLiquidateLongInstruction<
       pool: getNextAccount(),
       position: getNextAccount(),
       custody: getNextAccount(),
-      custodyOracle: getNextAccount(),
-      custodyTradeOracle: getNextAccount(),
+      oracle: getNextAccount(),
       custodyTokenAccount: getNextAccount(),
       userProfile: getNextOptionalAccount(),
       referrerProfile: getNextOptionalAccount(),

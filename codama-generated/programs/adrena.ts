@@ -17,7 +17,6 @@ import {
   type ParsedAddCollateralLongInstruction,
   type ParsedAddCollateralShortInstruction,
   type ParsedAddCustodyInstruction,
-  type ParsedAddGenesisLiquidityInstruction,
   type ParsedAddLimitOrderInstruction,
   type ParsedAddLiquidStakeInstruction,
   type ParsedAddLiquidityInstruction,
@@ -53,16 +52,17 @@ import {
   type ParsedGetLiquidationStateInstruction,
   type ParsedGetLpTokenPriceInstruction,
   type ParsedGetOpenPositionWithSwapAmountAndFeesInstruction,
-  type ParsedGetOraclePriceInstruction,
   type ParsedGetPnlInstruction,
   type ParsedGetPoolInfoSnapshotInstruction,
   type ParsedGetRemoveLiquidityAmountAndFeeInstruction,
   type ParsedGetSwapAmountAndFeesInstruction,
+  type ParsedGrantOrRemoveAchievementInstruction,
   type ParsedIncreasePositionLongInstruction,
   type ParsedIncreasePositionShortInstruction,
   type ParsedInitFourVestingInstruction,
   type ParsedInitLimitOrderBookInstruction,
   type ParsedInitOneCoreInstruction,
+  type ParsedInitOracleInstruction,
   type ParsedInitReferrerRewardTokenVaultInstruction,
   type ParsedInitStakingFourInstruction,
   type ParsedInitStakingOneInstruction,
@@ -81,6 +81,7 @@ import {
   type ParsedOpenOrIncreasePositionWithSwapShortInstruction,
   type ParsedOpenPositionLongInstruction,
   type ParsedOpenPositionShortInstruction,
+  type ParsedPatchCustodiesOraclesInstruction,
   type ParsedPatchCustodyLockedAmountInstruction,
   type ParsedPatchStakingRoundInstruction,
   type ParsedRemoveCollateralLongInstruction,
@@ -121,6 +122,7 @@ export enum AdrenaAccount {
   Custody,
   GenesisLock,
   LimitOrderBook,
+  Oracle,
   Pool,
   Position,
   Staking,
@@ -179,6 +181,17 @@ export function identifyAdrenaAccount(
     )
   ) {
     return AdrenaAccount.LimitOrderBook;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([139, 194, 131, 179, 140, 179, 229, 244])
+      ),
+      0
+    )
+  ) {
+    return AdrenaAccount.Oracle;
   }
   if (
     containsBytes(
@@ -307,7 +320,6 @@ export enum AdrenaInstruction {
   SetPoolAumSoftCapUsd,
   Swap,
   AddLiquidity,
-  AddGenesisLiquidity,
   GenesisOtcOut,
   GenesisOtcIn,
   RemoveLiquidity,
@@ -334,7 +346,6 @@ export enum AdrenaInstruction {
   GetPnl,
   GetLiquidationPrice,
   GetLiquidationState,
-  GetOraclePrice,
   GetSwapAmountAndFees,
   GetAssetsUnderManagement,
   InitUserStaking,
@@ -382,6 +393,9 @@ export enum AdrenaInstruction {
   DistributeFees,
   ClaimReferralFee,
   InitReferrerRewardTokenVault,
+  GrantOrRemoveAchievement,
+  InitOracle,
+  PatchCustodiesOracles,
 }
 
 export function identifyAdrenaInstruction(
@@ -629,17 +643,6 @@ export function identifyAdrenaInstruction(
     )
   ) {
     return AdrenaInstruction.AddLiquidity;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([37, 173, 172, 33, 28, 127, 13, 69])
-      ),
-      0
-    )
-  ) {
-    return AdrenaInstruction.AddGenesisLiquidity;
   }
   if (
     containsBytes(
@@ -926,17 +929,6 @@ export function identifyAdrenaInstruction(
     )
   ) {
     return AdrenaInstruction.GetLiquidationState;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([200, 20, 0, 106, 56, 210, 230, 140])
-      ),
-      0
-    )
-  ) {
-    return AdrenaInstruction.GetOraclePrice;
   }
   if (
     containsBytes(
@@ -1455,6 +1447,39 @@ export function identifyAdrenaInstruction(
   ) {
     return AdrenaInstruction.InitReferrerRewardTokenVault;
   }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([31, 192, 107, 213, 24, 175, 248, 248])
+      ),
+      0
+    )
+  ) {
+    return AdrenaInstruction.GrantOrRemoveAchievement;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([78, 100, 33, 183, 96, 207, 60, 91])
+      ),
+      0
+    )
+  ) {
+    return AdrenaInstruction.InitOracle;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([150, 248, 194, 18, 193, 152, 67, 25])
+      ),
+      0
+    )
+  ) {
+    return AdrenaInstruction.PatchCustodiesOracles;
+  }
   throw new Error(
     'The provided instruction could not be identified as a adrena instruction.'
   );
@@ -1529,9 +1554,6 @@ export type ParsedAdrenaInstruction<
   | ({
       instructionType: AdrenaInstruction.AddLiquidity;
     } & ParsedAddLiquidityInstruction<TProgram>)
-  | ({
-      instructionType: AdrenaInstruction.AddGenesisLiquidity;
-    } & ParsedAddGenesisLiquidityInstruction<TProgram>)
   | ({
       instructionType: AdrenaInstruction.GenesisOtcOut;
     } & ParsedGenesisOtcOutInstruction<TProgram>)
@@ -1610,9 +1632,6 @@ export type ParsedAdrenaInstruction<
   | ({
       instructionType: AdrenaInstruction.GetLiquidationState;
     } & ParsedGetLiquidationStateInstruction<TProgram>)
-  | ({
-      instructionType: AdrenaInstruction.GetOraclePrice;
-    } & ParsedGetOraclePriceInstruction<TProgram>)
   | ({
       instructionType: AdrenaInstruction.GetSwapAmountAndFees;
     } & ParsedGetSwapAmountAndFeesInstruction<TProgram>)
@@ -1753,4 +1772,13 @@ export type ParsedAdrenaInstruction<
     } & ParsedClaimReferralFeeInstruction<TProgram>)
   | ({
       instructionType: AdrenaInstruction.InitReferrerRewardTokenVault;
-    } & ParsedInitReferrerRewardTokenVaultInstruction<TProgram>);
+    } & ParsedInitReferrerRewardTokenVaultInstruction<TProgram>)
+  | ({
+      instructionType: AdrenaInstruction.GrantOrRemoveAchievement;
+    } & ParsedGrantOrRemoveAchievementInstruction<TProgram>)
+  | ({
+      instructionType: AdrenaInstruction.InitOracle;
+    } & ParsedInitOracleInstruction<TProgram>)
+  | ({
+      instructionType: AdrenaInstruction.PatchCustodiesOracles;
+    } & ParsedPatchCustodiesOraclesInstruction<TProgram>);

@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   transformEncoder,
@@ -23,11 +25,20 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
+  type WritableAccount,
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const GET_POOL_INFO_SNAPSHOT_DISCRIMINATOR = new Uint8Array([
   115, 34, 247, 123, 65, 121, 105, 116,
@@ -44,6 +55,7 @@ export type GetPoolInfoSnapshotInstruction<
   TAccountCortex extends string | IAccountMeta<string> = string,
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountLpTokenMint extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
   IInstructionWithData<Uint8Array> &
@@ -53,24 +65,33 @@ export type GetPoolInfoSnapshotInstruction<
         ? ReadonlyAccount<TAccountCortex>
         : TAccountCortex,
       TAccountPool extends string
-        ? ReadonlyAccount<TAccountPool>
+        ? WritableAccount<TAccountPool>
         : TAccountPool,
       TAccountLpTokenMint extends string
         ? ReadonlyAccount<TAccountLpTokenMint>
         : TAccountLpTokenMint,
+      TAccountOracle extends string
+        ? WritableAccount<TAccountOracle>
+        : TAccountOracle,
       ...TRemainingAccounts,
     ]
   >;
 
 export type GetPoolInfoSnapshotInstructionData = {
   discriminator: ReadonlyUint8Array;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
-export type GetPoolInfoSnapshotInstructionDataArgs = {};
+export type GetPoolInfoSnapshotInstructionDataArgs = {
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
+};
 
 export function getGetPoolInfoSnapshotInstructionDataEncoder(): Encoder<GetPoolInfoSnapshotInstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([['discriminator', fixEncoderSize(getBytesEncoder(), 8)]]),
+    getStructEncoder([
+      ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
+    ]),
     (value) => ({
       ...value,
       discriminator: GET_POOL_INFO_SNAPSHOT_DISCRIMINATOR,
@@ -81,6 +102,7 @@ export function getGetPoolInfoSnapshotInstructionDataEncoder(): Encoder<GetPoolI
 export function getGetPoolInfoSnapshotInstructionDataDecoder(): Decoder<GetPoolInfoSnapshotInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -98,6 +120,7 @@ export type GetPoolInfoSnapshotInput<
   TAccountCortex extends string = string,
   TAccountPool extends string = string,
   TAccountLpTokenMint extends string = string,
+  TAccountOracle extends string = string,
 > = {
   /** #1 */
   cortex: Address<TAccountCortex>;
@@ -105,25 +128,31 @@ export type GetPoolInfoSnapshotInput<
   pool: Address<TAccountPool>;
   /** #3 */
   lpTokenMint: Address<TAccountLpTokenMint>;
+  /** #4 */
+  oracle: Address<TAccountOracle>;
+  oraclePrices: GetPoolInfoSnapshotInstructionDataArgs['oraclePrices'];
 };
 
 export function getGetPoolInfoSnapshotInstruction<
   TAccountCortex extends string,
   TAccountPool extends string,
   TAccountLpTokenMint extends string,
+  TAccountOracle extends string,
   TProgramAddress extends Address = typeof ADRENA_PROGRAM_ADDRESS,
 >(
   input: GetPoolInfoSnapshotInput<
     TAccountCortex,
     TAccountPool,
-    TAccountLpTokenMint
+    TAccountLpTokenMint,
+    TAccountOracle
   >,
   config?: { programAddress?: TProgramAddress }
 ): GetPoolInfoSnapshotInstruction<
   TProgramAddress,
   TAccountCortex,
   TAccountPool,
-  TAccountLpTokenMint
+  TAccountLpTokenMint,
+  TAccountOracle
 > {
   // Program address.
   const programAddress = config?.programAddress ?? ADRENA_PROGRAM_ADDRESS;
@@ -131,13 +160,17 @@ export function getGetPoolInfoSnapshotInstruction<
   // Original accounts.
   const originalAccounts = {
     cortex: { value: input.cortex ?? null, isWritable: false },
-    pool: { value: input.pool ?? null, isWritable: false },
+    pool: { value: input.pool ?? null, isWritable: true },
     lpTokenMint: { value: input.lpTokenMint ?? null, isWritable: false },
+    oracle: { value: input.oracle ?? null, isWritable: true },
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
     ResolvedAccount
   >;
+
+  // Original args.
+  const args = { ...input };
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
@@ -145,14 +178,18 @@ export function getGetPoolInfoSnapshotInstruction<
       getAccountMeta(accounts.cortex),
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.lpTokenMint),
+      getAccountMeta(accounts.oracle),
     ],
     programAddress,
-    data: getGetPoolInfoSnapshotInstructionDataEncoder().encode({}),
+    data: getGetPoolInfoSnapshotInstructionDataEncoder().encode(
+      args as GetPoolInfoSnapshotInstructionDataArgs
+    ),
   } as GetPoolInfoSnapshotInstruction<
     TProgramAddress,
     TAccountCortex,
     TAccountPool,
-    TAccountLpTokenMint
+    TAccountLpTokenMint,
+    TAccountOracle
   >;
 
   return instruction;
@@ -170,6 +207,8 @@ export type ParsedGetPoolInfoSnapshotInstruction<
     pool: TAccountMetas[1];
     /** #3 */
     lpTokenMint: TAccountMetas[2];
+    /** #4 */
+    oracle: TAccountMetas[3];
   };
   data: GetPoolInfoSnapshotInstructionData;
 };
@@ -182,7 +221,7 @@ export function parseGetPoolInfoSnapshotInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedGetPoolInfoSnapshotInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 3) {
+  if (instruction.accounts.length < 4) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -198,6 +237,7 @@ export function parseGetPoolInfoSnapshotInstruction<
       cortex: getNextAccount(),
       pool: getNextAccount(),
       lpTokenMint: getNextAccount(),
+      oracle: getNextAccount(),
     },
     data: getGetPoolInfoSnapshotInstructionDataDecoder().decode(
       instruction.data

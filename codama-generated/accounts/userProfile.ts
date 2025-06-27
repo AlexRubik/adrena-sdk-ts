@@ -64,7 +64,9 @@ export type UserProfile = {
   profilePicture: number;
   wallpaper: number;
   title: number;
-  padding: ReadonlyUint8Array;
+  team: number;
+  continent: number;
+  padding: number;
   nickname: LimitedString;
   createdAt: bigint;
   owner: Address;
@@ -81,7 +83,9 @@ export type UserProfileArgs = {
   profilePicture: number;
   wallpaper: number;
   title: number;
-  padding: ReadonlyUint8Array;
+  team: number;
+  continent: number;
+  padding: number;
   nickname: LimitedStringArgs;
   createdAt: number | bigint;
   owner: Address;
@@ -101,7 +105,9 @@ export function getUserProfileEncoder(): Encoder<UserProfileArgs> {
       ['profilePicture', getU8Encoder()],
       ['wallpaper', getU8Encoder()],
       ['title', getU8Encoder()],
-      ['padding', fixEncoderSize(getBytesEncoder(), 3)],
+      ['team', getU8Encoder()],
+      ['continent', getU8Encoder()],
+      ['padding', getU8Encoder()],
       ['nickname', getLimitedStringEncoder()],
       ['createdAt', getI64Encoder()],
       ['owner', getAddressEncoder()],
@@ -123,7 +129,9 @@ export function getUserProfileDecoder(): Decoder<UserProfile> {
     ['profilePicture', getU8Decoder()],
     ['wallpaper', getU8Decoder()],
     ['title', getU8Decoder()],
-    ['padding', fixDecoderSize(getBytesDecoder(), 3)],
+    ['team', getU8Decoder()],
+    ['continent', getU8Decoder()],
+    ['padding', getU8Decoder()],
     ['nickname', getLimitedStringDecoder()],
     ['createdAt', getI64Decoder()],
     ['owner', getAddressDecoder()],

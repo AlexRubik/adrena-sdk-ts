@@ -17,10 +17,6 @@ import {
 
 export enum ProfilePicture {
   Zero,
-  One,
-  Two,
-  Three,
-  Four,
 }
 
 export type ProfilePictureArgs = ProfilePicture;

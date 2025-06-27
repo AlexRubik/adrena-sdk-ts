@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   getU32Decoder,
@@ -29,11 +31,19 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const GET_ENTRY_PRICE_AND_FEE_DISCRIMINATOR = new Uint8Array([
   134, 30, 231, 199, 83, 72, 27, 99,
@@ -50,11 +60,8 @@ export type GetEntryPriceAndFeeInstruction<
   TAccountCortex extends string | IAccountMeta<string> = string,
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountCustody extends string | IAccountMeta<string> = string,
-  TAccountCustodyTradeOracle extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TAccountCollateralCustody extends string | IAccountMeta<string> = string,
-  TAccountCollateralCustodyOracle extends
-    | string
-    | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
   IInstructionWithData<Uint8Array> &
@@ -69,15 +76,12 @@ export type GetEntryPriceAndFeeInstruction<
       TAccountCustody extends string
         ? ReadonlyAccount<TAccountCustody>
         : TAccountCustody,
-      TAccountCustodyTradeOracle extends string
-        ? ReadonlyAccount<TAccountCustodyTradeOracle>
-        : TAccountCustodyTradeOracle,
+      TAccountOracle extends string
+        ? ReadonlyAccount<TAccountOracle>
+        : TAccountOracle,
       TAccountCollateralCustody extends string
         ? ReadonlyAccount<TAccountCollateralCustody>
         : TAccountCollateralCustody,
-      TAccountCollateralCustodyOracle extends string
-        ? ReadonlyAccount<TAccountCollateralCustodyOracle>
-        : TAccountCollateralCustodyOracle,
       ...TRemainingAccounts,
     ]
   >;
@@ -87,12 +91,14 @@ export type GetEntryPriceAndFeeInstructionData = {
   collateral: bigint;
   leverage: number;
   side: number;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
 export type GetEntryPriceAndFeeInstructionDataArgs = {
   collateral: number | bigint;
   leverage: number;
   side: number;
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
 };
 
 export function getGetEntryPriceAndFeeInstructionDataEncoder(): Encoder<GetEntryPriceAndFeeInstructionDataArgs> {
@@ -102,6 +108,7 @@ export function getGetEntryPriceAndFeeInstructionDataEncoder(): Encoder<GetEntry
       ['collateral', getU64Encoder()],
       ['leverage', getU32Encoder()],
       ['side', getU8Encoder()],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
     ]),
     (value) => ({
       ...value,
@@ -116,6 +123,7 @@ export function getGetEntryPriceAndFeeInstructionDataDecoder(): Decoder<GetEntry
     ['collateral', getU64Decoder()],
     ['leverage', getU32Decoder()],
     ['side', getU8Decoder()],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -133,9 +141,8 @@ export type GetEntryPriceAndFeeInput<
   TAccountCortex extends string = string,
   TAccountPool extends string = string,
   TAccountCustody extends string = string,
-  TAccountCustodyTradeOracle extends string = string,
+  TAccountOracle extends string = string,
   TAccountCollateralCustody extends string = string,
-  TAccountCollateralCustodyOracle extends string = string,
 > = {
   /** #1 */
   cortex: Address<TAccountCortex>;
@@ -144,32 +151,29 @@ export type GetEntryPriceAndFeeInput<
   /** #3 */
   custody: Address<TAccountCustody>;
   /** #4 */
-  custodyTradeOracle: Address<TAccountCustodyTradeOracle>;
+  oracle: Address<TAccountOracle>;
   /** #5 */
   collateralCustody: Address<TAccountCollateralCustody>;
-  /** #6 */
-  collateralCustodyOracle: Address<TAccountCollateralCustodyOracle>;
   collateral: GetEntryPriceAndFeeInstructionDataArgs['collateral'];
   leverage: GetEntryPriceAndFeeInstructionDataArgs['leverage'];
   side: GetEntryPriceAndFeeInstructionDataArgs['side'];
+  oraclePrices: GetEntryPriceAndFeeInstructionDataArgs['oraclePrices'];
 };
 
 export function getGetEntryPriceAndFeeInstruction<
   TAccountCortex extends string,
   TAccountPool extends string,
   TAccountCustody extends string,
-  TAccountCustodyTradeOracle extends string,
+  TAccountOracle extends string,
   TAccountCollateralCustody extends string,
-  TAccountCollateralCustodyOracle extends string,
   TProgramAddress extends Address = typeof ADRENA_PROGRAM_ADDRESS,
 >(
   input: GetEntryPriceAndFeeInput<
     TAccountCortex,
     TAccountPool,
     TAccountCustody,
-    TAccountCustodyTradeOracle,
-    TAccountCollateralCustody,
-    TAccountCollateralCustodyOracle
+    TAccountOracle,
+    TAccountCollateralCustody
   >,
   config?: { programAddress?: TProgramAddress }
 ): GetEntryPriceAndFeeInstruction<
@@ -177,9 +181,8 @@ export function getGetEntryPriceAndFeeInstruction<
   TAccountCortex,
   TAccountPool,
   TAccountCustody,
-  TAccountCustodyTradeOracle,
-  TAccountCollateralCustody,
-  TAccountCollateralCustodyOracle
+  TAccountOracle,
+  TAccountCollateralCustody
 > {
   // Program address.
   const programAddress = config?.programAddress ?? ADRENA_PROGRAM_ADDRESS;
@@ -189,16 +192,9 @@ export function getGetEntryPriceAndFeeInstruction<
     cortex: { value: input.cortex ?? null, isWritable: false },
     pool: { value: input.pool ?? null, isWritable: false },
     custody: { value: input.custody ?? null, isWritable: false },
-    custodyTradeOracle: {
-      value: input.custodyTradeOracle ?? null,
-      isWritable: false,
-    },
+    oracle: { value: input.oracle ?? null, isWritable: false },
     collateralCustody: {
       value: input.collateralCustody ?? null,
-      isWritable: false,
-    },
-    collateralCustodyOracle: {
-      value: input.collateralCustodyOracle ?? null,
       isWritable: false,
     },
   };
@@ -216,9 +212,8 @@ export function getGetEntryPriceAndFeeInstruction<
       getAccountMeta(accounts.cortex),
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.custody),
-      getAccountMeta(accounts.custodyTradeOracle),
+      getAccountMeta(accounts.oracle),
       getAccountMeta(accounts.collateralCustody),
-      getAccountMeta(accounts.collateralCustodyOracle),
     ],
     programAddress,
     data: getGetEntryPriceAndFeeInstructionDataEncoder().encode(
@@ -229,9 +224,8 @@ export function getGetEntryPriceAndFeeInstruction<
     TAccountCortex,
     TAccountPool,
     TAccountCustody,
-    TAccountCustodyTradeOracle,
-    TAccountCollateralCustody,
-    TAccountCollateralCustodyOracle
+    TAccountOracle,
+    TAccountCollateralCustody
   >;
 
   return instruction;
@@ -250,11 +244,9 @@ export type ParsedGetEntryPriceAndFeeInstruction<
     /** #3 */
     custody: TAccountMetas[2];
     /** #4 */
-    custodyTradeOracle: TAccountMetas[3];
+    oracle: TAccountMetas[3];
     /** #5 */
     collateralCustody: TAccountMetas[4];
-    /** #6 */
-    collateralCustodyOracle: TAccountMetas[5];
   };
   data: GetEntryPriceAndFeeInstructionData;
 };
@@ -267,7 +259,7 @@ export function parseGetEntryPriceAndFeeInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedGetEntryPriceAndFeeInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 6) {
+  if (instruction.accounts.length < 5) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -283,9 +275,8 @@ export function parseGetEntryPriceAndFeeInstruction<
       cortex: getNextAccount(),
       pool: getNextAccount(),
       custody: getNextAccount(),
-      custodyTradeOracle: getNextAccount(),
+      oracle: getNextAccount(),
       collateralCustody: getNextAccount(),
-      collateralCustodyOracle: getNextAccount(),
     },
     data: getGetEntryPriceAndFeeInstructionDataDecoder().decode(
       instruction.data

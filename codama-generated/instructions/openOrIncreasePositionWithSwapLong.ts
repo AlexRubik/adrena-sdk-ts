@@ -56,15 +56,11 @@ export type OpenOrIncreasePositionWithSwapLongInstruction<
   TAccountFundingAccount extends string | IAccountMeta<string> = string,
   TAccountCollateralAccount extends string | IAccountMeta<string> = string,
   TAccountReceivingCustody extends string | IAccountMeta<string> = string,
-  TAccountReceivingCustodyOracle extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TAccountReceivingCustodyTokenAccount extends
     | string
     | IAccountMeta<string> = string,
   TAccountPrincipalCustody extends string | IAccountMeta<string> = string,
-  TAccountPrincipalCustodyOracle extends string | IAccountMeta<string> = string,
-  TAccountPrincipalCustodyTradeOracle extends
-    | string
-    | IAccountMeta<string> = string,
   TAccountPrincipalCustodyTokenAccount extends
     | string
     | IAccountMeta<string> = string,
@@ -101,21 +97,15 @@ export type OpenOrIncreasePositionWithSwapLongInstruction<
       TAccountReceivingCustody extends string
         ? WritableAccount<TAccountReceivingCustody>
         : TAccountReceivingCustody,
-      TAccountReceivingCustodyOracle extends string
-        ? ReadonlyAccount<TAccountReceivingCustodyOracle>
-        : TAccountReceivingCustodyOracle,
+      TAccountOracle extends string
+        ? WritableAccount<TAccountOracle>
+        : TAccountOracle,
       TAccountReceivingCustodyTokenAccount extends string
         ? WritableAccount<TAccountReceivingCustodyTokenAccount>
         : TAccountReceivingCustodyTokenAccount,
       TAccountPrincipalCustody extends string
         ? WritableAccount<TAccountPrincipalCustody>
         : TAccountPrincipalCustody,
-      TAccountPrincipalCustodyOracle extends string
-        ? ReadonlyAccount<TAccountPrincipalCustodyOracle>
-        : TAccountPrincipalCustodyOracle,
-      TAccountPrincipalCustodyTradeOracle extends string
-        ? ReadonlyAccount<TAccountPrincipalCustodyTradeOracle>
-        : TAccountPrincipalCustodyTradeOracle,
       TAccountPrincipalCustodyTokenAccount extends string
         ? WritableAccount<TAccountPrincipalCustodyTokenAccount>
         : TAccountPrincipalCustodyTokenAccount,
@@ -189,11 +179,9 @@ export type OpenOrIncreasePositionWithSwapLongInput<
   TAccountFundingAccount extends string = string,
   TAccountCollateralAccount extends string = string,
   TAccountReceivingCustody extends string = string,
-  TAccountReceivingCustodyOracle extends string = string,
+  TAccountOracle extends string = string,
   TAccountReceivingCustodyTokenAccount extends string = string,
   TAccountPrincipalCustody extends string = string,
-  TAccountPrincipalCustodyOracle extends string = string,
-  TAccountPrincipalCustodyTradeOracle extends string = string,
   TAccountPrincipalCustodyTokenAccount extends string = string,
   TAccountTransferAuthority extends string = string,
   TAccountCortex extends string = string,
@@ -214,30 +202,26 @@ export type OpenOrIncreasePositionWithSwapLongInput<
   /** #5 */
   receivingCustody: Address<TAccountReceivingCustody>;
   /** #6 */
-  receivingCustodyOracle: Address<TAccountReceivingCustodyOracle>;
+  oracle: Address<TAccountOracle>;
   /** #7 */
   receivingCustodyTokenAccount: Address<TAccountReceivingCustodyTokenAccount>;
   /** #8 */
   principalCustody: Address<TAccountPrincipalCustody>;
   /** #9 */
-  principalCustodyOracle: Address<TAccountPrincipalCustodyOracle>;
-  /** #10 */
-  principalCustodyTradeOracle: Address<TAccountPrincipalCustodyTradeOracle>;
-  /** #11 */
   principalCustodyTokenAccount: Address<TAccountPrincipalCustodyTokenAccount>;
-  /** #12 */
+  /** #10 */
   transferAuthority: Address<TAccountTransferAuthority>;
-  /** #13 */
+  /** #11 */
   cortex: Address<TAccountCortex>;
-  /** #14 */
+  /** #12 */
   pool: Address<TAccountPool>;
-  /** #15 */
+  /** #13 */
   position: Address<TAccountPosition>;
-  /** #16 */
+  /** #14 */
   systemProgram?: Address<TAccountSystemProgram>;
-  /** #17 */
+  /** #15 */
   tokenProgram?: Address<TAccountTokenProgram>;
-  /** #18 */
+  /** #16 */
   adrenaProgram: Address<TAccountAdrenaProgram>;
   params: OpenOrIncreasePositionWithSwapLongInstructionDataArgs['params'];
 };
@@ -248,11 +232,9 @@ export function getOpenOrIncreasePositionWithSwapLongInstruction<
   TAccountFundingAccount extends string,
   TAccountCollateralAccount extends string,
   TAccountReceivingCustody extends string,
-  TAccountReceivingCustodyOracle extends string,
+  TAccountOracle extends string,
   TAccountReceivingCustodyTokenAccount extends string,
   TAccountPrincipalCustody extends string,
-  TAccountPrincipalCustodyOracle extends string,
-  TAccountPrincipalCustodyTradeOracle extends string,
   TAccountPrincipalCustodyTokenAccount extends string,
   TAccountTransferAuthority extends string,
   TAccountCortex extends string,
@@ -269,11 +251,9 @@ export function getOpenOrIncreasePositionWithSwapLongInstruction<
     TAccountFundingAccount,
     TAccountCollateralAccount,
     TAccountReceivingCustody,
-    TAccountReceivingCustodyOracle,
+    TAccountOracle,
     TAccountReceivingCustodyTokenAccount,
     TAccountPrincipalCustody,
-    TAccountPrincipalCustodyOracle,
-    TAccountPrincipalCustodyTradeOracle,
     TAccountPrincipalCustodyTokenAccount,
     TAccountTransferAuthority,
     TAccountCortex,
@@ -291,11 +271,9 @@ export function getOpenOrIncreasePositionWithSwapLongInstruction<
   TAccountFundingAccount,
   TAccountCollateralAccount,
   TAccountReceivingCustody,
-  TAccountReceivingCustodyOracle,
+  TAccountOracle,
   TAccountReceivingCustodyTokenAccount,
   TAccountPrincipalCustody,
-  TAccountPrincipalCustodyOracle,
-  TAccountPrincipalCustodyTradeOracle,
   TAccountPrincipalCustodyTokenAccount,
   TAccountTransferAuthority,
   TAccountCortex,
@@ -321,10 +299,7 @@ export function getOpenOrIncreasePositionWithSwapLongInstruction<
       value: input.receivingCustody ?? null,
       isWritable: true,
     },
-    receivingCustodyOracle: {
-      value: input.receivingCustodyOracle ?? null,
-      isWritable: false,
-    },
+    oracle: { value: input.oracle ?? null, isWritable: true },
     receivingCustodyTokenAccount: {
       value: input.receivingCustodyTokenAccount ?? null,
       isWritable: true,
@@ -332,14 +307,6 @@ export function getOpenOrIncreasePositionWithSwapLongInstruction<
     principalCustody: {
       value: input.principalCustody ?? null,
       isWritable: true,
-    },
-    principalCustodyOracle: {
-      value: input.principalCustodyOracle ?? null,
-      isWritable: false,
-    },
-    principalCustodyTradeOracle: {
-      value: input.principalCustodyTradeOracle ?? null,
-      isWritable: false,
     },
     principalCustodyTokenAccount: {
       value: input.principalCustodyTokenAccount ?? null,
@@ -382,11 +349,9 @@ export function getOpenOrIncreasePositionWithSwapLongInstruction<
       getAccountMeta(accounts.fundingAccount),
       getAccountMeta(accounts.collateralAccount),
       getAccountMeta(accounts.receivingCustody),
-      getAccountMeta(accounts.receivingCustodyOracle),
+      getAccountMeta(accounts.oracle),
       getAccountMeta(accounts.receivingCustodyTokenAccount),
       getAccountMeta(accounts.principalCustody),
-      getAccountMeta(accounts.principalCustodyOracle),
-      getAccountMeta(accounts.principalCustodyTradeOracle),
       getAccountMeta(accounts.principalCustodyTokenAccount),
       getAccountMeta(accounts.transferAuthority),
       getAccountMeta(accounts.cortex),
@@ -407,11 +372,9 @@ export function getOpenOrIncreasePositionWithSwapLongInstruction<
     TAccountFundingAccount,
     TAccountCollateralAccount,
     TAccountReceivingCustody,
-    TAccountReceivingCustodyOracle,
+    TAccountOracle,
     TAccountReceivingCustodyTokenAccount,
     TAccountPrincipalCustody,
-    TAccountPrincipalCustodyOracle,
-    TAccountPrincipalCustodyTradeOracle,
     TAccountPrincipalCustodyTokenAccount,
     TAccountTransferAuthority,
     TAccountCortex,
@@ -442,31 +405,27 @@ export type ParsedOpenOrIncreasePositionWithSwapLongInstruction<
     /** #5 */
     receivingCustody: TAccountMetas[4];
     /** #6 */
-    receivingCustodyOracle: TAccountMetas[5];
+    oracle: TAccountMetas[5];
     /** #7 */
     receivingCustodyTokenAccount: TAccountMetas[6];
     /** #8 */
     principalCustody: TAccountMetas[7];
     /** #9 */
-    principalCustodyOracle: TAccountMetas[8];
+    principalCustodyTokenAccount: TAccountMetas[8];
     /** #10 */
-    principalCustodyTradeOracle: TAccountMetas[9];
+    transferAuthority: TAccountMetas[9];
     /** #11 */
-    principalCustodyTokenAccount: TAccountMetas[10];
+    cortex: TAccountMetas[10];
     /** #12 */
-    transferAuthority: TAccountMetas[11];
+    pool: TAccountMetas[11];
     /** #13 */
-    cortex: TAccountMetas[12];
+    position: TAccountMetas[12];
     /** #14 */
-    pool: TAccountMetas[13];
+    systemProgram: TAccountMetas[13];
     /** #15 */
-    position: TAccountMetas[14];
+    tokenProgram: TAccountMetas[14];
     /** #16 */
-    systemProgram: TAccountMetas[15];
-    /** #17 */
-    tokenProgram: TAccountMetas[16];
-    /** #18 */
-    adrenaProgram: TAccountMetas[17];
+    adrenaProgram: TAccountMetas[15];
   };
   data: OpenOrIncreasePositionWithSwapLongInstructionData;
 };
@@ -482,7 +441,7 @@ export function parseOpenOrIncreasePositionWithSwapLongInstruction<
   TProgram,
   TAccountMetas
 > {
-  if (instruction.accounts.length < 18) {
+  if (instruction.accounts.length < 16) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -500,11 +459,9 @@ export function parseOpenOrIncreasePositionWithSwapLongInstruction<
       fundingAccount: getNextAccount(),
       collateralAccount: getNextAccount(),
       receivingCustody: getNextAccount(),
-      receivingCustodyOracle: getNextAccount(),
+      oracle: getNextAccount(),
       receivingCustodyTokenAccount: getNextAccount(),
       principalCustody: getNextAccount(),
-      principalCustodyOracle: getNextAccount(),
-      principalCustodyTradeOracle: getNextAccount(),
       principalCustodyTokenAccount: getNextAccount(),
       transferAuthority: getNextAccount(),
       cortex: getNextAccount(),

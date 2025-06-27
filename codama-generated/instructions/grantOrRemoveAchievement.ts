@@ -7,15 +7,17 @@
  */
 
 import {
+  addDecoderSizePrefix,
+  addEncoderSizePrefix,
   combineCodec,
   fixDecoderSize,
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
-  getOptionDecoder,
-  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
+  getU32Decoder,
+  getU32Encoder,
   getU8Decoder,
   getU8Encoder,
   transformEncoder,
@@ -28,8 +30,6 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
-  type Option,
-  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlySignerAccount,
   type ReadonlyUint8Array,
@@ -40,22 +40,22 @@ import {
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
-export const EDIT_USER_PROFILE_DISCRIMINATOR = new Uint8Array([
-  253, 8, 161, 147, 64, 21, 60, 145,
+export const GRANT_OR_REMOVE_ACHIEVEMENT_DISCRIMINATOR = new Uint8Array([
+  31, 192, 107, 213, 24, 175, 248, 248,
 ]);
 
-export function getEditUserProfileDiscriminatorBytes() {
+export function getGrantOrRemoveAchievementDiscriminatorBytes() {
   return fixEncoderSize(getBytesEncoder(), 8).encode(
-    EDIT_USER_PROFILE_DISCRIMINATOR
+    GRANT_OR_REMOVE_ACHIEVEMENT_DISCRIMINATOR
   );
 }
 
-export type EditUserProfileInstruction<
+export type GrantOrRemoveAchievementInstruction<
   TProgram extends string = typeof ADRENA_PROGRAM_ADDRESS,
-  TAccountUser extends string | IAccountMeta<string> = string,
+  TAccountWhitelistedCaller extends string | IAccountMeta<string> = string,
   TAccountPayer extends string | IAccountMeta<string> = string,
+  TAccountUser extends string | IAccountMeta<string> = string,
   TAccountUserProfile extends string | IAccountMeta<string> = string,
-  TAccountReferrerProfile extends string | IAccountMeta<string> = string,
   TAccountSystemProgram extends
     | string
     | IAccountMeta<string> = '11111111111111111111111111111111',
@@ -64,19 +64,20 @@ export type EditUserProfileInstruction<
   IInstructionWithData<Uint8Array> &
   IInstructionWithAccounts<
     [
-      TAccountUser extends string
-        ? ReadonlySignerAccount<TAccountUser> & IAccountSignerMeta<TAccountUser>
-        : TAccountUser,
+      TAccountWhitelistedCaller extends string
+        ? ReadonlySignerAccount<TAccountWhitelistedCaller> &
+            IAccountSignerMeta<TAccountWhitelistedCaller>
+        : TAccountWhitelistedCaller,
       TAccountPayer extends string
         ? WritableSignerAccount<TAccountPayer> &
             IAccountSignerMeta<TAccountPayer>
         : TAccountPayer,
+      TAccountUser extends string
+        ? ReadonlyAccount<TAccountUser>
+        : TAccountUser,
       TAccountUserProfile extends string
         ? WritableAccount<TAccountUserProfile>
         : TAccountUserProfile,
-      TAccountReferrerProfile extends string
-        ? ReadonlyAccount<TAccountReferrerProfile>
-        : TAccountReferrerProfile,
       TAccountSystemProgram extends string
         ? ReadonlyAccount<TAccountSystemProgram>
         : TAccountSystemProgram,
@@ -84,107 +85,95 @@ export type EditUserProfileInstruction<
     ]
   >;
 
-export type EditUserProfileInstructionData = {
+export type GrantOrRemoveAchievementInstructionData = {
   discriminator: ReadonlyUint8Array;
-  profilePicture: number;
-  wallpaper: number;
-  title: number;
-  team: Option<number>;
-  continent: Option<number>;
+  achievements: ReadonlyUint8Array;
+  operation: number;
 };
 
-export type EditUserProfileInstructionDataArgs = {
-  profilePicture: number;
-  wallpaper: number;
-  title: number;
-  team: OptionOrNullable<number>;
-  continent: OptionOrNullable<number>;
+export type GrantOrRemoveAchievementInstructionDataArgs = {
+  achievements: ReadonlyUint8Array;
+  operation: number;
 };
 
-export function getEditUserProfileInstructionDataEncoder(): Encoder<EditUserProfileInstructionDataArgs> {
+export function getGrantOrRemoveAchievementInstructionDataEncoder(): Encoder<GrantOrRemoveAchievementInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
-      ['profilePicture', getU8Encoder()],
-      ['wallpaper', getU8Encoder()],
-      ['title', getU8Encoder()],
-      ['team', getOptionEncoder(getU8Encoder())],
-      ['continent', getOptionEncoder(getU8Encoder())],
+      [
+        'achievements',
+        addEncoderSizePrefix(getBytesEncoder(), getU32Encoder()),
+      ],
+      ['operation', getU8Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: EDIT_USER_PROFILE_DISCRIMINATOR })
+    (value) => ({
+      ...value,
+      discriminator: GRANT_OR_REMOVE_ACHIEVEMENT_DISCRIMINATOR,
+    })
   );
 }
 
-export function getEditUserProfileInstructionDataDecoder(): Decoder<EditUserProfileInstructionData> {
+export function getGrantOrRemoveAchievementInstructionDataDecoder(): Decoder<GrantOrRemoveAchievementInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
-    ['profilePicture', getU8Decoder()],
-    ['wallpaper', getU8Decoder()],
-    ['title', getU8Decoder()],
-    ['team', getOptionDecoder(getU8Decoder())],
-    ['continent', getOptionDecoder(getU8Decoder())],
+    ['achievements', addDecoderSizePrefix(getBytesDecoder(), getU32Decoder())],
+    ['operation', getU8Decoder()],
   ]);
 }
 
-export function getEditUserProfileInstructionDataCodec(): Codec<
-  EditUserProfileInstructionDataArgs,
-  EditUserProfileInstructionData
+export function getGrantOrRemoveAchievementInstructionDataCodec(): Codec<
+  GrantOrRemoveAchievementInstructionDataArgs,
+  GrantOrRemoveAchievementInstructionData
 > {
   return combineCodec(
-    getEditUserProfileInstructionDataEncoder(),
-    getEditUserProfileInstructionDataDecoder()
+    getGrantOrRemoveAchievementInstructionDataEncoder(),
+    getGrantOrRemoveAchievementInstructionDataDecoder()
   );
 }
 
-export type EditUserProfileInput<
-  TAccountUser extends string = string,
+export type GrantOrRemoveAchievementInput<
+  TAccountWhitelistedCaller extends string = string,
   TAccountPayer extends string = string,
+  TAccountUser extends string = string,
   TAccountUserProfile extends string = string,
-  TAccountReferrerProfile extends string = string,
   TAccountSystemProgram extends string = string,
 > = {
   /** #1 */
-  user: TransactionSigner<TAccountUser>;
+  whitelistedCaller: TransactionSigner<TAccountWhitelistedCaller>;
   /** #2 */
   payer: TransactionSigner<TAccountPayer>;
   /** #3 */
+  user: Address<TAccountUser>;
+  /** #4 */
   userProfile: Address<TAccountUserProfile>;
-  /**
-   * #4
-   * Apply this referrer to the user profile, If none, referrer_profile is set to default
-   */
-  referrerProfile?: Address<TAccountReferrerProfile>;
   /** #5 */
   systemProgram?: Address<TAccountSystemProgram>;
-  profilePicture: EditUserProfileInstructionDataArgs['profilePicture'];
-  wallpaper: EditUserProfileInstructionDataArgs['wallpaper'];
-  title: EditUserProfileInstructionDataArgs['title'];
-  team: EditUserProfileInstructionDataArgs['team'];
-  continent: EditUserProfileInstructionDataArgs['continent'];
+  achievements: GrantOrRemoveAchievementInstructionDataArgs['achievements'];
+  operation: GrantOrRemoveAchievementInstructionDataArgs['operation'];
 };
 
-export function getEditUserProfileInstruction<
-  TAccountUser extends string,
+export function getGrantOrRemoveAchievementInstruction<
+  TAccountWhitelistedCaller extends string,
   TAccountPayer extends string,
+  TAccountUser extends string,
   TAccountUserProfile extends string,
-  TAccountReferrerProfile extends string,
   TAccountSystemProgram extends string,
   TProgramAddress extends Address = typeof ADRENA_PROGRAM_ADDRESS,
 >(
-  input: EditUserProfileInput<
-    TAccountUser,
+  input: GrantOrRemoveAchievementInput<
+    TAccountWhitelistedCaller,
     TAccountPayer,
+    TAccountUser,
     TAccountUserProfile,
-    TAccountReferrerProfile,
     TAccountSystemProgram
   >,
   config?: { programAddress?: TProgramAddress }
-): EditUserProfileInstruction<
+): GrantOrRemoveAchievementInstruction<
   TProgramAddress,
-  TAccountUser,
+  TAccountWhitelistedCaller,
   TAccountPayer,
+  TAccountUser,
   TAccountUserProfile,
-  TAccountReferrerProfile,
   TAccountSystemProgram
 > {
   // Program address.
@@ -192,13 +181,13 @@ export function getEditUserProfileInstruction<
 
   // Original accounts.
   const originalAccounts = {
-    user: { value: input.user ?? null, isWritable: false },
-    payer: { value: input.payer ?? null, isWritable: true },
-    userProfile: { value: input.userProfile ?? null, isWritable: true },
-    referrerProfile: {
-      value: input.referrerProfile ?? null,
+    whitelistedCaller: {
+      value: input.whitelistedCaller ?? null,
       isWritable: false,
     },
+    payer: { value: input.payer ?? null, isWritable: true },
+    user: { value: input.user ?? null, isWritable: false },
+    userProfile: { value: input.userProfile ?? null, isWritable: true },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -218,60 +207,56 @@ export function getEditUserProfileInstruction<
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
     accounts: [
-      getAccountMeta(accounts.user),
+      getAccountMeta(accounts.whitelistedCaller),
       getAccountMeta(accounts.payer),
+      getAccountMeta(accounts.user),
       getAccountMeta(accounts.userProfile),
-      getAccountMeta(accounts.referrerProfile),
       getAccountMeta(accounts.systemProgram),
     ],
     programAddress,
-    data: getEditUserProfileInstructionDataEncoder().encode(
-      args as EditUserProfileInstructionDataArgs
+    data: getGrantOrRemoveAchievementInstructionDataEncoder().encode(
+      args as GrantOrRemoveAchievementInstructionDataArgs
     ),
-  } as EditUserProfileInstruction<
+  } as GrantOrRemoveAchievementInstruction<
     TProgramAddress,
-    TAccountUser,
+    TAccountWhitelistedCaller,
     TAccountPayer,
+    TAccountUser,
     TAccountUserProfile,
-    TAccountReferrerProfile,
     TAccountSystemProgram
   >;
 
   return instruction;
 }
 
-export type ParsedEditUserProfileInstruction<
+export type ParsedGrantOrRemoveAchievementInstruction<
   TProgram extends string = typeof ADRENA_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
     /** #1 */
-    user: TAccountMetas[0];
+    whitelistedCaller: TAccountMetas[0];
     /** #2 */
     payer: TAccountMetas[1];
     /** #3 */
-    userProfile: TAccountMetas[2];
-    /**
-     * #4
-     * Apply this referrer to the user profile, If none, referrer_profile is set to default
-     */
-
-    referrerProfile?: TAccountMetas[3] | undefined;
+    user: TAccountMetas[2];
+    /** #4 */
+    userProfile: TAccountMetas[3];
     /** #5 */
     systemProgram: TAccountMetas[4];
   };
-  data: EditUserProfileInstructionData;
+  data: GrantOrRemoveAchievementInstructionData;
 };
 
-export function parseEditUserProfileInstruction<
+export function parseGrantOrRemoveAchievementInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedEditUserProfileInstruction<TProgram, TAccountMetas> {
+): ParsedGrantOrRemoveAchievementInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 5) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
@@ -282,21 +267,17 @@ export function parseEditUserProfileInstruction<
     accountIndex += 1;
     return accountMeta;
   };
-  const getNextOptionalAccount = () => {
-    const accountMeta = getNextAccount();
-    return accountMeta.address === ADRENA_PROGRAM_ADDRESS
-      ? undefined
-      : accountMeta;
-  };
   return {
     programAddress: instruction.programAddress,
     accounts: {
-      user: getNextAccount(),
+      whitelistedCaller: getNextAccount(),
       payer: getNextAccount(),
+      user: getNextAccount(),
       userProfile: getNextAccount(),
-      referrerProfile: getNextOptionalAccount(),
       systemProgram: getNextAccount(),
     },
-    data: getEditUserProfileInstructionDataDecoder().decode(instruction.data),
+    data: getGrantOrRemoveAchievementInstructionDataDecoder().decode(
+      instruction.data
+    ),
   };
 }

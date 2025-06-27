@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   getU64Decoder,
@@ -25,11 +27,19 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const GET_REMOVE_LIQUIDITY_AMOUNT_AND_FEE_DISCRIMINATOR = new Uint8Array(
   [194, 226, 233, 102, 14, 21, 196, 7]
@@ -46,7 +56,7 @@ export type GetRemoveLiquidityAmountAndFeeInstruction<
   TAccountCortex extends string | IAccountMeta<string> = string,
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountCustody extends string | IAccountMeta<string> = string,
-  TAccountCustodyOracle extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TAccountLpTokenMint extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
@@ -62,9 +72,9 @@ export type GetRemoveLiquidityAmountAndFeeInstruction<
       TAccountCustody extends string
         ? ReadonlyAccount<TAccountCustody>
         : TAccountCustody,
-      TAccountCustodyOracle extends string
-        ? ReadonlyAccount<TAccountCustodyOracle>
-        : TAccountCustodyOracle,
+      TAccountOracle extends string
+        ? ReadonlyAccount<TAccountOracle>
+        : TAccountOracle,
       TAccountLpTokenMint extends string
         ? ReadonlyAccount<TAccountLpTokenMint>
         : TAccountLpTokenMint,
@@ -75,10 +85,12 @@ export type GetRemoveLiquidityAmountAndFeeInstruction<
 export type GetRemoveLiquidityAmountAndFeeInstructionData = {
   discriminator: ReadonlyUint8Array;
   lpAmountIn: bigint;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
 export type GetRemoveLiquidityAmountAndFeeInstructionDataArgs = {
   lpAmountIn: number | bigint;
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
 };
 
 export function getGetRemoveLiquidityAmountAndFeeInstructionDataEncoder(): Encoder<GetRemoveLiquidityAmountAndFeeInstructionDataArgs> {
@@ -86,6 +98,7 @@ export function getGetRemoveLiquidityAmountAndFeeInstructionDataEncoder(): Encod
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['lpAmountIn', getU64Encoder()],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
     ]),
     (value) => ({
       ...value,
@@ -98,6 +111,7 @@ export function getGetRemoveLiquidityAmountAndFeeInstructionDataDecoder(): Decod
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['lpAmountIn', getU64Decoder()],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -115,7 +129,7 @@ export type GetRemoveLiquidityAmountAndFeeInput<
   TAccountCortex extends string = string,
   TAccountPool extends string = string,
   TAccountCustody extends string = string,
-  TAccountCustodyOracle extends string = string,
+  TAccountOracle extends string = string,
   TAccountLpTokenMint extends string = string,
 > = {
   /** #1 */
@@ -124,18 +138,19 @@ export type GetRemoveLiquidityAmountAndFeeInput<
   pool: Address<TAccountPool>;
   /** #3 */
   custody: Address<TAccountCustody>;
-  /** #4 */
-  custodyOracle: Address<TAccountCustodyOracle>;
   /** #5 */
+  oracle: Address<TAccountOracle>;
+  /** #6 */
   lpTokenMint: Address<TAccountLpTokenMint>;
   lpAmountIn: GetRemoveLiquidityAmountAndFeeInstructionDataArgs['lpAmountIn'];
+  oraclePrices: GetRemoveLiquidityAmountAndFeeInstructionDataArgs['oraclePrices'];
 };
 
 export function getGetRemoveLiquidityAmountAndFeeInstruction<
   TAccountCortex extends string,
   TAccountPool extends string,
   TAccountCustody extends string,
-  TAccountCustodyOracle extends string,
+  TAccountOracle extends string,
   TAccountLpTokenMint extends string,
   TProgramAddress extends Address = typeof ADRENA_PROGRAM_ADDRESS,
 >(
@@ -143,7 +158,7 @@ export function getGetRemoveLiquidityAmountAndFeeInstruction<
     TAccountCortex,
     TAccountPool,
     TAccountCustody,
-    TAccountCustodyOracle,
+    TAccountOracle,
     TAccountLpTokenMint
   >,
   config?: { programAddress?: TProgramAddress }
@@ -152,7 +167,7 @@ export function getGetRemoveLiquidityAmountAndFeeInstruction<
   TAccountCortex,
   TAccountPool,
   TAccountCustody,
-  TAccountCustodyOracle,
+  TAccountOracle,
   TAccountLpTokenMint
 > {
   // Program address.
@@ -163,7 +178,7 @@ export function getGetRemoveLiquidityAmountAndFeeInstruction<
     cortex: { value: input.cortex ?? null, isWritable: false },
     pool: { value: input.pool ?? null, isWritable: false },
     custody: { value: input.custody ?? null, isWritable: false },
-    custodyOracle: { value: input.custodyOracle ?? null, isWritable: false },
+    oracle: { value: input.oracle ?? null, isWritable: false },
     lpTokenMint: { value: input.lpTokenMint ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -180,7 +195,7 @@ export function getGetRemoveLiquidityAmountAndFeeInstruction<
       getAccountMeta(accounts.cortex),
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.custody),
-      getAccountMeta(accounts.custodyOracle),
+      getAccountMeta(accounts.oracle),
       getAccountMeta(accounts.lpTokenMint),
     ],
     programAddress,
@@ -192,7 +207,7 @@ export function getGetRemoveLiquidityAmountAndFeeInstruction<
     TAccountCortex,
     TAccountPool,
     TAccountCustody,
-    TAccountCustodyOracle,
+    TAccountOracle,
     TAccountLpTokenMint
   >;
 
@@ -211,9 +226,9 @@ export type ParsedGetRemoveLiquidityAmountAndFeeInstruction<
     pool: TAccountMetas[1];
     /** #3 */
     custody: TAccountMetas[2];
-    /** #4 */
-    custodyOracle: TAccountMetas[3];
     /** #5 */
+    oracle: TAccountMetas[3];
+    /** #6 */
     lpTokenMint: TAccountMetas[4];
   };
   data: GetRemoveLiquidityAmountAndFeeInstructionData;
@@ -243,7 +258,7 @@ export function parseGetRemoveLiquidityAmountAndFeeInstruction<
       cortex: getNextAccount(),
       pool: getNextAccount(),
       custody: getNextAccount(),
-      custodyOracle: getNextAccount(),
+      oracle: getNextAccount(),
       lpTokenMint: getNextAccount(),
     },
     data: getGetRemoveLiquidityAmountAndFeeInstructionDataDecoder().decode(

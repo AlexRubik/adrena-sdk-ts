@@ -31,6 +31,7 @@ import {
   type IInstructionWithAccounts,
   type IInstructionWithData,
   type ReadonlyAccount,
+  type ReadonlySignerAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
   type WritableAccount,
@@ -52,6 +53,7 @@ export function getMigrateUserProfileFromV1ToV2DiscriminatorBytes() {
 export type MigrateUserProfileFromV1ToV2Instruction<
   TProgram extends string = typeof ADRENA_PROGRAM_ADDRESS,
   TAccountOwner extends string | IAccountMeta<string> = string,
+  TAccountCaller extends string | IAccountMeta<string> = string,
   TAccountPayer extends string | IAccountMeta<string> = string,
   TAccountUserProfile extends string | IAccountMeta<string> = string,
   TAccountUserNickname extends string | IAccountMeta<string> = string,
@@ -70,9 +72,12 @@ export type MigrateUserProfileFromV1ToV2Instruction<
   IInstructionWithAccounts<
     [
       TAccountOwner extends string
-        ? WritableSignerAccount<TAccountOwner> &
-            IAccountSignerMeta<TAccountOwner>
+        ? ReadonlyAccount<TAccountOwner>
         : TAccountOwner,
+      TAccountCaller extends string
+        ? ReadonlySignerAccount<TAccountCaller> &
+            IAccountSignerMeta<TAccountCaller>
+        : TAccountCaller,
       TAccountPayer extends string
         ? WritableSignerAccount<TAccountPayer> &
             IAccountSignerMeta<TAccountPayer>
@@ -137,6 +142,7 @@ export function getMigrateUserProfileFromV1ToV2InstructionDataCodec(): Codec<
 
 export type MigrateUserProfileFromV1ToV2Input<
   TAccountOwner extends string = string,
+  TAccountCaller extends string = string,
   TAccountPayer extends string = string,
   TAccountUserProfile extends string = string,
   TAccountUserNickname extends string = string,
@@ -148,30 +154,30 @@ export type MigrateUserProfileFromV1ToV2Input<
    * #1
    * Wallet related to the user profile
    */
-  owner: TransactionSigner<TAccountOwner>;
-  /**
-   * #2
-   * Account paying for the reallocation
-   */
-  payer: TransactionSigner<TAccountPayer>;
+  owner: Address<TAccountOwner>;
+  /** #2 */
+  caller: TransactionSigner<TAccountCaller>;
   /** #3 */
+  payer: TransactionSigner<TAccountPayer>;
+  /** #4 */
   userProfile: Address<TAccountUserProfile>;
   /**
-   * #4
+   * #5
    * Use PDA to make nicknames unique
    */
   userNickname: Address<TAccountUserNickname>;
-  /** #5 */
-  systemProgram?: Address<TAccountSystemProgram>;
   /** #6 */
-  tokenProgram?: Address<TAccountTokenProgram>;
+  systemProgram?: Address<TAccountSystemProgram>;
   /** #7 */
+  tokenProgram?: Address<TAccountTokenProgram>;
+  /** #8 */
   rent?: Address<TAccountRent>;
   nickname: MigrateUserProfileFromV1ToV2InstructionDataArgs['nickname'];
 };
 
 export function getMigrateUserProfileFromV1ToV2Instruction<
   TAccountOwner extends string,
+  TAccountCaller extends string,
   TAccountPayer extends string,
   TAccountUserProfile extends string,
   TAccountUserNickname extends string,
@@ -182,6 +188,7 @@ export function getMigrateUserProfileFromV1ToV2Instruction<
 >(
   input: MigrateUserProfileFromV1ToV2Input<
     TAccountOwner,
+    TAccountCaller,
     TAccountPayer,
     TAccountUserProfile,
     TAccountUserNickname,
@@ -193,6 +200,7 @@ export function getMigrateUserProfileFromV1ToV2Instruction<
 ): MigrateUserProfileFromV1ToV2Instruction<
   TProgramAddress,
   TAccountOwner,
+  TAccountCaller,
   TAccountPayer,
   TAccountUserProfile,
   TAccountUserNickname,
@@ -205,7 +213,8 @@ export function getMigrateUserProfileFromV1ToV2Instruction<
 
   // Original accounts.
   const originalAccounts = {
-    owner: { value: input.owner ?? null, isWritable: true },
+    owner: { value: input.owner ?? null, isWritable: false },
+    caller: { value: input.caller ?? null, isWritable: false },
     payer: { value: input.payer ?? null, isWritable: true },
     userProfile: { value: input.userProfile ?? null, isWritable: true },
     userNickname: { value: input.userNickname ?? null, isWritable: true },
@@ -239,6 +248,7 @@ export function getMigrateUserProfileFromV1ToV2Instruction<
   const instruction = {
     accounts: [
       getAccountMeta(accounts.owner),
+      getAccountMeta(accounts.caller),
       getAccountMeta(accounts.payer),
       getAccountMeta(accounts.userProfile),
       getAccountMeta(accounts.userNickname),
@@ -253,6 +263,7 @@ export function getMigrateUserProfileFromV1ToV2Instruction<
   } as MigrateUserProfileFromV1ToV2Instruction<
     TProgramAddress,
     TAccountOwner,
+    TAccountCaller,
     TAccountPayer,
     TAccountUserProfile,
     TAccountUserNickname,
@@ -276,26 +287,24 @@ export type ParsedMigrateUserProfileFromV1ToV2Instruction<
      */
 
     owner: TAccountMetas[0];
-    /**
-     * #2
-     * Account paying for the reallocation
-     */
-
-    payer: TAccountMetas[1];
+    /** #2 */
+    caller: TAccountMetas[1];
     /** #3 */
-    userProfile: TAccountMetas[2];
+    payer: TAccountMetas[2];
+    /** #4 */
+    userProfile: TAccountMetas[3];
     /**
-     * #4
+     * #5
      * Use PDA to make nicknames unique
      */
 
-    userNickname: TAccountMetas[3];
-    /** #5 */
-    systemProgram: TAccountMetas[4];
+    userNickname: TAccountMetas[4];
     /** #6 */
-    tokenProgram: TAccountMetas[5];
+    systemProgram: TAccountMetas[5];
     /** #7 */
-    rent: TAccountMetas[6];
+    tokenProgram: TAccountMetas[6];
+    /** #8 */
+    rent: TAccountMetas[7];
   };
   data: MigrateUserProfileFromV1ToV2InstructionData;
 };
@@ -308,7 +317,7 @@ export function parseMigrateUserProfileFromV1ToV2Instruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedMigrateUserProfileFromV1ToV2Instruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 7) {
+  if (instruction.accounts.length < 8) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -322,6 +331,7 @@ export function parseMigrateUserProfileFromV1ToV2Instruction<
     programAddress: instruction.programAddress,
     accounts: {
       owner: getNextAccount(),
+      caller: getNextAccount(),
       payer: getNextAccount(),
       userProfile: getNextAccount(),
       userNickname: getNextAccount(),

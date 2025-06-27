@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   getU64Decoder,
@@ -26,6 +28,8 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
@@ -34,6 +38,12 @@ import {
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const EXECUTE_LIMIT_ORDER_LONG_DISCRIMINATOR = new Uint8Array([
   114, 251, 178, 6, 238, 31, 245, 245,
@@ -51,8 +61,7 @@ export type ExecuteLimitOrderLongInstruction<
   TAccountCaller extends string | IAccountMeta<string> = string,
   TAccountCollateralEscrow extends string | IAccountMeta<string> = string,
   TAccountCustody extends string | IAccountMeta<string> = string,
-  TAccountCustodyOracle extends string | IAccountMeta<string> = string,
-  TAccountCustodyTradeOracle extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TAccountCustodyTokenAccount extends string | IAccountMeta<string> = string,
   TAccountTransferAuthority extends string | IAccountMeta<string> = string,
   TAccountCortex extends string | IAccountMeta<string> = string,
@@ -84,12 +93,9 @@ export type ExecuteLimitOrderLongInstruction<
       TAccountCustody extends string
         ? WritableAccount<TAccountCustody>
         : TAccountCustody,
-      TAccountCustodyOracle extends string
-        ? ReadonlyAccount<TAccountCustodyOracle>
-        : TAccountCustodyOracle,
-      TAccountCustodyTradeOracle extends string
-        ? ReadonlyAccount<TAccountCustodyTradeOracle>
-        : TAccountCustodyTradeOracle,
+      TAccountOracle extends string
+        ? WritableAccount<TAccountOracle>
+        : TAccountOracle,
       TAccountCustodyTokenAccount extends string
         ? WritableAccount<TAccountCustodyTokenAccount>
         : TAccountCustodyTokenAccount,
@@ -124,15 +130,20 @@ export type ExecuteLimitOrderLongInstruction<
 export type ExecuteLimitOrderLongInstructionData = {
   discriminator: ReadonlyUint8Array;
   id: bigint;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
-export type ExecuteLimitOrderLongInstructionDataArgs = { id: number | bigint };
+export type ExecuteLimitOrderLongInstructionDataArgs = {
+  id: number | bigint;
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
+};
 
 export function getExecuteLimitOrderLongInstructionDataEncoder(): Encoder<ExecuteLimitOrderLongInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['id', getU64Encoder()],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
     ]),
     (value) => ({
       ...value,
@@ -145,6 +156,7 @@ export function getExecuteLimitOrderLongInstructionDataDecoder(): Decoder<Execut
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['id', getU64Decoder()],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -163,8 +175,7 @@ export type ExecuteLimitOrderLongInput<
   TAccountCaller extends string = string,
   TAccountCollateralEscrow extends string = string,
   TAccountCustody extends string = string,
-  TAccountCustodyOracle extends string = string,
-  TAccountCustodyTradeOracle extends string = string,
+  TAccountOracle extends string = string,
   TAccountCustodyTokenAccount extends string = string,
   TAccountTransferAuthority extends string = string,
   TAccountCortex extends string = string,
@@ -184,28 +195,27 @@ export type ExecuteLimitOrderLongInput<
   /** #4 */
   custody: Address<TAccountCustody>;
   /** #5 */
-  custodyOracle: Address<TAccountCustodyOracle>;
+  oracle: Address<TAccountOracle>;
   /** #6 */
-  custodyTradeOracle: Address<TAccountCustodyTradeOracle>;
-  /** #7 */
   custodyTokenAccount: Address<TAccountCustodyTokenAccount>;
-  /** #8 */
+  /** #7 */
   transferAuthority: Address<TAccountTransferAuthority>;
-  /** #9 */
+  /** #8 */
   cortex: Address<TAccountCortex>;
-  /** #10 */
+  /** #9 */
   pool: Address<TAccountPool>;
-  /** #11 */
+  /** #10 */
   position: Address<TAccountPosition>;
-  /** #12 */
+  /** #11 */
   limitOrderBook: Address<TAccountLimitOrderBook>;
-  /** #13 */
+  /** #12 */
   systemProgram?: Address<TAccountSystemProgram>;
-  /** #14 */
+  /** #13 */
   tokenProgram?: Address<TAccountTokenProgram>;
-  /** #15 */
+  /** #14 */
   adrenaProgram: Address<TAccountAdrenaProgram>;
   id: ExecuteLimitOrderLongInstructionDataArgs['id'];
+  oraclePrices: ExecuteLimitOrderLongInstructionDataArgs['oraclePrices'];
 };
 
 export function getExecuteLimitOrderLongInstruction<
@@ -213,8 +223,7 @@ export function getExecuteLimitOrderLongInstruction<
   TAccountCaller extends string,
   TAccountCollateralEscrow extends string,
   TAccountCustody extends string,
-  TAccountCustodyOracle extends string,
-  TAccountCustodyTradeOracle extends string,
+  TAccountOracle extends string,
   TAccountCustodyTokenAccount extends string,
   TAccountTransferAuthority extends string,
   TAccountCortex extends string,
@@ -231,8 +240,7 @@ export function getExecuteLimitOrderLongInstruction<
     TAccountCaller,
     TAccountCollateralEscrow,
     TAccountCustody,
-    TAccountCustodyOracle,
-    TAccountCustodyTradeOracle,
+    TAccountOracle,
     TAccountCustodyTokenAccount,
     TAccountTransferAuthority,
     TAccountCortex,
@@ -250,8 +258,7 @@ export function getExecuteLimitOrderLongInstruction<
   TAccountCaller,
   TAccountCollateralEscrow,
   TAccountCustody,
-  TAccountCustodyOracle,
-  TAccountCustodyTradeOracle,
+  TAccountOracle,
   TAccountCustodyTokenAccount,
   TAccountTransferAuthority,
   TAccountCortex,
@@ -274,11 +281,7 @@ export function getExecuteLimitOrderLongInstruction<
       isWritable: true,
     },
     custody: { value: input.custody ?? null, isWritable: true },
-    custodyOracle: { value: input.custodyOracle ?? null, isWritable: false },
-    custodyTradeOracle: {
-      value: input.custodyTradeOracle ?? null,
-      isWritable: false,
-    },
+    oracle: { value: input.oracle ?? null, isWritable: true },
     custodyTokenAccount: {
       value: input.custodyTokenAccount ?? null,
       isWritable: true,
@@ -320,8 +323,7 @@ export function getExecuteLimitOrderLongInstruction<
       getAccountMeta(accounts.caller),
       getAccountMeta(accounts.collateralEscrow),
       getAccountMeta(accounts.custody),
-      getAccountMeta(accounts.custodyOracle),
-      getAccountMeta(accounts.custodyTradeOracle),
+      getAccountMeta(accounts.oracle),
       getAccountMeta(accounts.custodyTokenAccount),
       getAccountMeta(accounts.transferAuthority),
       getAccountMeta(accounts.cortex),
@@ -342,8 +344,7 @@ export function getExecuteLimitOrderLongInstruction<
     TAccountCaller,
     TAccountCollateralEscrow,
     TAccountCustody,
-    TAccountCustodyOracle,
-    TAccountCustodyTradeOracle,
+    TAccountOracle,
     TAccountCustodyTokenAccount,
     TAccountTransferAuthority,
     TAccountCortex,
@@ -373,27 +374,25 @@ export type ParsedExecuteLimitOrderLongInstruction<
     /** #4 */
     custody: TAccountMetas[3];
     /** #5 */
-    custodyOracle: TAccountMetas[4];
+    oracle: TAccountMetas[4];
     /** #6 */
-    custodyTradeOracle: TAccountMetas[5];
+    custodyTokenAccount: TAccountMetas[5];
     /** #7 */
-    custodyTokenAccount: TAccountMetas[6];
+    transferAuthority: TAccountMetas[6];
     /** #8 */
-    transferAuthority: TAccountMetas[7];
+    cortex: TAccountMetas[7];
     /** #9 */
-    cortex: TAccountMetas[8];
+    pool: TAccountMetas[8];
     /** #10 */
-    pool: TAccountMetas[9];
+    position: TAccountMetas[9];
     /** #11 */
-    position: TAccountMetas[10];
+    limitOrderBook: TAccountMetas[10];
     /** #12 */
-    limitOrderBook: TAccountMetas[11];
+    systemProgram: TAccountMetas[11];
     /** #13 */
-    systemProgram: TAccountMetas[12];
+    tokenProgram: TAccountMetas[12];
     /** #14 */
-    tokenProgram: TAccountMetas[13];
-    /** #15 */
-    adrenaProgram: TAccountMetas[14];
+    adrenaProgram: TAccountMetas[13];
   };
   data: ExecuteLimitOrderLongInstructionData;
 };
@@ -406,7 +405,7 @@ export function parseExecuteLimitOrderLongInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedExecuteLimitOrderLongInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 15) {
+  if (instruction.accounts.length < 14) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -423,8 +422,7 @@ export function parseExecuteLimitOrderLongInstruction<
       caller: getNextAccount(),
       collateralEscrow: getNextAccount(),
       custody: getNextAccount(),
-      custodyOracle: getNextAccount(),
-      custodyTradeOracle: getNextAccount(),
+      oracle: getNextAccount(),
       custodyTokenAccount: getNextAccount(),
       transferAuthority: getNextAccount(),
       cortex: getNextAccount(),

@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   transformEncoder,
@@ -24,6 +26,8 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
   type TransactionSigner,
@@ -32,6 +36,12 @@ import {
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const DISTRIBUTE_FEES_DISCRIMINATOR = new Uint8Array([
   120, 56, 27, 7, 53, 176, 113, 186,
@@ -66,9 +76,7 @@ export type DistributeFeesInstruction<
   TAccountStakingRewardTokenCustody extends
     | string
     | IAccountMeta<string> = string,
-  TAccountStakingRewardTokenCustodyOracle extends
-    | string
-    | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TAccountStakingRewardTokenCustodyTokenAccount extends
     | string
     | IAccountMeta<string> = string,
@@ -125,9 +133,9 @@ export type DistributeFeesInstruction<
       TAccountStakingRewardTokenCustody extends string
         ? WritableAccount<TAccountStakingRewardTokenCustody>
         : TAccountStakingRewardTokenCustody,
-      TAccountStakingRewardTokenCustodyOracle extends string
-        ? ReadonlyAccount<TAccountStakingRewardTokenCustodyOracle>
-        : TAccountStakingRewardTokenCustodyOracle,
+      TAccountOracle extends string
+        ? WritableAccount<TAccountOracle>
+        : TAccountOracle,
       TAccountStakingRewardTokenCustodyTokenAccount extends string
         ? WritableAccount<TAccountStakingRewardTokenCustodyTokenAccount>
         : TAccountStakingRewardTokenCustodyTokenAccount,
@@ -149,13 +157,19 @@ export type DistributeFeesInstruction<
 
 export type DistributeFeesInstructionData = {
   discriminator: ReadonlyUint8Array;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
-export type DistributeFeesInstructionDataArgs = {};
+export type DistributeFeesInstructionDataArgs = {
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
+};
 
 export function getDistributeFeesInstructionDataEncoder(): Encoder<DistributeFeesInstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([['discriminator', fixEncoderSize(getBytesEncoder(), 8)]]),
+    getStructEncoder([
+      ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
+    ]),
     (value) => ({ ...value, discriminator: DISTRIBUTE_FEES_DISCRIMINATOR })
   );
 }
@@ -163,6 +177,7 @@ export function getDistributeFeesInstructionDataEncoder(): Encoder<DistributeFee
 export function getDistributeFeesInstructionDataDecoder(): Decoder<DistributeFeesInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -190,7 +205,7 @@ export type DistributeFeesInput<
   TAccountLpStakingRewardTokenVault extends string = string,
   TAccountReferrerRewardTokenVault extends string = string,
   TAccountStakingRewardTokenCustody extends string = string,
-  TAccountStakingRewardTokenCustodyOracle extends string = string,
+  TAccountOracle extends string = string,
   TAccountStakingRewardTokenCustodyTokenAccount extends string = string,
   TAccountProtocolFeeRecipient extends string = string,
   TAccountTokenProgram extends string = string,
@@ -227,7 +242,7 @@ export type DistributeFeesInput<
   /** #13 */
   stakingRewardTokenCustody: Address<TAccountStakingRewardTokenCustody>;
   /** #14 */
-  stakingRewardTokenCustodyOracle: Address<TAccountStakingRewardTokenCustodyOracle>;
+  oracle: Address<TAccountOracle>;
   /** #15 */
   stakingRewardTokenCustodyTokenAccount: Address<TAccountStakingRewardTokenCustodyTokenAccount>;
   /** #16 */
@@ -238,6 +253,7 @@ export type DistributeFeesInput<
   systemProgram?: Address<TAccountSystemProgram>;
   /** #19 */
   adrenaProgram: Address<TAccountAdrenaProgram>;
+  oraclePrices: DistributeFeesInstructionDataArgs['oraclePrices'];
 };
 
 export function getDistributeFeesInstruction<
@@ -254,7 +270,7 @@ export function getDistributeFeesInstruction<
   TAccountLpStakingRewardTokenVault extends string,
   TAccountReferrerRewardTokenVault extends string,
   TAccountStakingRewardTokenCustody extends string,
-  TAccountStakingRewardTokenCustodyOracle extends string,
+  TAccountOracle extends string,
   TAccountStakingRewardTokenCustodyTokenAccount extends string,
   TAccountProtocolFeeRecipient extends string,
   TAccountTokenProgram extends string,
@@ -276,7 +292,7 @@ export function getDistributeFeesInstruction<
     TAccountLpStakingRewardTokenVault,
     TAccountReferrerRewardTokenVault,
     TAccountStakingRewardTokenCustody,
-    TAccountStakingRewardTokenCustodyOracle,
+    TAccountOracle,
     TAccountStakingRewardTokenCustodyTokenAccount,
     TAccountProtocolFeeRecipient,
     TAccountTokenProgram,
@@ -299,7 +315,7 @@ export function getDistributeFeesInstruction<
   TAccountLpStakingRewardTokenVault,
   TAccountReferrerRewardTokenVault,
   TAccountStakingRewardTokenCustody,
-  TAccountStakingRewardTokenCustodyOracle,
+  TAccountOracle,
   TAccountStakingRewardTokenCustodyTokenAccount,
   TAccountProtocolFeeRecipient,
   TAccountTokenProgram,
@@ -342,10 +358,7 @@ export function getDistributeFeesInstruction<
       value: input.stakingRewardTokenCustody ?? null,
       isWritable: true,
     },
-    stakingRewardTokenCustodyOracle: {
-      value: input.stakingRewardTokenCustodyOracle ?? null,
-      isWritable: false,
-    },
+    oracle: { value: input.oracle ?? null, isWritable: true },
     stakingRewardTokenCustodyTokenAccount: {
       value: input.stakingRewardTokenCustodyTokenAccount ?? null,
       isWritable: true,
@@ -362,6 +375,9 @@ export function getDistributeFeesInstruction<
     keyof typeof originalAccounts,
     ResolvedAccount
   >;
+
+  // Original args.
+  const args = { ...input };
 
   // Resolve default values.
   if (!accounts.tokenProgram.value) {
@@ -389,7 +405,7 @@ export function getDistributeFeesInstruction<
       getAccountMeta(accounts.lpStakingRewardTokenVault),
       getAccountMeta(accounts.referrerRewardTokenVault),
       getAccountMeta(accounts.stakingRewardTokenCustody),
-      getAccountMeta(accounts.stakingRewardTokenCustodyOracle),
+      getAccountMeta(accounts.oracle),
       getAccountMeta(accounts.stakingRewardTokenCustodyTokenAccount),
       getAccountMeta(accounts.protocolFeeRecipient),
       getAccountMeta(accounts.tokenProgram),
@@ -397,7 +413,9 @@ export function getDistributeFeesInstruction<
       getAccountMeta(accounts.adrenaProgram),
     ],
     programAddress,
-    data: getDistributeFeesInstructionDataEncoder().encode({}),
+    data: getDistributeFeesInstructionDataEncoder().encode(
+      args as DistributeFeesInstructionDataArgs
+    ),
   } as DistributeFeesInstruction<
     TProgramAddress,
     TAccountCaller,
@@ -413,7 +431,7 @@ export function getDistributeFeesInstruction<
     TAccountLpStakingRewardTokenVault,
     TAccountReferrerRewardTokenVault,
     TAccountStakingRewardTokenCustody,
-    TAccountStakingRewardTokenCustodyOracle,
+    TAccountOracle,
     TAccountStakingRewardTokenCustodyTokenAccount,
     TAccountProtocolFeeRecipient,
     TAccountTokenProgram,
@@ -461,7 +479,7 @@ export type ParsedDistributeFeesInstruction<
     /** #13 */
     stakingRewardTokenCustody: TAccountMetas[12];
     /** #14 */
-    stakingRewardTokenCustodyOracle: TAccountMetas[13];
+    oracle: TAccountMetas[13];
     /** #15 */
     stakingRewardTokenCustodyTokenAccount: TAccountMetas[14];
     /** #16 */
@@ -510,7 +528,7 @@ export function parseDistributeFeesInstruction<
       lpStakingRewardTokenVault: getNextAccount(),
       referrerRewardTokenVault: getNextAccount(),
       stakingRewardTokenCustody: getNextAccount(),
-      stakingRewardTokenCustodyOracle: getNextAccount(),
+      oracle: getNextAccount(),
       stakingRewardTokenCustodyTokenAccount: getNextAccount(),
       protocolFeeRecipient: getNextAccount(),
       tokenProgram: getNextAccount(),

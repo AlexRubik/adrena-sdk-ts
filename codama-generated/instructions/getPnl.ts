@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   transformEncoder,
@@ -23,11 +25,19 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const GET_PNL_DISCRIMINATOR = new Uint8Array([
   106, 212, 3, 250, 195, 224, 64, 160,
@@ -43,11 +53,8 @@ export type GetPnlInstruction<
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountPosition extends string | IAccountMeta<string> = string,
   TAccountCustody extends string | IAccountMeta<string> = string,
-  TAccountCustodyTradeOracle extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TAccountCollateralCustody extends string | IAccountMeta<string> = string,
-  TAccountCollateralCustodyOracle extends
-    | string
-    | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
   IInstructionWithData<Uint8Array> &
@@ -65,26 +72,31 @@ export type GetPnlInstruction<
       TAccountCustody extends string
         ? ReadonlyAccount<TAccountCustody>
         : TAccountCustody,
-      TAccountCustodyTradeOracle extends string
-        ? ReadonlyAccount<TAccountCustodyTradeOracle>
-        : TAccountCustodyTradeOracle,
+      TAccountOracle extends string
+        ? ReadonlyAccount<TAccountOracle>
+        : TAccountOracle,
       TAccountCollateralCustody extends string
         ? ReadonlyAccount<TAccountCollateralCustody>
         : TAccountCollateralCustody,
-      TAccountCollateralCustodyOracle extends string
-        ? ReadonlyAccount<TAccountCollateralCustodyOracle>
-        : TAccountCollateralCustodyOracle,
       ...TRemainingAccounts,
     ]
   >;
 
-export type GetPnlInstructionData = { discriminator: ReadonlyUint8Array };
+export type GetPnlInstructionData = {
+  discriminator: ReadonlyUint8Array;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
+};
 
-export type GetPnlInstructionDataArgs = {};
+export type GetPnlInstructionDataArgs = {
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
+};
 
 export function getGetPnlInstructionDataEncoder(): Encoder<GetPnlInstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([['discriminator', fixEncoderSize(getBytesEncoder(), 8)]]),
+    getStructEncoder([
+      ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
+    ]),
     (value) => ({ ...value, discriminator: GET_PNL_DISCRIMINATOR })
   );
 }
@@ -92,6 +104,7 @@ export function getGetPnlInstructionDataEncoder(): Encoder<GetPnlInstructionData
 export function getGetPnlInstructionDataDecoder(): Decoder<GetPnlInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -110,9 +123,8 @@ export type GetPnlInput<
   TAccountPool extends string = string,
   TAccountPosition extends string = string,
   TAccountCustody extends string = string,
-  TAccountCustodyTradeOracle extends string = string,
+  TAccountOracle extends string = string,
   TAccountCollateralCustody extends string = string,
-  TAccountCollateralCustodyOracle extends string = string,
 > = {
   /** #1 */
   cortex: Address<TAccountCortex>;
@@ -123,11 +135,10 @@ export type GetPnlInput<
   /** #4 */
   custody: Address<TAccountCustody>;
   /** #5 */
-  custodyTradeOracle: Address<TAccountCustodyTradeOracle>;
+  oracle: Address<TAccountOracle>;
   /** #6 */
   collateralCustody: Address<TAccountCollateralCustody>;
-  /** #7 */
-  collateralCustodyOracle: Address<TAccountCollateralCustodyOracle>;
+  oraclePrices: GetPnlInstructionDataArgs['oraclePrices'];
 };
 
 export function getGetPnlInstruction<
@@ -135,9 +146,8 @@ export function getGetPnlInstruction<
   TAccountPool extends string,
   TAccountPosition extends string,
   TAccountCustody extends string,
-  TAccountCustodyTradeOracle extends string,
+  TAccountOracle extends string,
   TAccountCollateralCustody extends string,
-  TAccountCollateralCustodyOracle extends string,
   TProgramAddress extends Address = typeof ADRENA_PROGRAM_ADDRESS,
 >(
   input: GetPnlInput<
@@ -145,9 +155,8 @@ export function getGetPnlInstruction<
     TAccountPool,
     TAccountPosition,
     TAccountCustody,
-    TAccountCustodyTradeOracle,
-    TAccountCollateralCustody,
-    TAccountCollateralCustodyOracle
+    TAccountOracle,
+    TAccountCollateralCustody
   >,
   config?: { programAddress?: TProgramAddress }
 ): GetPnlInstruction<
@@ -156,9 +165,8 @@ export function getGetPnlInstruction<
   TAccountPool,
   TAccountPosition,
   TAccountCustody,
-  TAccountCustodyTradeOracle,
-  TAccountCollateralCustody,
-  TAccountCollateralCustodyOracle
+  TAccountOracle,
+  TAccountCollateralCustody
 > {
   // Program address.
   const programAddress = config?.programAddress ?? ADRENA_PROGRAM_ADDRESS;
@@ -169,16 +177,9 @@ export function getGetPnlInstruction<
     pool: { value: input.pool ?? null, isWritable: false },
     position: { value: input.position ?? null, isWritable: false },
     custody: { value: input.custody ?? null, isWritable: false },
-    custodyTradeOracle: {
-      value: input.custodyTradeOracle ?? null,
-      isWritable: false,
-    },
+    oracle: { value: input.oracle ?? null, isWritable: false },
     collateralCustody: {
       value: input.collateralCustody ?? null,
-      isWritable: false,
-    },
-    collateralCustodyOracle: {
-      value: input.collateralCustodyOracle ?? null,
       isWritable: false,
     },
   };
@@ -187,6 +188,9 @@ export function getGetPnlInstruction<
     ResolvedAccount
   >;
 
+  // Original args.
+  const args = { ...input };
+
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
     accounts: [
@@ -194,21 +198,21 @@ export function getGetPnlInstruction<
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.position),
       getAccountMeta(accounts.custody),
-      getAccountMeta(accounts.custodyTradeOracle),
+      getAccountMeta(accounts.oracle),
       getAccountMeta(accounts.collateralCustody),
-      getAccountMeta(accounts.collateralCustodyOracle),
     ],
     programAddress,
-    data: getGetPnlInstructionDataEncoder().encode({}),
+    data: getGetPnlInstructionDataEncoder().encode(
+      args as GetPnlInstructionDataArgs
+    ),
   } as GetPnlInstruction<
     TProgramAddress,
     TAccountCortex,
     TAccountPool,
     TAccountPosition,
     TAccountCustody,
-    TAccountCustodyTradeOracle,
-    TAccountCollateralCustody,
-    TAccountCollateralCustodyOracle
+    TAccountOracle,
+    TAccountCollateralCustody
   >;
 
   return instruction;
@@ -229,11 +233,9 @@ export type ParsedGetPnlInstruction<
     /** #4 */
     custody: TAccountMetas[3];
     /** #5 */
-    custodyTradeOracle: TAccountMetas[4];
+    oracle: TAccountMetas[4];
     /** #6 */
     collateralCustody: TAccountMetas[5];
-    /** #7 */
-    collateralCustodyOracle: TAccountMetas[6];
   };
   data: GetPnlInstructionData;
 };
@@ -246,7 +248,7 @@ export function parseGetPnlInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedGetPnlInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 7) {
+  if (instruction.accounts.length < 6) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -263,9 +265,8 @@ export function parseGetPnlInstruction<
       pool: getNextAccount(),
       position: getNextAccount(),
       custody: getNextAccount(),
-      custodyTradeOracle: getNextAccount(),
+      oracle: getNextAccount(),
       collateralCustody: getNextAccount(),
-      collateralCustodyOracle: getNextAccount(),
     },
     data: getGetPnlInstructionDataDecoder().decode(instruction.data),
   };

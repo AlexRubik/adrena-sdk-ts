@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   getU32Decoder,
@@ -29,11 +31,20 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
+  type WritableAccount,
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const GET_OPEN_POSITION_WITH_SWAP_AMOUNT_AND_FEES_DISCRIMINATOR =
   new Uint8Array([105, 20, 255, 69, 225, 245, 10, 189]);
@@ -49,15 +60,9 @@ export type GetOpenPositionWithSwapAmountAndFeesInstruction<
   TAccountCortex extends string | IAccountMeta<string> = string,
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountReceivingCustody extends string | IAccountMeta<string> = string,
-  TAccountReceivingCustodyOracle extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TAccountCollateralCustody extends string | IAccountMeta<string> = string,
-  TAccountCollateralCustodyOracle extends
-    | string
-    | IAccountMeta<string> = string,
   TAccountPrincipalCustody extends string | IAccountMeta<string> = string,
-  TAccountPrincipalCustodyTradeOracle extends
-    | string
-    | IAccountMeta<string> = string,
   TAccountAdrenaProgram extends string | IAccountMeta<string> = string,
   TRemainingAccounts extends readonly IAccountMeta<string>[] = [],
 > = IInstruction<TProgram> &
@@ -73,21 +78,15 @@ export type GetOpenPositionWithSwapAmountAndFeesInstruction<
       TAccountReceivingCustody extends string
         ? ReadonlyAccount<TAccountReceivingCustody>
         : TAccountReceivingCustody,
-      TAccountReceivingCustodyOracle extends string
-        ? ReadonlyAccount<TAccountReceivingCustodyOracle>
-        : TAccountReceivingCustodyOracle,
+      TAccountOracle extends string
+        ? WritableAccount<TAccountOracle>
+        : TAccountOracle,
       TAccountCollateralCustody extends string
         ? ReadonlyAccount<TAccountCollateralCustody>
         : TAccountCollateralCustody,
-      TAccountCollateralCustodyOracle extends string
-        ? ReadonlyAccount<TAccountCollateralCustodyOracle>
-        : TAccountCollateralCustodyOracle,
       TAccountPrincipalCustody extends string
         ? ReadonlyAccount<TAccountPrincipalCustody>
         : TAccountPrincipalCustody,
-      TAccountPrincipalCustodyTradeOracle extends string
-        ? ReadonlyAccount<TAccountPrincipalCustodyTradeOracle>
-        : TAccountPrincipalCustodyTradeOracle,
       TAccountAdrenaProgram extends string
         ? ReadonlyAccount<TAccountAdrenaProgram>
         : TAccountAdrenaProgram,
@@ -100,12 +99,14 @@ export type GetOpenPositionWithSwapAmountAndFeesInstructionData = {
   collateralAmount: bigint;
   leverage: number;
   side: number;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
 export type GetOpenPositionWithSwapAmountAndFeesInstructionDataArgs = {
   collateralAmount: number | bigint;
   leverage: number;
   side: number;
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
 };
 
 export function getGetOpenPositionWithSwapAmountAndFeesInstructionDataEncoder(): Encoder<GetOpenPositionWithSwapAmountAndFeesInstructionDataArgs> {
@@ -115,6 +116,7 @@ export function getGetOpenPositionWithSwapAmountAndFeesInstructionDataEncoder():
       ['collateralAmount', getU64Encoder()],
       ['leverage', getU32Encoder()],
       ['side', getU8Encoder()],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
     ]),
     (value) => ({
       ...value,
@@ -129,6 +131,7 @@ export function getGetOpenPositionWithSwapAmountAndFeesInstructionDataDecoder():
     ['collateralAmount', getU64Decoder()],
     ['leverage', getU32Decoder()],
     ['side', getU8Decoder()],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -146,11 +149,9 @@ export type GetOpenPositionWithSwapAmountAndFeesInput<
   TAccountCortex extends string = string,
   TAccountPool extends string = string,
   TAccountReceivingCustody extends string = string,
-  TAccountReceivingCustodyOracle extends string = string,
+  TAccountOracle extends string = string,
   TAccountCollateralCustody extends string = string,
-  TAccountCollateralCustodyOracle extends string = string,
   TAccountPrincipalCustody extends string = string,
-  TAccountPrincipalCustodyTradeOracle extends string = string,
   TAccountAdrenaProgram extends string = string,
 > = {
   /** #1 */
@@ -160,31 +161,26 @@ export type GetOpenPositionWithSwapAmountAndFeesInput<
   /** #3 */
   receivingCustody: Address<TAccountReceivingCustody>;
   /** #4 */
-  receivingCustodyOracle: Address<TAccountReceivingCustodyOracle>;
+  oracle: Address<TAccountOracle>;
   /** #5 */
   collateralCustody: Address<TAccountCollateralCustody>;
   /** #6 */
-  collateralCustodyOracle: Address<TAccountCollateralCustodyOracle>;
-  /** #7 */
   principalCustody: Address<TAccountPrincipalCustody>;
-  /** #8 */
-  principalCustodyTradeOracle: Address<TAccountPrincipalCustodyTradeOracle>;
-  /** #9 */
+  /** #7 */
   adrenaProgram: Address<TAccountAdrenaProgram>;
   collateralAmount: GetOpenPositionWithSwapAmountAndFeesInstructionDataArgs['collateralAmount'];
   leverage: GetOpenPositionWithSwapAmountAndFeesInstructionDataArgs['leverage'];
   side: GetOpenPositionWithSwapAmountAndFeesInstructionDataArgs['side'];
+  oraclePrices: GetOpenPositionWithSwapAmountAndFeesInstructionDataArgs['oraclePrices'];
 };
 
 export function getGetOpenPositionWithSwapAmountAndFeesInstruction<
   TAccountCortex extends string,
   TAccountPool extends string,
   TAccountReceivingCustody extends string,
-  TAccountReceivingCustodyOracle extends string,
+  TAccountOracle extends string,
   TAccountCollateralCustody extends string,
-  TAccountCollateralCustodyOracle extends string,
   TAccountPrincipalCustody extends string,
-  TAccountPrincipalCustodyTradeOracle extends string,
   TAccountAdrenaProgram extends string,
   TProgramAddress extends Address = typeof ADRENA_PROGRAM_ADDRESS,
 >(
@@ -192,11 +188,9 @@ export function getGetOpenPositionWithSwapAmountAndFeesInstruction<
     TAccountCortex,
     TAccountPool,
     TAccountReceivingCustody,
-    TAccountReceivingCustodyOracle,
+    TAccountOracle,
     TAccountCollateralCustody,
-    TAccountCollateralCustodyOracle,
     TAccountPrincipalCustody,
-    TAccountPrincipalCustodyTradeOracle,
     TAccountAdrenaProgram
   >,
   config?: { programAddress?: TProgramAddress }
@@ -205,11 +199,9 @@ export function getGetOpenPositionWithSwapAmountAndFeesInstruction<
   TAccountCortex,
   TAccountPool,
   TAccountReceivingCustody,
-  TAccountReceivingCustodyOracle,
+  TAccountOracle,
   TAccountCollateralCustody,
-  TAccountCollateralCustodyOracle,
   TAccountPrincipalCustody,
-  TAccountPrincipalCustodyTradeOracle,
   TAccountAdrenaProgram
 > {
   // Program address.
@@ -223,24 +215,13 @@ export function getGetOpenPositionWithSwapAmountAndFeesInstruction<
       value: input.receivingCustody ?? null,
       isWritable: false,
     },
-    receivingCustodyOracle: {
-      value: input.receivingCustodyOracle ?? null,
-      isWritable: false,
-    },
+    oracle: { value: input.oracle ?? null, isWritable: true },
     collateralCustody: {
       value: input.collateralCustody ?? null,
       isWritable: false,
     },
-    collateralCustodyOracle: {
-      value: input.collateralCustodyOracle ?? null,
-      isWritable: false,
-    },
     principalCustody: {
       value: input.principalCustody ?? null,
-      isWritable: false,
-    },
-    principalCustodyTradeOracle: {
-      value: input.principalCustodyTradeOracle ?? null,
       isWritable: false,
     },
     adrenaProgram: { value: input.adrenaProgram ?? null, isWritable: false },
@@ -259,11 +240,9 @@ export function getGetOpenPositionWithSwapAmountAndFeesInstruction<
       getAccountMeta(accounts.cortex),
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.receivingCustody),
-      getAccountMeta(accounts.receivingCustodyOracle),
+      getAccountMeta(accounts.oracle),
       getAccountMeta(accounts.collateralCustody),
-      getAccountMeta(accounts.collateralCustodyOracle),
       getAccountMeta(accounts.principalCustody),
-      getAccountMeta(accounts.principalCustodyTradeOracle),
       getAccountMeta(accounts.adrenaProgram),
     ],
     programAddress,
@@ -275,11 +254,9 @@ export function getGetOpenPositionWithSwapAmountAndFeesInstruction<
     TAccountCortex,
     TAccountPool,
     TAccountReceivingCustody,
-    TAccountReceivingCustodyOracle,
+    TAccountOracle,
     TAccountCollateralCustody,
-    TAccountCollateralCustodyOracle,
     TAccountPrincipalCustody,
-    TAccountPrincipalCustodyTradeOracle,
     TAccountAdrenaProgram
   >;
 
@@ -299,17 +276,13 @@ export type ParsedGetOpenPositionWithSwapAmountAndFeesInstruction<
     /** #3 */
     receivingCustody: TAccountMetas[2];
     /** #4 */
-    receivingCustodyOracle: TAccountMetas[3];
+    oracle: TAccountMetas[3];
     /** #5 */
     collateralCustody: TAccountMetas[4];
     /** #6 */
-    collateralCustodyOracle: TAccountMetas[5];
+    principalCustody: TAccountMetas[5];
     /** #7 */
-    principalCustody: TAccountMetas[6];
-    /** #8 */
-    principalCustodyTradeOracle: TAccountMetas[7];
-    /** #9 */
-    adrenaProgram: TAccountMetas[8];
+    adrenaProgram: TAccountMetas[6];
   };
   data: GetOpenPositionWithSwapAmountAndFeesInstructionData;
 };
@@ -325,7 +298,7 @@ export function parseGetOpenPositionWithSwapAmountAndFeesInstruction<
   TProgram,
   TAccountMetas
 > {
-  if (instruction.accounts.length < 9) {
+  if (instruction.accounts.length < 7) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -341,11 +314,9 @@ export function parseGetOpenPositionWithSwapAmountAndFeesInstruction<
       cortex: getNextAccount(),
       pool: getNextAccount(),
       receivingCustody: getNextAccount(),
-      receivingCustodyOracle: getNextAccount(),
+      oracle: getNextAccount(),
       collateralCustody: getNextAccount(),
-      collateralCustodyOracle: getNextAccount(),
       principalCustody: getNextAccount(),
-      principalCustodyTradeOracle: getNextAccount(),
       adrenaProgram: getNextAccount(),
     },
     data: getGetOpenPositionWithSwapAmountAndFeesInstructionDataDecoder().decode(

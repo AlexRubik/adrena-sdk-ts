@@ -55,6 +55,7 @@ export function getInitUserProfileDiscriminatorBytes() {
 export type InitUserProfileInstruction<
   TProgram extends string = typeof ADRENA_PROGRAM_ADDRESS,
   TAccountUser extends string | IAccountMeta<string> = string,
+  TAccountCaller extends string | IAccountMeta<string> = string,
   TAccountPayer extends string | IAccountMeta<string> = string,
   TAccountUserProfile extends string | IAccountMeta<string> = string,
   TAccountUserNickname extends string | IAccountMeta<string> = string,
@@ -69,8 +70,12 @@ export type InitUserProfileInstruction<
   IInstructionWithAccounts<
     [
       TAccountUser extends string
-        ? ReadonlySignerAccount<TAccountUser> & IAccountSignerMeta<TAccountUser>
+        ? ReadonlyAccount<TAccountUser>
         : TAccountUser,
+      TAccountCaller extends string
+        ? ReadonlySignerAccount<TAccountCaller> &
+            IAccountSignerMeta<TAccountCaller>
+        : TAccountCaller,
       TAccountPayer extends string
         ? WritableSignerAccount<TAccountPayer> &
             IAccountSignerMeta<TAccountPayer>
@@ -100,6 +105,8 @@ export type InitUserProfileInstructionData = {
   profilePicture: number;
   wallpaper: number;
   title: number;
+  team: number;
+  continent: number;
 };
 
 export type InitUserProfileInstructionDataArgs = {
@@ -107,6 +114,8 @@ export type InitUserProfileInstructionDataArgs = {
   profilePicture: number;
   wallpaper: number;
   title: number;
+  team: number;
+  continent: number;
 };
 
 export function getInitUserProfileInstructionDataEncoder(): Encoder<InitUserProfileInstructionDataArgs> {
@@ -117,6 +126,8 @@ export function getInitUserProfileInstructionDataEncoder(): Encoder<InitUserProf
       ['profilePicture', getU8Encoder()],
       ['wallpaper', getU8Encoder()],
       ['title', getU8Encoder()],
+      ['team', getU8Encoder()],
+      ['continent', getU8Encoder()],
     ]),
     (value) => ({ ...value, discriminator: INIT_USER_PROFILE_DISCRIMINATOR })
   );
@@ -129,6 +140,8 @@ export function getInitUserProfileInstructionDataDecoder(): Decoder<InitUserProf
     ['profilePicture', getU8Decoder()],
     ['wallpaper', getU8Decoder()],
     ['title', getU8Decoder()],
+    ['team', getU8Decoder()],
+    ['continent', getU8Decoder()],
   ]);
 }
 
@@ -144,6 +157,7 @@ export function getInitUserProfileInstructionDataCodec(): Codec<
 
 export type InitUserProfileInput<
   TAccountUser extends string = string,
+  TAccountCaller extends string = string,
   TAccountPayer extends string = string,
   TAccountUserProfile extends string = string,
   TAccountUserNickname extends string = string,
@@ -152,33 +166,38 @@ export type InitUserProfileInput<
   TAccountSystemProgram extends string = string,
 > = {
   /** #1 */
-  user: TransactionSigner<TAccountUser>;
+  user: Address<TAccountUser>;
   /** #2 */
-  payer: TransactionSigner<TAccountPayer>;
+  caller: TransactionSigner<TAccountCaller>;
   /** #3 */
+  payer: TransactionSigner<TAccountPayer>;
+  /** #4 */
   userProfile: Address<TAccountUserProfile>;
   /**
-   * #4
+   * #5
    * Use PDA to make nicknames unique
    */
   userNickname: Address<TAccountUserNickname>;
   /**
-   * #5
+   * #6
    * Apply this referrer to the user profile, If none, referrer_profile is set to default
    */
   referrerProfile?: Address<TAccountReferrerProfile>;
-  /** #6 */
-  cortex: Address<TAccountCortex>;
   /** #7 */
+  cortex: Address<TAccountCortex>;
+  /** #8 */
   systemProgram?: Address<TAccountSystemProgram>;
   nickname: InitUserProfileInstructionDataArgs['nickname'];
   profilePicture: InitUserProfileInstructionDataArgs['profilePicture'];
   wallpaper: InitUserProfileInstructionDataArgs['wallpaper'];
   title: InitUserProfileInstructionDataArgs['title'];
+  team: InitUserProfileInstructionDataArgs['team'];
+  continent: InitUserProfileInstructionDataArgs['continent'];
 };
 
 export function getInitUserProfileInstruction<
   TAccountUser extends string,
+  TAccountCaller extends string,
   TAccountPayer extends string,
   TAccountUserProfile extends string,
   TAccountUserNickname extends string,
@@ -189,6 +208,7 @@ export function getInitUserProfileInstruction<
 >(
   input: InitUserProfileInput<
     TAccountUser,
+    TAccountCaller,
     TAccountPayer,
     TAccountUserProfile,
     TAccountUserNickname,
@@ -200,6 +220,7 @@ export function getInitUserProfileInstruction<
 ): InitUserProfileInstruction<
   TProgramAddress,
   TAccountUser,
+  TAccountCaller,
   TAccountPayer,
   TAccountUserProfile,
   TAccountUserNickname,
@@ -213,6 +234,7 @@ export function getInitUserProfileInstruction<
   // Original accounts.
   const originalAccounts = {
     user: { value: input.user ?? null, isWritable: false },
+    caller: { value: input.caller ?? null, isWritable: false },
     payer: { value: input.payer ?? null, isWritable: true },
     userProfile: { value: input.userProfile ?? null, isWritable: true },
     userNickname: { value: input.userNickname ?? null, isWritable: true },
@@ -241,6 +263,7 @@ export function getInitUserProfileInstruction<
   const instruction = {
     accounts: [
       getAccountMeta(accounts.user),
+      getAccountMeta(accounts.caller),
       getAccountMeta(accounts.payer),
       getAccountMeta(accounts.userProfile),
       getAccountMeta(accounts.userNickname),
@@ -255,6 +278,7 @@ export function getInitUserProfileInstruction<
   } as InitUserProfileInstruction<
     TProgramAddress,
     TAccountUser,
+    TAccountCaller,
     TAccountPayer,
     TAccountUserProfile,
     TAccountUserNickname,
@@ -275,25 +299,27 @@ export type ParsedInitUserProfileInstruction<
     /** #1 */
     user: TAccountMetas[0];
     /** #2 */
-    payer: TAccountMetas[1];
+    caller: TAccountMetas[1];
     /** #3 */
-    userProfile: TAccountMetas[2];
+    payer: TAccountMetas[2];
+    /** #4 */
+    userProfile: TAccountMetas[3];
     /**
-     * #4
+     * #5
      * Use PDA to make nicknames unique
      */
 
-    userNickname: TAccountMetas[3];
+    userNickname: TAccountMetas[4];
     /**
-     * #5
+     * #6
      * Apply this referrer to the user profile, If none, referrer_profile is set to default
      */
 
-    referrerProfile?: TAccountMetas[4] | undefined;
-    /** #6 */
-    cortex: TAccountMetas[5];
+    referrerProfile?: TAccountMetas[5] | undefined;
     /** #7 */
-    systemProgram: TAccountMetas[6];
+    cortex: TAccountMetas[6];
+    /** #8 */
+    systemProgram: TAccountMetas[7];
   };
   data: InitUserProfileInstructionData;
 };
@@ -306,7 +332,7 @@ export function parseInitUserProfileInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedInitUserProfileInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 7) {
+  if (instruction.accounts.length < 8) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -326,6 +352,7 @@ export function parseInitUserProfileInstruction<
     programAddress: instruction.programAddress,
     accounts: {
       user: getNextAccount(),
+      caller: getNextAccount(),
       payer: getNextAccount(),
       userProfile: getNextAccount(),
       userNickname: getNextAccount(),

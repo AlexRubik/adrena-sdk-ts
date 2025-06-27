@@ -12,6 +12,8 @@ import {
   fixEncoderSize,
   getBytesDecoder,
   getBytesEncoder,
+  getOptionDecoder,
+  getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
   getU64Decoder,
@@ -26,6 +28,8 @@ import {
   type IInstruction,
   type IInstructionWithAccounts,
   type IInstructionWithData,
+  type Option,
+  type OptionOrNullable,
   type ReadonlyAccount,
   type ReadonlySignerAccount,
   type ReadonlyUint8Array,
@@ -34,6 +38,12 @@ import {
 } from '@solana/kit';
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
+import {
+  getChaosLabsBatchPricesDecoder,
+  getChaosLabsBatchPricesEncoder,
+  type ChaosLabsBatchPrices,
+  type ChaosLabsBatchPricesArgs,
+} from '../types';
 
 export const SWAP_DISCRIMINATOR = new Uint8Array([
   248, 198, 158, 145, 225, 117, 135, 200,
@@ -53,14 +63,11 @@ export type SwapInstruction<
   TAccountCortex extends string | IAccountMeta<string> = string,
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountReceivingCustody extends string | IAccountMeta<string> = string,
-  TAccountReceivingCustodyOracle extends string | IAccountMeta<string> = string,
+  TAccountOracle extends string | IAccountMeta<string> = string,
   TAccountReceivingCustodyTokenAccount extends
     | string
     | IAccountMeta<string> = string,
   TAccountDispensingCustody extends string | IAccountMeta<string> = string,
-  TAccountDispensingCustodyOracle extends
-    | string
-    | IAccountMeta<string> = string,
   TAccountDispensingCustodyTokenAccount extends
     | string
     | IAccountMeta<string> = string,
@@ -99,18 +106,15 @@ export type SwapInstruction<
       TAccountReceivingCustody extends string
         ? WritableAccount<TAccountReceivingCustody>
         : TAccountReceivingCustody,
-      TAccountReceivingCustodyOracle extends string
-        ? ReadonlyAccount<TAccountReceivingCustodyOracle>
-        : TAccountReceivingCustodyOracle,
+      TAccountOracle extends string
+        ? WritableAccount<TAccountOracle>
+        : TAccountOracle,
       TAccountReceivingCustodyTokenAccount extends string
         ? WritableAccount<TAccountReceivingCustodyTokenAccount>
         : TAccountReceivingCustodyTokenAccount,
       TAccountDispensingCustody extends string
         ? WritableAccount<TAccountDispensingCustody>
         : TAccountDispensingCustody,
-      TAccountDispensingCustodyOracle extends string
-        ? ReadonlyAccount<TAccountDispensingCustodyOracle>
-        : TAccountDispensingCustodyOracle,
       TAccountDispensingCustodyTokenAccount extends string
         ? WritableAccount<TAccountDispensingCustodyTokenAccount>
         : TAccountDispensingCustodyTokenAccount,
@@ -128,11 +132,13 @@ export type SwapInstructionData = {
   discriminator: ReadonlyUint8Array;
   amountIn: bigint;
   minAmountOut: bigint;
+  oraclePrices: Option<ChaosLabsBatchPrices>;
 };
 
 export type SwapInstructionDataArgs = {
   amountIn: number | bigint;
   minAmountOut: number | bigint;
+  oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
 };
 
 export function getSwapInstructionDataEncoder(): Encoder<SwapInstructionDataArgs> {
@@ -141,6 +147,7 @@ export function getSwapInstructionDataEncoder(): Encoder<SwapInstructionDataArgs
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['amountIn', getU64Encoder()],
       ['minAmountOut', getU64Encoder()],
+      ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
     ]),
     (value) => ({ ...value, discriminator: SWAP_DISCRIMINATOR })
   );
@@ -151,6 +158,7 @@ export function getSwapInstructionDataDecoder(): Decoder<SwapInstructionData> {
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['amountIn', getU64Decoder()],
     ['minAmountOut', getU64Decoder()],
+    ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
   ]);
 }
 
@@ -173,10 +181,9 @@ export type SwapInput<
   TAccountCortex extends string = string,
   TAccountPool extends string = string,
   TAccountReceivingCustody extends string = string,
-  TAccountReceivingCustodyOracle extends string = string,
+  TAccountOracle extends string = string,
   TAccountReceivingCustodyTokenAccount extends string = string,
   TAccountDispensingCustody extends string = string,
-  TAccountDispensingCustodyOracle extends string = string,
   TAccountDispensingCustodyTokenAccount extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAdrenaProgram extends string = string,
@@ -198,21 +205,20 @@ export type SwapInput<
   /** #8 */
   receivingCustody: Address<TAccountReceivingCustody>;
   /** #9 */
-  receivingCustodyOracle: Address<TAccountReceivingCustodyOracle>;
+  oracle: Address<TAccountOracle>;
   /** #10 */
   receivingCustodyTokenAccount: Address<TAccountReceivingCustodyTokenAccount>;
   /** #11 */
   dispensingCustody: Address<TAccountDispensingCustody>;
   /** #12 */
-  dispensingCustodyOracle: Address<TAccountDispensingCustodyOracle>;
-  /** #13 */
   dispensingCustodyTokenAccount: Address<TAccountDispensingCustodyTokenAccount>;
-  /** #14 */
+  /** #13 */
   tokenProgram?: Address<TAccountTokenProgram>;
-  /** #15 */
+  /** #14 */
   adrenaProgram: Address<TAccountAdrenaProgram>;
   amountIn: SwapInstructionDataArgs['amountIn'];
   minAmountOut: SwapInstructionDataArgs['minAmountOut'];
+  oraclePrices: SwapInstructionDataArgs['oraclePrices'];
 };
 
 export function getSwapInstruction<
@@ -224,10 +230,9 @@ export function getSwapInstruction<
   TAccountCortex extends string,
   TAccountPool extends string,
   TAccountReceivingCustody extends string,
-  TAccountReceivingCustodyOracle extends string,
+  TAccountOracle extends string,
   TAccountReceivingCustodyTokenAccount extends string,
   TAccountDispensingCustody extends string,
-  TAccountDispensingCustodyOracle extends string,
   TAccountDispensingCustodyTokenAccount extends string,
   TAccountTokenProgram extends string,
   TAccountAdrenaProgram extends string,
@@ -242,10 +247,9 @@ export function getSwapInstruction<
     TAccountCortex,
     TAccountPool,
     TAccountReceivingCustody,
-    TAccountReceivingCustodyOracle,
+    TAccountOracle,
     TAccountReceivingCustodyTokenAccount,
     TAccountDispensingCustody,
-    TAccountDispensingCustodyOracle,
     TAccountDispensingCustodyTokenAccount,
     TAccountTokenProgram,
     TAccountAdrenaProgram
@@ -261,10 +265,9 @@ export function getSwapInstruction<
   TAccountCortex,
   TAccountPool,
   TAccountReceivingCustody,
-  TAccountReceivingCustodyOracle,
+  TAccountOracle,
   TAccountReceivingCustodyTokenAccount,
   TAccountDispensingCustody,
-  TAccountDispensingCustodyOracle,
   TAccountDispensingCustodyTokenAccount,
   TAccountTokenProgram,
   TAccountAdrenaProgram
@@ -291,10 +294,7 @@ export function getSwapInstruction<
       value: input.receivingCustody ?? null,
       isWritable: true,
     },
-    receivingCustodyOracle: {
-      value: input.receivingCustodyOracle ?? null,
-      isWritable: false,
-    },
+    oracle: { value: input.oracle ?? null, isWritable: true },
     receivingCustodyTokenAccount: {
       value: input.receivingCustodyTokenAccount ?? null,
       isWritable: true,
@@ -302,10 +302,6 @@ export function getSwapInstruction<
     dispensingCustody: {
       value: input.dispensingCustody ?? null,
       isWritable: true,
-    },
-    dispensingCustodyOracle: {
-      value: input.dispensingCustodyOracle ?? null,
-      isWritable: false,
     },
     dispensingCustodyTokenAccount: {
       value: input.dispensingCustodyTokenAccount ?? null,
@@ -339,10 +335,9 @@ export function getSwapInstruction<
       getAccountMeta(accounts.cortex),
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.receivingCustody),
-      getAccountMeta(accounts.receivingCustodyOracle),
+      getAccountMeta(accounts.oracle),
       getAccountMeta(accounts.receivingCustodyTokenAccount),
       getAccountMeta(accounts.dispensingCustody),
-      getAccountMeta(accounts.dispensingCustodyOracle),
       getAccountMeta(accounts.dispensingCustodyTokenAccount),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.adrenaProgram),
@@ -361,10 +356,9 @@ export function getSwapInstruction<
     TAccountCortex,
     TAccountPool,
     TAccountReceivingCustody,
-    TAccountReceivingCustodyOracle,
+    TAccountOracle,
     TAccountReceivingCustodyTokenAccount,
     TAccountDispensingCustody,
-    TAccountDispensingCustodyOracle,
     TAccountDispensingCustodyTokenAccount,
     TAccountTokenProgram,
     TAccountAdrenaProgram
@@ -396,19 +390,17 @@ export type ParsedSwapInstruction<
     /** #8 */
     receivingCustody: TAccountMetas[7];
     /** #9 */
-    receivingCustodyOracle: TAccountMetas[8];
+    oracle: TAccountMetas[8];
     /** #10 */
     receivingCustodyTokenAccount: TAccountMetas[9];
     /** #11 */
     dispensingCustody: TAccountMetas[10];
     /** #12 */
-    dispensingCustodyOracle: TAccountMetas[11];
+    dispensingCustodyTokenAccount: TAccountMetas[11];
     /** #13 */
-    dispensingCustodyTokenAccount: TAccountMetas[12];
+    tokenProgram: TAccountMetas[12];
     /** #14 */
-    tokenProgram: TAccountMetas[13];
-    /** #15 */
-    adrenaProgram: TAccountMetas[14];
+    adrenaProgram: TAccountMetas[13];
   };
   data: SwapInstructionData;
 };
@@ -421,7 +413,7 @@ export function parseSwapInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedSwapInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 15) {
+  if (instruction.accounts.length < 14) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -442,10 +434,9 @@ export function parseSwapInstruction<
       cortex: getNextAccount(),
       pool: getNextAccount(),
       receivingCustody: getNextAccount(),
-      receivingCustodyOracle: getNextAccount(),
+      oracle: getNextAccount(),
       receivingCustodyTokenAccount: getNextAccount(),
       dispensingCustody: getNextAccount(),
-      dispensingCustodyOracle: getNextAccount(),
       dispensingCustodyTokenAccount: getNextAccount(),
       tokenProgram: getNextAccount(),
       adrenaProgram: getNextAccount(),

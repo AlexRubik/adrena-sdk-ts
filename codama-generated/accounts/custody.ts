@@ -47,6 +47,8 @@ import {
   getFeesEncoder,
   getFeesStatsDecoder,
   getFeesStatsEncoder,
+  getLimitedStringDecoder,
+  getLimitedStringEncoder,
   getPositionsAccountingDecoder,
   getPositionsAccountingEncoder,
   getPricingParamsDecoder,
@@ -65,6 +67,8 @@ import {
   type FeesArgs,
   type FeesStats,
   type FeesStatsArgs,
+  type LimitedString,
+  type LimitedStringArgs,
   type PositionsAccounting,
   type PositionsAccountingArgs,
   type PricingParams,
@@ -95,8 +99,8 @@ export type Custody = {
   pool: Address;
   mint: Address;
   tokenAccount: Address;
-  oracle: Address;
-  tradeOracle: Address;
+  oracle: LimitedString;
+  tradeOracle: LimitedString;
   pricing: PricingParams;
   fees: Fees;
   borrowRate: BorrowRateParams;
@@ -120,8 +124,8 @@ export type CustodyArgs = {
   pool: Address;
   mint: Address;
   tokenAccount: Address;
-  oracle: Address;
-  tradeOracle: Address;
+  oracle: LimitedStringArgs;
+  tradeOracle: LimitedStringArgs;
   pricing: PricingParamsArgs;
   fees: FeesArgs;
   borrowRate: BorrowRateParamsArgs;
@@ -148,8 +152,8 @@ export function getCustodyEncoder(): Encoder<CustodyArgs> {
       ['pool', getAddressEncoder()],
       ['mint', getAddressEncoder()],
       ['tokenAccount', getAddressEncoder()],
-      ['oracle', getAddressEncoder()],
-      ['tradeOracle', getAddressEncoder()],
+      ['oracle', getLimitedStringEncoder()],
+      ['tradeOracle', getLimitedStringEncoder()],
       ['pricing', getPricingParamsEncoder()],
       ['fees', getFeesEncoder()],
       ['borrowRate', getBorrowRateParamsEncoder()],
@@ -178,8 +182,8 @@ export function getCustodyDecoder(): Decoder<Custody> {
     ['pool', getAddressDecoder()],
     ['mint', getAddressDecoder()],
     ['tokenAccount', getAddressDecoder()],
-    ['oracle', getAddressDecoder()],
-    ['tradeOracle', getAddressDecoder()],
+    ['oracle', getLimitedStringDecoder()],
+    ['tradeOracle', getLimitedStringDecoder()],
     ['pricing', getPricingParamsDecoder()],
     ['fees', getFeesDecoder()],
     ['borrowRate', getBorrowRateParamsDecoder()],

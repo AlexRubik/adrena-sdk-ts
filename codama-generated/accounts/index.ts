@@ -10,6 +10,7 @@ export * from './cortex';
 export * from './custody';
 export * from './genesisLock';
 export * from './limitOrderBook';
+export * from './oracle';
 export * from './pool';
 export * from './position';
 export * from './staking';

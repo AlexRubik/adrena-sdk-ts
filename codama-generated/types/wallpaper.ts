@@ -17,10 +17,6 @@ import {
 
 export enum Wallpaper {
   Zero,
-  One,
-  Two,
-  Three,
-  Four,
 }
 
 export type WallpaperArgs = Wallpaper;

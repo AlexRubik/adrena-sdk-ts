@@ -80,10 +80,10 @@ export type Pool = {
   feesDebtUsd: bigint;
   referrersFeeDebtUsd: bigint;
   cumulativeReferrerFeeUsd: bigint;
-  padding1: ReadonlyUint8Array;
+  lpTokenPriceUsd: bigint;
   whitelistedSwapper: Address;
   ratios: Array<TokenRatios>;
-  padding2: ReadonlyUint8Array;
+  lastAumAndLpTokenPriceUsdUpdate: bigint;
   uniqueLimitOrderIdCounter: bigint;
   aumUsd: U128Split;
   inceptionTime: bigint;
@@ -104,10 +104,10 @@ export type PoolArgs = {
   feesDebtUsd: number | bigint;
   referrersFeeDebtUsd: number | bigint;
   cumulativeReferrerFeeUsd: number | bigint;
-  padding1: ReadonlyUint8Array;
+  lpTokenPriceUsd: number | bigint;
   whitelistedSwapper: Address;
   ratios: Array<TokenRatiosArgs>;
-  padding2: ReadonlyUint8Array;
+  lastAumAndLpTokenPriceUsdUpdate: number | bigint;
   uniqueLimitOrderIdCounter: number | bigint;
   aumUsd: U128SplitArgs;
   inceptionTime: number | bigint;
@@ -131,10 +131,10 @@ export function getPoolEncoder(): Encoder<PoolArgs> {
       ['feesDebtUsd', getU64Encoder()],
       ['referrersFeeDebtUsd', getU64Encoder()],
       ['cumulativeReferrerFeeUsd', getU64Encoder()],
-      ['padding1', fixEncoderSize(getBytesEncoder(), 8)],
+      ['lpTokenPriceUsd', getU64Encoder()],
       ['whitelistedSwapper', getAddressEncoder()],
       ['ratios', getArrayEncoder(getTokenRatiosEncoder(), { size: 8 })],
-      ['padding2', fixEncoderSize(getBytesEncoder(), 8)],
+      ['lastAumAndLpTokenPriceUsdUpdate', getI64Encoder()],
       ['uniqueLimitOrderIdCounter', getU64Encoder()],
       ['aumUsd', getU128SplitEncoder()],
       ['inceptionTime', getI64Encoder()],
@@ -160,10 +160,10 @@ export function getPoolDecoder(): Decoder<Pool> {
     ['feesDebtUsd', getU64Decoder()],
     ['referrersFeeDebtUsd', getU64Decoder()],
     ['cumulativeReferrerFeeUsd', getU64Decoder()],
-    ['padding1', fixDecoderSize(getBytesDecoder(), 8)],
+    ['lpTokenPriceUsd', getU64Decoder()],
     ['whitelistedSwapper', getAddressDecoder()],
     ['ratios', getArrayDecoder(getTokenRatiosDecoder(), { size: 8 })],
-    ['padding2', fixDecoderSize(getBytesDecoder(), 8)],
+    ['lastAumAndLpTokenPriceUsdUpdate', getI64Decoder()],
     ['uniqueLimitOrderIdCounter', getU64Decoder()],
     ['aumUsd', getU128SplitDecoder()],
     ['inceptionTime', getI64Decoder()],
