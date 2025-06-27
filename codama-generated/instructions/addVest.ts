@@ -60,16 +60,6 @@ export type AddVestInstruction<
   TAccountVestRegistry extends string | IAccountMeta<string> = string,
   TAccountVest extends string | IAccountMeta<string> = string,
   TAccountLmTokenMint extends string | IAccountMeta<string> = string,
-  TAccountGovernanceTokenMint extends string | IAccountMeta<string> = string,
-  TAccountGovernanceRealm extends string | IAccountMeta<string> = string,
-  TAccountGovernanceRealmConfig extends string | IAccountMeta<string> = string,
-  TAccountGovernanceGoverningTokenHolding extends
-    | string
-    | IAccountMeta<string> = string,
-  TAccountGovernanceGoverningTokenOwnerRecord extends
-    | string
-    | IAccountMeta<string> = string,
-  TAccountGovernanceProgram extends string | IAccountMeta<string> = string,
   TAccountSystemProgram extends
     | string
     | IAccountMeta<string> = '11111111111111111111111111111111',
@@ -110,24 +100,6 @@ export type AddVestInstruction<
       TAccountLmTokenMint extends string
         ? WritableAccount<TAccountLmTokenMint>
         : TAccountLmTokenMint,
-      TAccountGovernanceTokenMint extends string
-        ? WritableAccount<TAccountGovernanceTokenMint>
-        : TAccountGovernanceTokenMint,
-      TAccountGovernanceRealm extends string
-        ? ReadonlyAccount<TAccountGovernanceRealm>
-        : TAccountGovernanceRealm,
-      TAccountGovernanceRealmConfig extends string
-        ? ReadonlyAccount<TAccountGovernanceRealmConfig>
-        : TAccountGovernanceRealmConfig,
-      TAccountGovernanceGoverningTokenHolding extends string
-        ? WritableAccount<TAccountGovernanceGoverningTokenHolding>
-        : TAccountGovernanceGoverningTokenHolding,
-      TAccountGovernanceGoverningTokenOwnerRecord extends string
-        ? WritableAccount<TAccountGovernanceGoverningTokenOwnerRecord>
-        : TAccountGovernanceGoverningTokenOwnerRecord,
-      TAccountGovernanceProgram extends string
-        ? ReadonlyAccount<TAccountGovernanceProgram>
-        : TAccountGovernanceProgram,
       TAccountSystemProgram extends string
         ? ReadonlyAccount<TAccountSystemProgram>
         : TAccountSystemProgram,
@@ -202,12 +174,6 @@ export type AddVestInput<
   TAccountVestRegistry extends string = string,
   TAccountVest extends string = string,
   TAccountLmTokenMint extends string = string,
-  TAccountGovernanceTokenMint extends string = string,
-  TAccountGovernanceRealm extends string = string,
-  TAccountGovernanceRealmConfig extends string = string,
-  TAccountGovernanceGoverningTokenHolding extends string = string,
-  TAccountGovernanceGoverningTokenOwnerRecord extends string = string,
-  TAccountGovernanceProgram extends string = string,
   TAccountSystemProgram extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountRent extends string = string,
@@ -228,27 +194,6 @@ export type AddVestInput<
   vest: Address<TAccountVest>;
   /** #8 */
   lmTokenMint: Address<TAccountLmTokenMint>;
-  /** #9 */
-  governanceTokenMint: Address<TAccountGovernanceTokenMint>;
-  /**
-   * #10
-   * A realm represent one project within the governance program
-   */
-  governanceRealm: Address<TAccountGovernanceRealm>;
-  /** #11 */
-  governanceRealmConfig: Address<TAccountGovernanceRealmConfig>;
-  /**
-   * #12
-   * Token account owned by governance program holding user's locked tokens
-   */
-  governanceGoverningTokenHolding: Address<TAccountGovernanceGoverningTokenHolding>;
-  /**
-   * #13
-   * Account owned by governance storing user information
-   */
-  governanceGoverningTokenOwnerRecord: Address<TAccountGovernanceGoverningTokenOwnerRecord>;
-  /** #14 */
-  governanceProgram: Address<TAccountGovernanceProgram>;
   /** #15 */
   systemProgram?: Address<TAccountSystemProgram>;
   /** #16 */
@@ -271,12 +216,6 @@ export function getAddVestInstruction<
   TAccountVestRegistry extends string,
   TAccountVest extends string,
   TAccountLmTokenMint extends string,
-  TAccountGovernanceTokenMint extends string,
-  TAccountGovernanceRealm extends string,
-  TAccountGovernanceRealmConfig extends string,
-  TAccountGovernanceGoverningTokenHolding extends string,
-  TAccountGovernanceGoverningTokenOwnerRecord extends string,
-  TAccountGovernanceProgram extends string,
   TAccountSystemProgram extends string,
   TAccountTokenProgram extends string,
   TAccountRent extends string,
@@ -291,12 +230,6 @@ export function getAddVestInstruction<
     TAccountVestRegistry,
     TAccountVest,
     TAccountLmTokenMint,
-    TAccountGovernanceTokenMint,
-    TAccountGovernanceRealm,
-    TAccountGovernanceRealmConfig,
-    TAccountGovernanceGoverningTokenHolding,
-    TAccountGovernanceGoverningTokenOwnerRecord,
-    TAccountGovernanceProgram,
     TAccountSystemProgram,
     TAccountTokenProgram,
     TAccountRent
@@ -312,12 +245,6 @@ export function getAddVestInstruction<
   TAccountVestRegistry,
   TAccountVest,
   TAccountLmTokenMint,
-  TAccountGovernanceTokenMint,
-  TAccountGovernanceRealm,
-  TAccountGovernanceRealmConfig,
-  TAccountGovernanceGoverningTokenHolding,
-  TAccountGovernanceGoverningTokenOwnerRecord,
-  TAccountGovernanceProgram,
   TAccountSystemProgram,
   TAccountTokenProgram,
   TAccountRent
@@ -338,30 +265,6 @@ export function getAddVestInstruction<
     vestRegistry: { value: input.vestRegistry ?? null, isWritable: true },
     vest: { value: input.vest ?? null, isWritable: true },
     lmTokenMint: { value: input.lmTokenMint ?? null, isWritable: true },
-    governanceTokenMint: {
-      value: input.governanceTokenMint ?? null,
-      isWritable: true,
-    },
-    governanceRealm: {
-      value: input.governanceRealm ?? null,
-      isWritable: false,
-    },
-    governanceRealmConfig: {
-      value: input.governanceRealmConfig ?? null,
-      isWritable: false,
-    },
-    governanceGoverningTokenHolding: {
-      value: input.governanceGoverningTokenHolding ?? null,
-      isWritable: true,
-    },
-    governanceGoverningTokenOwnerRecord: {
-      value: input.governanceGoverningTokenOwnerRecord ?? null,
-      isWritable: true,
-    },
-    governanceProgram: {
-      value: input.governanceProgram ?? null,
-      isWritable: false,
-    },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     rent: { value: input.rent ?? null, isWritable: false },
@@ -399,12 +302,6 @@ export function getAddVestInstruction<
       getAccountMeta(accounts.vestRegistry),
       getAccountMeta(accounts.vest),
       getAccountMeta(accounts.lmTokenMint),
-      getAccountMeta(accounts.governanceTokenMint),
-      getAccountMeta(accounts.governanceRealm),
-      getAccountMeta(accounts.governanceRealmConfig),
-      getAccountMeta(accounts.governanceGoverningTokenHolding),
-      getAccountMeta(accounts.governanceGoverningTokenOwnerRecord),
-      getAccountMeta(accounts.governanceProgram),
       getAccountMeta(accounts.systemProgram),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.rent),
@@ -423,12 +320,6 @@ export function getAddVestInstruction<
     TAccountVestRegistry,
     TAccountVest,
     TAccountLmTokenMint,
-    TAccountGovernanceTokenMint,
-    TAccountGovernanceRealm,
-    TAccountGovernanceRealmConfig,
-    TAccountGovernanceGoverningTokenHolding,
-    TAccountGovernanceGoverningTokenOwnerRecord,
-    TAccountGovernanceProgram,
     TAccountSystemProgram,
     TAccountTokenProgram,
     TAccountRent
@@ -459,36 +350,12 @@ export type ParsedAddVestInstruction<
     vest: TAccountMetas[6];
     /** #8 */
     lmTokenMint: TAccountMetas[7];
-    /** #9 */
-    governanceTokenMint: TAccountMetas[8];
-    /**
-     * #10
-     * A realm represent one project within the governance program
-     */
-
-    governanceRealm: TAccountMetas[9];
-    /** #11 */
-    governanceRealmConfig: TAccountMetas[10];
-    /**
-     * #12
-     * Token account owned by governance program holding user's locked tokens
-     */
-
-    governanceGoverningTokenHolding: TAccountMetas[11];
-    /**
-     * #13
-     * Account owned by governance storing user information
-     */
-
-    governanceGoverningTokenOwnerRecord: TAccountMetas[12];
-    /** #14 */
-    governanceProgram: TAccountMetas[13];
     /** #15 */
-    systemProgram: TAccountMetas[14];
+    systemProgram: TAccountMetas[8];
     /** #16 */
-    tokenProgram: TAccountMetas[15];
+    tokenProgram: TAccountMetas[9];
     /** #17 */
-    rent: TAccountMetas[16];
+    rent: TAccountMetas[10];
   };
   data: AddVestInstructionData;
 };
@@ -501,7 +368,7 @@ export function parseAddVestInstruction<
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
 ): ParsedAddVestInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 17) {
+  if (instruction.accounts.length < 11) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -522,12 +389,6 @@ export function parseAddVestInstruction<
       vestRegistry: getNextAccount(),
       vest: getNextAccount(),
       lmTokenMint: getNextAccount(),
-      governanceTokenMint: getNextAccount(),
-      governanceRealm: getNextAccount(),
-      governanceRealmConfig: getNextAccount(),
-      governanceGoverningTokenHolding: getNextAccount(),
-      governanceGoverningTokenOwnerRecord: getNextAccount(),
-      governanceProgram: getNextAccount(),
       systemProgram: getNextAccount(),
       tokenProgram: getNextAccount(),
       rent: getNextAccount(),

@@ -1,11 +1,12 @@
 // @ts-nocheck
 import { IInstruction, Rpc, SolanaRpcApi, TransactionSigner } from "@solana/kit";
 import { ADRENA_PROGRAM_ADDRESS, getClosePositionLongInstruction, getClosePositionShortInstruction } from "../../codama-generated";
-import { fetchPoolUtil, findCustodyTokenAccountAddress, findPositionAddress, getCortexPda, getCustodyByMint, getTransferAuthorityAddress, loadCustodies } from "../helpers/utils";
+import { fetchPoolUtil, findCustodyTokenAccountAddress, findPositionAddress, getCortexPda, getCustodyByMint, getOraclePda, getTransferAuthorityAddress, loadCustodies } from "../helpers/utils";
 import { CollateralToken, PrincipalToken } from "../types";
 import { DEV_PDA, PRICE_DECIMALS, PRINCIPAL_ADDRESSES, TOKEN_ADDRESSES } from "../helpers/constants";
 import { createAssociatedTokenAccountIx } from "../helpers/tokenHelpers";
 import { getPythPrice } from "../helpers/pyth";
+import BN from "bn.js";
 
 export type ClosePositionLongParams = {
     wallet: TransactionSigner,
@@ -51,6 +52,7 @@ export async function getClosePositionLongIxs(params: ClosePositionLongParams) {
 
     const cortexPda = (await getCortexPda())[0];
     const transferAuthAddress = (await getTransferAuthorityAddress())[0];
+    const oraclePda = (await getOraclePda())[0];
     const poolPda = pool.address;
     const positionAddress = (await findPositionAddress(
         poolPda,
@@ -70,6 +72,9 @@ export async function getClosePositionLongIxs(params: ClosePositionLongParams) {
     // then make close price 99
     const closePrice = params.price ? params.price : await getPythPrice(priceId);
 
+    const oraclePrices: ChaosLabsPricesExtended | null =
+    await DataApiClient.getChaosLabsPrices();
+
     const closeIx = getClosePositionLongInstruction(
         {
             caller: params.wallet,
@@ -79,8 +84,17 @@ export async function getClosePositionLongIxs(params: ClosePositionLongParams) {
             position: positionAddress,
             pool: poolPda,
             custody: principalCustody.address,
-            // oracle: ,
-            // oraclePrices: ,
+            oracle: oraclePda,
+            oraclePrices: oraclePrices ? {
+                prices: oraclePrices.prices.map(price => ({
+                    feedId: price.feedId,
+                    price: price.price.toNumber(),
+                    timestamp: price.timestamp.toNumber()
+                })),
+                signature: new Uint8Array(oraclePrices.signatureByteArray),
+                recoveryId: oraclePrices.recoveryId
+            } : null,
+            percentage: new BN(1000000), // 100 * 10000 = 100% in BPS with 2 more decimals
             custodyTokenAccount: principalCustodyTokenAccount,
             receivingAccount: ataIxForPrincipal.associatedAccount,
             adrenaProgram: ADRENA_PROGRAM_ADDRESS,
@@ -147,6 +161,9 @@ export async function getClosePositionShortIxs(params: ClosePositionShortParams)
     }
 
     const closePrice = params.price ? params.price : await getPythPrice(priceId);
+
+    const oraclePrices: ChaosLabsPricesExtended | null =
+    await DataApiClient.getChaosLabsPrices();
     
     const closeIx = getClosePositionShortInstruction(
         {
@@ -157,12 +174,21 @@ export async function getClosePositionShortIxs(params: ClosePositionShortParams)
             position: positionAddress,
             pool: poolPda,
             collateralCustody: collateralCustody.address, // TODO: remove the ignores and fix things
-            // @ts-ignore
+
             collateralCustodyOracle: collateralCustodyOracle,
             collateralCustodyTokenAccount: collateralCustodyTokenAccount,
             custody: principalCustody.address,
-            // @ts-ignore
-            custodyTradeOracle: principalCustodyTradeOracle,
+            oracle: oraclePda,
+            oraclePrices: oraclePrices ? {
+                prices: oraclePrices.prices.map(price => ({
+                    feedId: price.feedId,
+                    price: price.price.toNumber(),
+                    timestamp: price.timestamp.toNumber()
+                })),
+                signature: new Uint8Array(oraclePrices.signatureByteArray),
+                recoveryId: oraclePrices.recoveryId
+            } : null,
+            percentage: new BN(1000000), // 100 * 10000 = 100% in BPS with 2 more decimals
             receivingAccount: ataIxForPrincipal.associatedAccount,
             adrenaProgram: ADRENA_PROGRAM_ADDRESS,
             price: closePrice ? BigInt(Math.round(closePrice * 10 ** PRICE_DECIMALS)) : null,

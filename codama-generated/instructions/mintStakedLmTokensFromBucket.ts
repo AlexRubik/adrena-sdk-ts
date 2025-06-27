@@ -7,6 +7,8 @@
  */
 
 import {
+  addDecoderSizePrefix,
+  addEncoderSizePrefix,
   combineCodec,
   fixDecoderSize,
   fixEncoderSize,
@@ -14,6 +16,14 @@ import {
   getBytesEncoder,
   getStructDecoder,
   getStructEncoder,
+  getU32Decoder,
+  getU32Encoder,
+  getU64Decoder,
+  getU64Encoder,
+  getU8Decoder,
+  getU8Encoder,
+  getUtf8Decoder,
+  getUtf8Encoder,
   transformEncoder,
   type Address,
   type Codec,
@@ -34,36 +44,29 @@ import {
 import { ADRENA_PROGRAM_ADDRESS } from '../programs';
 import { getAccountMetaFactory, type ResolvedAccount } from '../shared';
 
-export const INIT_USER_STAKING_DISCRIMINATOR = new Uint8Array([
-  49, 77, 246, 16, 254, 90, 29, 206,
+export const MINT_STAKED_LM_TOKENS_FROM_BUCKET_DISCRIMINATOR = new Uint8Array([
+  37, 153, 105, 98, 59, 127, 123, 240,
 ]);
 
-export function getInitUserStakingDiscriminatorBytes() {
+export function getMintStakedLmTokensFromBucketDiscriminatorBytes() {
   return fixEncoderSize(getBytesEncoder(), 8).encode(
-    INIT_USER_STAKING_DISCRIMINATOR
+    MINT_STAKED_LM_TOKENS_FROM_BUCKET_DISCRIMINATOR
   );
 }
 
-export type InitUserStakingInstruction<
+export type MintStakedLmTokensFromBucketInstruction<
   TProgram extends string = typeof ADRENA_PROGRAM_ADDRESS,
-  TAccountCaller extends string | IAccountMeta<string> = string,
+  TAccountAdmin extends string | IAccountMeta<string> = string,
   TAccountPayer extends string | IAccountMeta<string> = string,
   TAccountOwner extends string | IAccountMeta<string> = string,
-  TAccountRewardTokenAccount extends string | IAccountMeta<string> = string,
-  TAccountLmTokenAccount extends string | IAccountMeta<string> = string,
-  TAccountStakingRewardTokenVault extends
+  TAccountStakingStakedTokenVault extends
     | string
     | IAccountMeta<string> = string,
-  TAccountStakingLmRewardTokenVault extends
-    | string
-    | IAccountMeta<string> = string,
-  TAccountUserStaking extends string | IAccountMeta<string> = string,
   TAccountTransferAuthority extends string | IAccountMeta<string> = string,
+  TAccountUserStaking extends string | IAccountMeta<string> = string,
   TAccountStaking extends string | IAccountMeta<string> = string,
   TAccountCortex extends string | IAccountMeta<string> = string,
-  TAccountPool extends string | IAccountMeta<string> = string,
   TAccountLmTokenMint extends string | IAccountMeta<string> = string,
-  TAccountFeeRedistributionMint extends string | IAccountMeta<string> = string,
   TAccountAdrenaProgram extends string | IAccountMeta<string> = string,
   TAccountSystemProgram extends
     | string
@@ -76,10 +79,10 @@ export type InitUserStakingInstruction<
   IInstructionWithData<Uint8Array> &
   IInstructionWithAccounts<
     [
-      TAccountCaller extends string
-        ? ReadonlySignerAccount<TAccountCaller> &
-            IAccountSignerMeta<TAccountCaller>
-        : TAccountCaller,
+      TAccountAdmin extends string
+        ? ReadonlySignerAccount<TAccountAdmin> &
+            IAccountSignerMeta<TAccountAdmin>
+        : TAccountAdmin,
       TAccountPayer extends string
         ? WritableSignerAccount<TAccountPayer> &
             IAccountSignerMeta<TAccountPayer>
@@ -87,39 +90,24 @@ export type InitUserStakingInstruction<
       TAccountOwner extends string
         ? ReadonlyAccount<TAccountOwner>
         : TAccountOwner,
-      TAccountRewardTokenAccount extends string
-        ? WritableAccount<TAccountRewardTokenAccount>
-        : TAccountRewardTokenAccount,
-      TAccountLmTokenAccount extends string
-        ? WritableAccount<TAccountLmTokenAccount>
-        : TAccountLmTokenAccount,
-      TAccountStakingRewardTokenVault extends string
-        ? WritableAccount<TAccountStakingRewardTokenVault>
-        : TAccountStakingRewardTokenVault,
-      TAccountStakingLmRewardTokenVault extends string
-        ? WritableAccount<TAccountStakingLmRewardTokenVault>
-        : TAccountStakingLmRewardTokenVault,
-      TAccountUserStaking extends string
-        ? WritableAccount<TAccountUserStaking>
-        : TAccountUserStaking,
+      TAccountStakingStakedTokenVault extends string
+        ? WritableAccount<TAccountStakingStakedTokenVault>
+        : TAccountStakingStakedTokenVault,
       TAccountTransferAuthority extends string
         ? ReadonlyAccount<TAccountTransferAuthority>
         : TAccountTransferAuthority,
+      TAccountUserStaking extends string
+        ? WritableAccount<TAccountUserStaking>
+        : TAccountUserStaking,
       TAccountStaking extends string
-        ? ReadonlyAccount<TAccountStaking>
+        ? WritableAccount<TAccountStaking>
         : TAccountStaking,
       TAccountCortex extends string
         ? WritableAccount<TAccountCortex>
         : TAccountCortex,
-      TAccountPool extends string
-        ? WritableAccount<TAccountPool>
-        : TAccountPool,
       TAccountLmTokenMint extends string
-        ? ReadonlyAccount<TAccountLmTokenMint>
+        ? WritableAccount<TAccountLmTokenMint>
         : TAccountLmTokenMint,
-      TAccountFeeRedistributionMint extends string
-        ? ReadonlyAccount<TAccountFeeRedistributionMint>
-        : TAccountFeeRedistributionMint,
       TAccountAdrenaProgram extends string
         ? ReadonlyAccount<TAccountAdrenaProgram>
         : TAccountAdrenaProgram,
@@ -133,146 +121,142 @@ export type InitUserStakingInstruction<
     ]
   >;
 
-export type InitUserStakingInstructionData = {
+export type MintStakedLmTokensFromBucketInstructionData = {
   discriminator: ReadonlyUint8Array;
+  bucketName: number;
+  amount: bigint;
+  reason: string;
+  lockedDays: number;
 };
 
-export type InitUserStakingInstructionDataArgs = {};
+export type MintStakedLmTokensFromBucketInstructionDataArgs = {
+  bucketName: number;
+  amount: number | bigint;
+  reason: string;
+  lockedDays: number;
+};
 
-export function getInitUserStakingInstructionDataEncoder(): Encoder<InitUserStakingInstructionDataArgs> {
+export function getMintStakedLmTokensFromBucketInstructionDataEncoder(): Encoder<MintStakedLmTokensFromBucketInstructionDataArgs> {
   return transformEncoder(
-    getStructEncoder([['discriminator', fixEncoderSize(getBytesEncoder(), 8)]]),
-    (value) => ({ ...value, discriminator: INIT_USER_STAKING_DISCRIMINATOR })
+    getStructEncoder([
+      ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
+      ['bucketName', getU8Encoder()],
+      ['amount', getU64Encoder()],
+      ['reason', addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
+      ['lockedDays', getU32Encoder()],
+    ]),
+    (value) => ({
+      ...value,
+      discriminator: MINT_STAKED_LM_TOKENS_FROM_BUCKET_DISCRIMINATOR,
+    })
   );
 }
 
-export function getInitUserStakingInstructionDataDecoder(): Decoder<InitUserStakingInstructionData> {
+export function getMintStakedLmTokensFromBucketInstructionDataDecoder(): Decoder<MintStakedLmTokensFromBucketInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
+    ['bucketName', getU8Decoder()],
+    ['amount', getU64Decoder()],
+    ['reason', addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
+    ['lockedDays', getU32Decoder()],
   ]);
 }
 
-export function getInitUserStakingInstructionDataCodec(): Codec<
-  InitUserStakingInstructionDataArgs,
-  InitUserStakingInstructionData
+export function getMintStakedLmTokensFromBucketInstructionDataCodec(): Codec<
+  MintStakedLmTokensFromBucketInstructionDataArgs,
+  MintStakedLmTokensFromBucketInstructionData
 > {
   return combineCodec(
-    getInitUserStakingInstructionDataEncoder(),
-    getInitUserStakingInstructionDataDecoder()
+    getMintStakedLmTokensFromBucketInstructionDataEncoder(),
+    getMintStakedLmTokensFromBucketInstructionDataDecoder()
   );
 }
 
-export type InitUserStakingInput<
-  TAccountCaller extends string = string,
+export type MintStakedLmTokensFromBucketInput<
+  TAccountAdmin extends string = string,
   TAccountPayer extends string = string,
   TAccountOwner extends string = string,
-  TAccountRewardTokenAccount extends string = string,
-  TAccountLmTokenAccount extends string = string,
-  TAccountStakingRewardTokenVault extends string = string,
-  TAccountStakingLmRewardTokenVault extends string = string,
-  TAccountUserStaking extends string = string,
+  TAccountStakingStakedTokenVault extends string = string,
   TAccountTransferAuthority extends string = string,
+  TAccountUserStaking extends string = string,
   TAccountStaking extends string = string,
   TAccountCortex extends string = string,
-  TAccountPool extends string = string,
   TAccountLmTokenMint extends string = string,
-  TAccountFeeRedistributionMint extends string = string,
   TAccountAdrenaProgram extends string = string,
   TAccountSystemProgram extends string = string,
   TAccountTokenProgram extends string = string,
 > = {
   /** #1 */
-  caller: TransactionSigner<TAccountCaller>;
+  admin: TransactionSigner<TAccountAdmin>;
   /** #2 */
   payer: TransactionSigner<TAccountPayer>;
   /** #3 */
   owner: Address<TAccountOwner>;
   /** #4 */
-  rewardTokenAccount: Address<TAccountRewardTokenAccount>;
+  stakingStakedTokenVault: Address<TAccountStakingStakedTokenVault>;
   /** #5 */
-  lmTokenAccount: Address<TAccountLmTokenAccount>;
-  /** #6 */
-  stakingRewardTokenVault: Address<TAccountStakingRewardTokenVault>;
-  /** #7 */
-  stakingLmRewardTokenVault: Address<TAccountStakingLmRewardTokenVault>;
-  /** #8 */
-  userStaking: Address<TAccountUserStaking>;
-  /** #9 */
   transferAuthority: Address<TAccountTransferAuthority>;
-  /** #10 */
+  /** #6 */
+  userStaking: Address<TAccountUserStaking>;
+  /** #7 */
   staking: Address<TAccountStaking>;
-  /** #11 */
+  /** #8 */
   cortex: Address<TAccountCortex>;
-  /** #12 */
-  pool: Address<TAccountPool>;
-  /** #13 */
+  /** #9 */
   lmTokenMint: Address<TAccountLmTokenMint>;
-  /** #14 */
-  feeRedistributionMint: Address<TAccountFeeRedistributionMint>;
-  /** #15 */
+  /** #10 */
   adrenaProgram: Address<TAccountAdrenaProgram>;
-  /** #16 */
+  /** #11 */
   systemProgram?: Address<TAccountSystemProgram>;
-  /** #17 */
+  /** #12 */
   tokenProgram?: Address<TAccountTokenProgram>;
+  bucketName: MintStakedLmTokensFromBucketInstructionDataArgs['bucketName'];
+  amount: MintStakedLmTokensFromBucketInstructionDataArgs['amount'];
+  reason: MintStakedLmTokensFromBucketInstructionDataArgs['reason'];
+  lockedDays: MintStakedLmTokensFromBucketInstructionDataArgs['lockedDays'];
 };
 
-export function getInitUserStakingInstruction<
-  TAccountCaller extends string,
+export function getMintStakedLmTokensFromBucketInstruction<
+  TAccountAdmin extends string,
   TAccountPayer extends string,
   TAccountOwner extends string,
-  TAccountRewardTokenAccount extends string,
-  TAccountLmTokenAccount extends string,
-  TAccountStakingRewardTokenVault extends string,
-  TAccountStakingLmRewardTokenVault extends string,
-  TAccountUserStaking extends string,
+  TAccountStakingStakedTokenVault extends string,
   TAccountTransferAuthority extends string,
+  TAccountUserStaking extends string,
   TAccountStaking extends string,
   TAccountCortex extends string,
-  TAccountPool extends string,
   TAccountLmTokenMint extends string,
-  TAccountFeeRedistributionMint extends string,
   TAccountAdrenaProgram extends string,
   TAccountSystemProgram extends string,
   TAccountTokenProgram extends string,
   TProgramAddress extends Address = typeof ADRENA_PROGRAM_ADDRESS,
 >(
-  input: InitUserStakingInput<
-    TAccountCaller,
+  input: MintStakedLmTokensFromBucketInput<
+    TAccountAdmin,
     TAccountPayer,
     TAccountOwner,
-    TAccountRewardTokenAccount,
-    TAccountLmTokenAccount,
-    TAccountStakingRewardTokenVault,
-    TAccountStakingLmRewardTokenVault,
-    TAccountUserStaking,
+    TAccountStakingStakedTokenVault,
     TAccountTransferAuthority,
+    TAccountUserStaking,
     TAccountStaking,
     TAccountCortex,
-    TAccountPool,
     TAccountLmTokenMint,
-    TAccountFeeRedistributionMint,
     TAccountAdrenaProgram,
     TAccountSystemProgram,
     TAccountTokenProgram
   >,
   config?: { programAddress?: TProgramAddress }
-): InitUserStakingInstruction<
+): MintStakedLmTokensFromBucketInstruction<
   TProgramAddress,
-  TAccountCaller,
+  TAccountAdmin,
   TAccountPayer,
   TAccountOwner,
-  TAccountRewardTokenAccount,
-  TAccountLmTokenAccount,
-  TAccountStakingRewardTokenVault,
-  TAccountStakingLmRewardTokenVault,
-  TAccountUserStaking,
+  TAccountStakingStakedTokenVault,
   TAccountTransferAuthority,
+  TAccountUserStaking,
   TAccountStaking,
   TAccountCortex,
-  TAccountPool,
   TAccountLmTokenMint,
-  TAccountFeeRedistributionMint,
   TAccountAdrenaProgram,
   TAccountSystemProgram,
   TAccountTokenProgram
@@ -282,35 +266,21 @@ export function getInitUserStakingInstruction<
 
   // Original accounts.
   const originalAccounts = {
-    caller: { value: input.caller ?? null, isWritable: false },
+    admin: { value: input.admin ?? null, isWritable: false },
     payer: { value: input.payer ?? null, isWritable: true },
     owner: { value: input.owner ?? null, isWritable: false },
-    rewardTokenAccount: {
-      value: input.rewardTokenAccount ?? null,
+    stakingStakedTokenVault: {
+      value: input.stakingStakedTokenVault ?? null,
       isWritable: true,
     },
-    lmTokenAccount: { value: input.lmTokenAccount ?? null, isWritable: true },
-    stakingRewardTokenVault: {
-      value: input.stakingRewardTokenVault ?? null,
-      isWritable: true,
-    },
-    stakingLmRewardTokenVault: {
-      value: input.stakingLmRewardTokenVault ?? null,
-      isWritable: true,
-    },
-    userStaking: { value: input.userStaking ?? null, isWritable: true },
     transferAuthority: {
       value: input.transferAuthority ?? null,
       isWritable: false,
     },
-    staking: { value: input.staking ?? null, isWritable: false },
+    userStaking: { value: input.userStaking ?? null, isWritable: true },
+    staking: { value: input.staking ?? null, isWritable: true },
     cortex: { value: input.cortex ?? null, isWritable: true },
-    pool: { value: input.pool ?? null, isWritable: true },
-    lmTokenMint: { value: input.lmTokenMint ?? null, isWritable: false },
-    feeRedistributionMint: {
-      value: input.feeRedistributionMint ?? null,
-      isWritable: false,
-    },
+    lmTokenMint: { value: input.lmTokenMint ?? null, isWritable: true },
     adrenaProgram: { value: input.adrenaProgram ?? null, isWritable: false },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
@@ -319,6 +289,9 @@ export function getInitUserStakingInstruction<
     keyof typeof originalAccounts,
     ResolvedAccount
   >;
+
+  // Original args.
+  const args = { ...input };
 
   // Resolve default values.
   if (!accounts.systemProgram.value) {
@@ -333,42 +306,34 @@ export function getInitUserStakingInstruction<
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
     accounts: [
-      getAccountMeta(accounts.caller),
+      getAccountMeta(accounts.admin),
       getAccountMeta(accounts.payer),
       getAccountMeta(accounts.owner),
-      getAccountMeta(accounts.rewardTokenAccount),
-      getAccountMeta(accounts.lmTokenAccount),
-      getAccountMeta(accounts.stakingRewardTokenVault),
-      getAccountMeta(accounts.stakingLmRewardTokenVault),
-      getAccountMeta(accounts.userStaking),
+      getAccountMeta(accounts.stakingStakedTokenVault),
       getAccountMeta(accounts.transferAuthority),
+      getAccountMeta(accounts.userStaking),
       getAccountMeta(accounts.staking),
       getAccountMeta(accounts.cortex),
-      getAccountMeta(accounts.pool),
       getAccountMeta(accounts.lmTokenMint),
-      getAccountMeta(accounts.feeRedistributionMint),
       getAccountMeta(accounts.adrenaProgram),
       getAccountMeta(accounts.systemProgram),
       getAccountMeta(accounts.tokenProgram),
     ],
     programAddress,
-    data: getInitUserStakingInstructionDataEncoder().encode({}),
-  } as InitUserStakingInstruction<
+    data: getMintStakedLmTokensFromBucketInstructionDataEncoder().encode(
+      args as MintStakedLmTokensFromBucketInstructionDataArgs
+    ),
+  } as MintStakedLmTokensFromBucketInstruction<
     TProgramAddress,
-    TAccountCaller,
+    TAccountAdmin,
     TAccountPayer,
     TAccountOwner,
-    TAccountRewardTokenAccount,
-    TAccountLmTokenAccount,
-    TAccountStakingRewardTokenVault,
-    TAccountStakingLmRewardTokenVault,
-    TAccountUserStaking,
+    TAccountStakingStakedTokenVault,
     TAccountTransferAuthority,
+    TAccountUserStaking,
     TAccountStaking,
     TAccountCortex,
-    TAccountPool,
     TAccountLmTokenMint,
-    TAccountFeeRedistributionMint,
     TAccountAdrenaProgram,
     TAccountSystemProgram,
     TAccountTokenProgram
@@ -377,59 +342,49 @@ export function getInitUserStakingInstruction<
   return instruction;
 }
 
-export type ParsedInitUserStakingInstruction<
+export type ParsedMintStakedLmTokensFromBucketInstruction<
   TProgram extends string = typeof ADRENA_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
     /** #1 */
-    caller: TAccountMetas[0];
+    admin: TAccountMetas[0];
     /** #2 */
     payer: TAccountMetas[1];
     /** #3 */
     owner: TAccountMetas[2];
     /** #4 */
-    rewardTokenAccount: TAccountMetas[3];
+    stakingStakedTokenVault: TAccountMetas[3];
     /** #5 */
-    lmTokenAccount: TAccountMetas[4];
+    transferAuthority: TAccountMetas[4];
     /** #6 */
-    stakingRewardTokenVault: TAccountMetas[5];
+    userStaking: TAccountMetas[5];
     /** #7 */
-    stakingLmRewardTokenVault: TAccountMetas[6];
+    staking: TAccountMetas[6];
     /** #8 */
-    userStaking: TAccountMetas[7];
+    cortex: TAccountMetas[7];
     /** #9 */
-    transferAuthority: TAccountMetas[8];
+    lmTokenMint: TAccountMetas[8];
     /** #10 */
-    staking: TAccountMetas[9];
+    adrenaProgram: TAccountMetas[9];
     /** #11 */
-    cortex: TAccountMetas[10];
+    systemProgram: TAccountMetas[10];
     /** #12 */
-    pool: TAccountMetas[11];
-    /** #13 */
-    lmTokenMint: TAccountMetas[12];
-    /** #14 */
-    feeRedistributionMint: TAccountMetas[13];
-    /** #15 */
-    adrenaProgram: TAccountMetas[14];
-    /** #16 */
-    systemProgram: TAccountMetas[15];
-    /** #17 */
-    tokenProgram: TAccountMetas[16];
+    tokenProgram: TAccountMetas[11];
   };
-  data: InitUserStakingInstructionData;
+  data: MintStakedLmTokensFromBucketInstructionData;
 };
 
-export function parseInitUserStakingInstruction<
+export function parseMintStakedLmTokensFromBucketInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedInitUserStakingInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 17) {
+): ParsedMintStakedLmTokensFromBucketInstruction<TProgram, TAccountMetas> {
+  if (instruction.accounts.length < 12) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -442,24 +397,21 @@ export function parseInitUserStakingInstruction<
   return {
     programAddress: instruction.programAddress,
     accounts: {
-      caller: getNextAccount(),
+      admin: getNextAccount(),
       payer: getNextAccount(),
       owner: getNextAccount(),
-      rewardTokenAccount: getNextAccount(),
-      lmTokenAccount: getNextAccount(),
-      stakingRewardTokenVault: getNextAccount(),
-      stakingLmRewardTokenVault: getNextAccount(),
-      userStaking: getNextAccount(),
+      stakingStakedTokenVault: getNextAccount(),
       transferAuthority: getNextAccount(),
+      userStaking: getNextAccount(),
       staking: getNextAccount(),
       cortex: getNextAccount(),
-      pool: getNextAccount(),
       lmTokenMint: getNextAccount(),
-      feeRedistributionMint: getNextAccount(),
       adrenaProgram: getNextAccount(),
       systemProgram: getNextAccount(),
       tokenProgram: getNextAccount(),
     },
-    data: getInitUserStakingInstructionDataDecoder().decode(instruction.data),
+    data: getMintStakedLmTokensFromBucketInstructionDataDecoder().decode(
+      instruction.data
+    ),
   };
 }

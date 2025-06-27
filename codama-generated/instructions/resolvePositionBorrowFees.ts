@@ -16,8 +16,6 @@ import {
   getOptionEncoder,
   getStructDecoder,
   getStructEncoder,
-  getU64Decoder,
-  getU64Encoder,
   transformEncoder,
   type Address,
   type Codec,
@@ -45,31 +43,26 @@ import {
   type ChaosLabsBatchPricesArgs,
 } from '../types';
 
-export const CLOSE_POSITION_SHORT_DISCRIMINATOR = new Uint8Array([
-  158, 216, 38, 16, 140, 37, 15, 131,
+export const RESOLVE_POSITION_BORROW_FEES_DISCRIMINATOR = new Uint8Array([
+  220, 145, 23, 255, 234, 9, 41, 145,
 ]);
 
-export function getClosePositionShortDiscriminatorBytes() {
+export function getResolvePositionBorrowFeesDiscriminatorBytes() {
   return fixEncoderSize(getBytesEncoder(), 8).encode(
-    CLOSE_POSITION_SHORT_DISCRIMINATOR
+    RESOLVE_POSITION_BORROW_FEES_DISCRIMINATOR
   );
 }
 
-export type ClosePositionShortInstruction<
+export type ResolvePositionBorrowFeesInstruction<
   TProgram extends string = typeof ADRENA_PROGRAM_ADDRESS,
-  TAccountCaller extends string | IAccountMeta<string> = string,
-  TAccountOwner extends string | IAccountMeta<string> = string,
-  TAccountReceivingAccount extends string | IAccountMeta<string> = string,
+  TAccountSigner extends string | IAccountMeta<string> = string,
   TAccountTransferAuthority extends string | IAccountMeta<string> = string,
   TAccountCortex extends string | IAccountMeta<string> = string,
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountPosition extends string | IAccountMeta<string> = string,
-  TAccountCustody extends string | IAccountMeta<string> = string,
   TAccountOracle extends string | IAccountMeta<string> = string,
+  TAccountCustody extends string | IAccountMeta<string> = string,
   TAccountCollateralCustody extends string | IAccountMeta<string> = string,
-  TAccountCollateralCustodyTokenAccount extends
-    | string
-    | IAccountMeta<string> = string,
   TAccountUserProfile extends string | IAccountMeta<string> = string,
   TAccountReferrerProfile extends string | IAccountMeta<string> = string,
   TAccountTokenProgram extends
@@ -81,21 +74,15 @@ export type ClosePositionShortInstruction<
   IInstructionWithData<Uint8Array> &
   IInstructionWithAccounts<
     [
-      TAccountCaller extends string
-        ? WritableSignerAccount<TAccountCaller> &
-            IAccountSignerMeta<TAccountCaller>
-        : TAccountCaller,
-      TAccountOwner extends string
-        ? WritableAccount<TAccountOwner>
-        : TAccountOwner,
-      TAccountReceivingAccount extends string
-        ? WritableAccount<TAccountReceivingAccount>
-        : TAccountReceivingAccount,
+      TAccountSigner extends string
+        ? WritableSignerAccount<TAccountSigner> &
+            IAccountSignerMeta<TAccountSigner>
+        : TAccountSigner,
       TAccountTransferAuthority extends string
         ? ReadonlyAccount<TAccountTransferAuthority>
         : TAccountTransferAuthority,
       TAccountCortex extends string
-        ? WritableAccount<TAccountCortex>
+        ? ReadonlyAccount<TAccountCortex>
         : TAccountCortex,
       TAccountPool extends string
         ? WritableAccount<TAccountPool>
@@ -103,20 +90,17 @@ export type ClosePositionShortInstruction<
       TAccountPosition extends string
         ? WritableAccount<TAccountPosition>
         : TAccountPosition,
-      TAccountCustody extends string
-        ? WritableAccount<TAccountCustody>
-        : TAccountCustody,
       TAccountOracle extends string
         ? WritableAccount<TAccountOracle>
         : TAccountOracle,
+      TAccountCustody extends string
+        ? WritableAccount<TAccountCustody>
+        : TAccountCustody,
       TAccountCollateralCustody extends string
         ? WritableAccount<TAccountCollateralCustody>
         : TAccountCollateralCustody,
-      TAccountCollateralCustodyTokenAccount extends string
-        ? WritableAccount<TAccountCollateralCustodyTokenAccount>
-        : TAccountCollateralCustodyTokenAccount,
       TAccountUserProfile extends string
-        ? WritableAccount<TAccountUserProfile>
+        ? ReadonlyAccount<TAccountUserProfile>
         : TAccountUserProfile,
       TAccountReferrerProfile extends string
         ? WritableAccount<TAccountReferrerProfile>
@@ -131,151 +115,126 @@ export type ClosePositionShortInstruction<
     ]
   >;
 
-export type ClosePositionShortInstructionData = {
+export type ResolvePositionBorrowFeesInstructionData = {
   discriminator: ReadonlyUint8Array;
-  price: Option<bigint>;
   oraclePrices: Option<ChaosLabsBatchPrices>;
-  percentage: bigint;
 };
 
-export type ClosePositionShortInstructionDataArgs = {
-  price: OptionOrNullable<number | bigint>;
+export type ResolvePositionBorrowFeesInstructionDataArgs = {
   oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
-  percentage: number | bigint;
 };
 
-export function getClosePositionShortInstructionDataEncoder(): Encoder<ClosePositionShortInstructionDataArgs> {
+export function getResolvePositionBorrowFeesInstructionDataEncoder(): Encoder<ResolvePositionBorrowFeesInstructionDataArgs> {
   return transformEncoder(
     getStructEncoder([
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
-      ['price', getOptionEncoder(getU64Encoder())],
       ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
-      ['percentage', getU64Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: CLOSE_POSITION_SHORT_DISCRIMINATOR })
+    (value) => ({
+      ...value,
+      discriminator: RESOLVE_POSITION_BORROW_FEES_DISCRIMINATOR,
+    })
   );
 }
 
-export function getClosePositionShortInstructionDataDecoder(): Decoder<ClosePositionShortInstructionData> {
+export function getResolvePositionBorrowFeesInstructionDataDecoder(): Decoder<ResolvePositionBorrowFeesInstructionData> {
   return getStructDecoder([
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
-    ['price', getOptionDecoder(getU64Decoder())],
     ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
-    ['percentage', getU64Decoder()],
   ]);
 }
 
-export function getClosePositionShortInstructionDataCodec(): Codec<
-  ClosePositionShortInstructionDataArgs,
-  ClosePositionShortInstructionData
+export function getResolvePositionBorrowFeesInstructionDataCodec(): Codec<
+  ResolvePositionBorrowFeesInstructionDataArgs,
+  ResolvePositionBorrowFeesInstructionData
 > {
   return combineCodec(
-    getClosePositionShortInstructionDataEncoder(),
-    getClosePositionShortInstructionDataDecoder()
+    getResolvePositionBorrowFeesInstructionDataEncoder(),
+    getResolvePositionBorrowFeesInstructionDataDecoder()
   );
 }
 
-export type ClosePositionShortInput<
-  TAccountCaller extends string = string,
-  TAccountOwner extends string = string,
-  TAccountReceivingAccount extends string = string,
+export type ResolvePositionBorrowFeesInput<
+  TAccountSigner extends string = string,
   TAccountTransferAuthority extends string = string,
   TAccountCortex extends string = string,
   TAccountPool extends string = string,
   TAccountPosition extends string = string,
-  TAccountCustody extends string = string,
   TAccountOracle extends string = string,
+  TAccountCustody extends string = string,
   TAccountCollateralCustody extends string = string,
-  TAccountCollateralCustodyTokenAccount extends string = string,
   TAccountUserProfile extends string = string,
   TAccountReferrerProfile extends string = string,
   TAccountTokenProgram extends string = string,
   TAccountAdrenaProgram extends string = string,
 > = {
   /** #1 */
-  caller: TransactionSigner<TAccountCaller>;
+  signer: TransactionSigner<TAccountSigner>;
   /** #2 */
-  owner: Address<TAccountOwner>;
-  /** #3 */
-  receivingAccount: Address<TAccountReceivingAccount>;
-  /** #4 */
   transferAuthority: Address<TAccountTransferAuthority>;
-  /** #5 */
+  /** #3 */
   cortex: Address<TAccountCortex>;
-  /** #6 */
+  /** #4 */
   pool: Address<TAccountPool>;
-  /** #7 */
+  /** #5 */
   position: Address<TAccountPosition>;
-  /** #8 */
-  custody: Address<TAccountCustody>;
-  /** #9 */
+  /** #6 */
   oracle: Address<TAccountOracle>;
-  /** #10 */
+  /** #7 */
+  custody: Address<TAccountCustody>;
+  /** #8 */
   collateralCustody: Address<TAccountCollateralCustody>;
-  /** #11 */
-  collateralCustodyTokenAccount: Address<TAccountCollateralCustodyTokenAccount>;
-  /** #12 */
+  /** #9 */
   userProfile?: Address<TAccountUserProfile>;
-  /** #13 */
+  /** #10 */
   referrerProfile?: Address<TAccountReferrerProfile>;
-  /** #14 */
+  /** #11 */
   tokenProgram?: Address<TAccountTokenProgram>;
-  /** #15 */
+  /** #12 */
   adrenaProgram: Address<TAccountAdrenaProgram>;
-  price: ClosePositionShortInstructionDataArgs['price'];
-  oraclePrices: ClosePositionShortInstructionDataArgs['oraclePrices'];
-  percentage: ClosePositionShortInstructionDataArgs['percentage'];
+  oraclePrices: ResolvePositionBorrowFeesInstructionDataArgs['oraclePrices'];
 };
 
-export function getClosePositionShortInstruction<
-  TAccountCaller extends string,
-  TAccountOwner extends string,
-  TAccountReceivingAccount extends string,
+export function getResolvePositionBorrowFeesInstruction<
+  TAccountSigner extends string,
   TAccountTransferAuthority extends string,
   TAccountCortex extends string,
   TAccountPool extends string,
   TAccountPosition extends string,
-  TAccountCustody extends string,
   TAccountOracle extends string,
+  TAccountCustody extends string,
   TAccountCollateralCustody extends string,
-  TAccountCollateralCustodyTokenAccount extends string,
   TAccountUserProfile extends string,
   TAccountReferrerProfile extends string,
   TAccountTokenProgram extends string,
   TAccountAdrenaProgram extends string,
   TProgramAddress extends Address = typeof ADRENA_PROGRAM_ADDRESS,
 >(
-  input: ClosePositionShortInput<
-    TAccountCaller,
-    TAccountOwner,
-    TAccountReceivingAccount,
+  input: ResolvePositionBorrowFeesInput<
+    TAccountSigner,
     TAccountTransferAuthority,
     TAccountCortex,
     TAccountPool,
     TAccountPosition,
-    TAccountCustody,
     TAccountOracle,
+    TAccountCustody,
     TAccountCollateralCustody,
-    TAccountCollateralCustodyTokenAccount,
     TAccountUserProfile,
     TAccountReferrerProfile,
     TAccountTokenProgram,
     TAccountAdrenaProgram
   >,
   config?: { programAddress?: TProgramAddress }
-): ClosePositionShortInstruction<
+): ResolvePositionBorrowFeesInstruction<
   TProgramAddress,
-  TAccountCaller,
-  TAccountOwner,
-  TAccountReceivingAccount,
+  TAccountSigner,
   TAccountTransferAuthority,
   TAccountCortex,
   TAccountPool,
   TAccountPosition,
-  TAccountCustody,
   TAccountOracle,
+  TAccountCustody,
   TAccountCollateralCustody,
-  TAccountCollateralCustodyTokenAccount,
   TAccountUserProfile,
   TAccountReferrerProfile,
   TAccountTokenProgram,
@@ -286,30 +245,21 @@ export function getClosePositionShortInstruction<
 
   // Original accounts.
   const originalAccounts = {
-    caller: { value: input.caller ?? null, isWritable: true },
-    owner: { value: input.owner ?? null, isWritable: true },
-    receivingAccount: {
-      value: input.receivingAccount ?? null,
-      isWritable: true,
-    },
+    signer: { value: input.signer ?? null, isWritable: true },
     transferAuthority: {
       value: input.transferAuthority ?? null,
       isWritable: false,
     },
-    cortex: { value: input.cortex ?? null, isWritable: true },
+    cortex: { value: input.cortex ?? null, isWritable: false },
     pool: { value: input.pool ?? null, isWritable: true },
     position: { value: input.position ?? null, isWritable: true },
-    custody: { value: input.custody ?? null, isWritable: true },
     oracle: { value: input.oracle ?? null, isWritable: true },
+    custody: { value: input.custody ?? null, isWritable: true },
     collateralCustody: {
       value: input.collateralCustody ?? null,
       isWritable: true,
     },
-    collateralCustodyTokenAccount: {
-      value: input.collateralCustodyTokenAccount ?? null,
-      isWritable: true,
-    },
-    userProfile: { value: input.userProfile ?? null, isWritable: true },
+    userProfile: { value: input.userProfile ?? null, isWritable: false },
     referrerProfile: { value: input.referrerProfile ?? null, isWritable: true },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
     adrenaProgram: { value: input.adrenaProgram ?? null, isWritable: false },
@@ -331,39 +281,33 @@ export function getClosePositionShortInstruction<
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const instruction = {
     accounts: [
-      getAccountMeta(accounts.caller),
-      getAccountMeta(accounts.owner),
-      getAccountMeta(accounts.receivingAccount),
+      getAccountMeta(accounts.signer),
       getAccountMeta(accounts.transferAuthority),
       getAccountMeta(accounts.cortex),
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.position),
-      getAccountMeta(accounts.custody),
       getAccountMeta(accounts.oracle),
+      getAccountMeta(accounts.custody),
       getAccountMeta(accounts.collateralCustody),
-      getAccountMeta(accounts.collateralCustodyTokenAccount),
       getAccountMeta(accounts.userProfile),
       getAccountMeta(accounts.referrerProfile),
       getAccountMeta(accounts.tokenProgram),
       getAccountMeta(accounts.adrenaProgram),
     ],
     programAddress,
-    data: getClosePositionShortInstructionDataEncoder().encode(
-      args as ClosePositionShortInstructionDataArgs
+    data: getResolvePositionBorrowFeesInstructionDataEncoder().encode(
+      args as ResolvePositionBorrowFeesInstructionDataArgs
     ),
-  } as ClosePositionShortInstruction<
+  } as ResolvePositionBorrowFeesInstruction<
     TProgramAddress,
-    TAccountCaller,
-    TAccountOwner,
-    TAccountReceivingAccount,
+    TAccountSigner,
     TAccountTransferAuthority,
     TAccountCortex,
     TAccountPool,
     TAccountPosition,
-    TAccountCustody,
     TAccountOracle,
+    TAccountCustody,
     TAccountCollateralCustody,
-    TAccountCollateralCustodyTokenAccount,
     TAccountUserProfile,
     TAccountReferrerProfile,
     TAccountTokenProgram,
@@ -373,55 +317,49 @@ export function getClosePositionShortInstruction<
   return instruction;
 }
 
-export type ParsedClosePositionShortInstruction<
+export type ParsedResolvePositionBorrowFeesInstruction<
   TProgram extends string = typeof ADRENA_PROGRAM_ADDRESS,
   TAccountMetas extends readonly IAccountMeta[] = readonly IAccountMeta[],
 > = {
   programAddress: Address<TProgram>;
   accounts: {
     /** #1 */
-    caller: TAccountMetas[0];
+    signer: TAccountMetas[0];
     /** #2 */
-    owner: TAccountMetas[1];
+    transferAuthority: TAccountMetas[1];
     /** #3 */
-    receivingAccount: TAccountMetas[2];
+    cortex: TAccountMetas[2];
     /** #4 */
-    transferAuthority: TAccountMetas[3];
+    pool: TAccountMetas[3];
     /** #5 */
-    cortex: TAccountMetas[4];
+    position: TAccountMetas[4];
     /** #6 */
-    pool: TAccountMetas[5];
+    oracle: TAccountMetas[5];
     /** #7 */
-    position: TAccountMetas[6];
+    custody: TAccountMetas[6];
     /** #8 */
-    custody: TAccountMetas[7];
+    collateralCustody: TAccountMetas[7];
     /** #9 */
-    oracle: TAccountMetas[8];
+    userProfile?: TAccountMetas[8] | undefined;
     /** #10 */
-    collateralCustody: TAccountMetas[9];
+    referrerProfile?: TAccountMetas[9] | undefined;
     /** #11 */
-    collateralCustodyTokenAccount: TAccountMetas[10];
+    tokenProgram: TAccountMetas[10];
     /** #12 */
-    userProfile?: TAccountMetas[11] | undefined;
-    /** #13 */
-    referrerProfile?: TAccountMetas[12] | undefined;
-    /** #14 */
-    tokenProgram: TAccountMetas[13];
-    /** #15 */
-    adrenaProgram: TAccountMetas[14];
+    adrenaProgram: TAccountMetas[11];
   };
-  data: ClosePositionShortInstructionData;
+  data: ResolvePositionBorrowFeesInstructionData;
 };
 
-export function parseClosePositionShortInstruction<
+export function parseResolvePositionBorrowFeesInstruction<
   TProgram extends string,
   TAccountMetas extends readonly IAccountMeta[],
 >(
   instruction: IInstruction<TProgram> &
     IInstructionWithAccounts<TAccountMetas> &
     IInstructionWithData<Uint8Array>
-): ParsedClosePositionShortInstruction<TProgram, TAccountMetas> {
-  if (instruction.accounts.length < 15) {
+): ParsedResolvePositionBorrowFeesInstruction<TProgram, TAccountMetas> {
+  if (instruction.accounts.length < 12) {
     // TODO: Coded error.
     throw new Error('Not enough accounts');
   }
@@ -440,23 +378,20 @@ export function parseClosePositionShortInstruction<
   return {
     programAddress: instruction.programAddress,
     accounts: {
-      caller: getNextAccount(),
-      owner: getNextAccount(),
-      receivingAccount: getNextAccount(),
+      signer: getNextAccount(),
       transferAuthority: getNextAccount(),
       cortex: getNextAccount(),
       pool: getNextAccount(),
       position: getNextAccount(),
-      custody: getNextAccount(),
       oracle: getNextAccount(),
+      custody: getNextAccount(),
       collateralCustody: getNextAccount(),
-      collateralCustodyTokenAccount: getNextAccount(),
       userProfile: getNextOptionalAccount(),
       referrerProfile: getNextOptionalAccount(),
       tokenProgram: getNextAccount(),
       adrenaProgram: getNextAccount(),
     },
-    data: getClosePositionShortInstructionDataDecoder().decode(
+    data: getResolvePositionBorrowFeesInstructionDataDecoder().decode(
       instruction.data
     ),
   };

@@ -77,6 +77,7 @@ import {
   type ParsedMigrateUserProfileFromV1ToV2Instruction,
   type ParsedMigrateVestFromV1ToV2Instruction,
   type ParsedMintLmTokensFromBucketInstruction,
+  type ParsedMintStakedLmTokensFromBucketInstruction,
   type ParsedOpenOrIncreasePositionWithSwapLongInstruction,
   type ParsedOpenOrIncreasePositionWithSwapShortInstruction,
   type ParsedOpenPositionLongInstruction,
@@ -91,6 +92,7 @@ import {
   type ParsedRemoveLiquidityInstruction,
   type ParsedRemoveLockedStakeInstruction,
   type ParsedRemovePoolInstruction,
+  type ParsedResolvePositionBorrowFeesInstruction,
   type ParsedResolveStakingRoundInstruction,
   type ParsedSetAdminInstruction,
   type ParsedSetCustodyAllowSwapInstruction,
@@ -110,6 +112,7 @@ import {
   type ParsedSetTakeProfitShortInstruction,
   type ParsedSetVestDelegateInstruction,
   type ParsedSwapInstruction,
+  type ParsedSyncUserVotingPowerInstruction,
   type ParsedUpdatePoolAumInstruction,
   type ParsedUpgradeLockedStakeInstruction,
 } from '../instructions';
@@ -396,6 +399,9 @@ export enum AdrenaInstruction {
   GrantOrRemoveAchievement,
   InitOracle,
   PatchCustodiesOracles,
+  ResolvePositionBorrowFees,
+  SyncUserVotingPower,
+  MintStakedLmTokensFromBucket,
 }
 
 export function identifyAdrenaInstruction(
@@ -1480,6 +1486,39 @@ export function identifyAdrenaInstruction(
   ) {
     return AdrenaInstruction.PatchCustodiesOracles;
   }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([220, 145, 23, 255, 234, 9, 41, 145])
+      ),
+      0
+    )
+  ) {
+    return AdrenaInstruction.ResolvePositionBorrowFees;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([94, 1, 234, 111, 197, 70, 50, 127])
+      ),
+      0
+    )
+  ) {
+    return AdrenaInstruction.SyncUserVotingPower;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([37, 153, 105, 98, 59, 127, 123, 240])
+      ),
+      0
+    )
+  ) {
+    return AdrenaInstruction.MintStakedLmTokensFromBucket;
+  }
   throw new Error(
     'The provided instruction could not be identified as a adrena instruction.'
   );
@@ -1781,4 +1820,13 @@ export type ParsedAdrenaInstruction<
     } & ParsedInitOracleInstruction<TProgram>)
   | ({
       instructionType: AdrenaInstruction.PatchCustodiesOracles;
-    } & ParsedPatchCustodiesOraclesInstruction<TProgram>);
+    } & ParsedPatchCustodiesOraclesInstruction<TProgram>)
+  | ({
+      instructionType: AdrenaInstruction.ResolvePositionBorrowFees;
+    } & ParsedResolvePositionBorrowFeesInstruction<TProgram>)
+  | ({
+      instructionType: AdrenaInstruction.SyncUserVotingPower;
+    } & ParsedSyncUserVotingPowerInstruction<TProgram>)
+  | ({
+      instructionType: AdrenaInstruction.MintStakedLmTokensFromBucket;
+    } & ParsedMintStakedLmTokensFromBucketInstruction<TProgram>);

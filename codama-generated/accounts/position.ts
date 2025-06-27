@@ -81,7 +81,7 @@ export type Position = {
   liquidationFeeUsd: bigint;
   id: bigint;
   takeProfitLimitPrice: bigint;
-  paddingUnsafe3: ReadonlyUint8Array;
+  paidInterestUsd: bigint;
   stopLossLimitPrice: bigint;
   stopLossClosePositionPrice: bigint;
 };
@@ -111,7 +111,7 @@ export type PositionArgs = {
   liquidationFeeUsd: number | bigint;
   id: number | bigint;
   takeProfitLimitPrice: number | bigint;
-  paddingUnsafe3: ReadonlyUint8Array;
+  paidInterestUsd: number | bigint;
   stopLossLimitPrice: number | bigint;
   stopLossClosePositionPrice: number | bigint;
 };
@@ -144,7 +144,7 @@ export function getPositionEncoder(): Encoder<PositionArgs> {
       ['liquidationFeeUsd', getU64Encoder()],
       ['id', getU64Encoder()],
       ['takeProfitLimitPrice', getU64Encoder()],
-      ['paddingUnsafe3', fixEncoderSize(getBytesEncoder(), 8)],
+      ['paidInterestUsd', getU64Encoder()],
       ['stopLossLimitPrice', getU64Encoder()],
       ['stopLossClosePositionPrice', getU64Encoder()],
     ]),
@@ -179,7 +179,7 @@ export function getPositionDecoder(): Decoder<Position> {
     ['liquidationFeeUsd', getU64Decoder()],
     ['id', getU64Decoder()],
     ['takeProfitLimitPrice', getU64Decoder()],
-    ['paddingUnsafe3', fixDecoderSize(getBytesDecoder(), 8)],
+    ['paidInterestUsd', getU64Decoder()],
     ['stopLossLimitPrice', getU64Decoder()],
     ['stopLossClosePositionPrice', getU64Decoder()],
   ]);

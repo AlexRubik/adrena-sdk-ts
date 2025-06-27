@@ -129,11 +129,13 @@ export type ClosePositionLongInstructionData = {
   discriminator: ReadonlyUint8Array;
   price: Option<bigint>;
   oraclePrices: Option<ChaosLabsBatchPrices>;
+  percentage: bigint;
 };
 
 export type ClosePositionLongInstructionDataArgs = {
   price: OptionOrNullable<number | bigint>;
   oraclePrices: OptionOrNullable<ChaosLabsBatchPricesArgs>;
+  percentage: number | bigint;
 };
 
 export function getClosePositionLongInstructionDataEncoder(): Encoder<ClosePositionLongInstructionDataArgs> {
@@ -142,6 +144,7 @@ export function getClosePositionLongInstructionDataEncoder(): Encoder<ClosePosit
       ['discriminator', fixEncoderSize(getBytesEncoder(), 8)],
       ['price', getOptionEncoder(getU64Encoder())],
       ['oraclePrices', getOptionEncoder(getChaosLabsBatchPricesEncoder())],
+      ['percentage', getU64Encoder()],
     ]),
     (value) => ({ ...value, discriminator: CLOSE_POSITION_LONG_DISCRIMINATOR })
   );
@@ -152,6 +155,7 @@ export function getClosePositionLongInstructionDataDecoder(): Decoder<ClosePosit
     ['discriminator', fixDecoderSize(getBytesDecoder(), 8)],
     ['price', getOptionDecoder(getU64Decoder())],
     ['oraclePrices', getOptionDecoder(getChaosLabsBatchPricesDecoder())],
+    ['percentage', getU64Decoder()],
   ]);
 }
 
@@ -211,6 +215,7 @@ export type ClosePositionLongInput<
   adrenaProgram: Address<TAccountAdrenaProgram>;
   price: ClosePositionLongInstructionDataArgs['price'];
   oraclePrices: ClosePositionLongInstructionDataArgs['oraclePrices'];
+  percentage: ClosePositionLongInstructionDataArgs['percentage'];
 };
 
 export function getClosePositionLongInstruction<
