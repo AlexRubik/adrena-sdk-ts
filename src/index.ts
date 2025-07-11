@@ -8,8 +8,6 @@ export * from './core';
 // Constants and types
 export * from './types';
 
-import { runOpenMarketLongExample } from './examples/openMarketLongExample';
-import { runOpenMarketShortExample } from './examples/openMarketShortExample';
 
 // Main entry point function
 export async function main() {

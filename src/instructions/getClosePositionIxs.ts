@@ -7,6 +7,8 @@ import { DEV_PDA, PRICE_DECIMALS, PRINCIPAL_ADDRESSES, TOKEN_ADDRESSES } from ".
 import { createAssociatedTokenAccountIx } from "../helpers/tokenHelpers";
 import { getPythPrice } from "../helpers/pyth";
 import BN from "bn.js";
+import DataApiClient from "../clients/DataApiClient";
+import { ChaosLabsPricesExtended } from "../types";
 
 export type ClosePositionLongParams = {
     wallet: TransactionSigner,

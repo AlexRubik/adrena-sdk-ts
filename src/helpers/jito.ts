@@ -75,7 +75,8 @@ export async function sendJitoBundle(base64Transactions: string[]): Promise<stri
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const body = await response.text();
+      throw new Error(`HTTP error! status: ${response.status}, body: ${body}`);
     }
 
     const data = await response.json() as JitoBundleResponse;
