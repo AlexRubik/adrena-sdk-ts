@@ -59,7 +59,7 @@ export type MintLmTokensFromBucketInstruction<
   TAccountReceivingAccount extends string | IAccountMeta<string> = string,
   TAccountTransferAuthority extends string | IAccountMeta<string> = string,
   TAccountCortex extends string | IAccountMeta<string> = string,
-  TAccountLmTokenMint extends string | IAccountMeta<string> = string,
+  TAccountLmTokenTreasury extends string | IAccountMeta<string> = string,
   TAccountTokenProgram extends
     | string
     | IAccountMeta<string> = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
@@ -81,9 +81,9 @@ export type MintLmTokensFromBucketInstruction<
       TAccountCortex extends string
         ? WritableAccount<TAccountCortex>
         : TAccountCortex,
-      TAccountLmTokenMint extends string
-        ? WritableAccount<TAccountLmTokenMint>
-        : TAccountLmTokenMint,
+      TAccountLmTokenTreasury extends string
+        ? WritableAccount<TAccountLmTokenTreasury>
+        : TAccountLmTokenTreasury,
       TAccountTokenProgram extends string
         ? ReadonlyAccount<TAccountTokenProgram>
         : TAccountTokenProgram,
@@ -143,7 +143,7 @@ export type MintLmTokensFromBucketInput<
   TAccountReceivingAccount extends string = string,
   TAccountTransferAuthority extends string = string,
   TAccountCortex extends string = string,
-  TAccountLmTokenMint extends string = string,
+  TAccountLmTokenTreasury extends string = string,
   TAccountTokenProgram extends string = string,
 > = {
   /** #1 */
@@ -155,7 +155,7 @@ export type MintLmTokensFromBucketInput<
   /** #4 */
   cortex: Address<TAccountCortex>;
   /** #5 */
-  lmTokenMint: Address<TAccountLmTokenMint>;
+  lmTokenTreasury: Address<TAccountLmTokenTreasury>;
   /** #6 */
   tokenProgram?: Address<TAccountTokenProgram>;
   bucketName: MintLmTokensFromBucketInstructionDataArgs['bucketName'];
@@ -168,7 +168,7 @@ export function getMintLmTokensFromBucketInstruction<
   TAccountReceivingAccount extends string,
   TAccountTransferAuthority extends string,
   TAccountCortex extends string,
-  TAccountLmTokenMint extends string,
+  TAccountLmTokenTreasury extends string,
   TAccountTokenProgram extends string,
   TProgramAddress extends Address = typeof ADRENA_PROGRAM_ADDRESS,
 >(
@@ -177,7 +177,7 @@ export function getMintLmTokensFromBucketInstruction<
     TAccountReceivingAccount,
     TAccountTransferAuthority,
     TAccountCortex,
-    TAccountLmTokenMint,
+    TAccountLmTokenTreasury,
     TAccountTokenProgram
   >,
   config?: { programAddress?: TProgramAddress }
@@ -187,7 +187,7 @@ export function getMintLmTokensFromBucketInstruction<
   TAccountReceivingAccount,
   TAccountTransferAuthority,
   TAccountCortex,
-  TAccountLmTokenMint,
+  TAccountLmTokenTreasury,
   TAccountTokenProgram
 > {
   // Program address.
@@ -205,7 +205,7 @@ export function getMintLmTokensFromBucketInstruction<
       isWritable: false,
     },
     cortex: { value: input.cortex ?? null, isWritable: true },
-    lmTokenMint: { value: input.lmTokenMint ?? null, isWritable: true },
+    lmTokenTreasury: { value: input.lmTokenTreasury ?? null, isWritable: true },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
   };
   const accounts = originalAccounts as Record<
@@ -229,7 +229,7 @@ export function getMintLmTokensFromBucketInstruction<
       getAccountMeta(accounts.receivingAccount),
       getAccountMeta(accounts.transferAuthority),
       getAccountMeta(accounts.cortex),
-      getAccountMeta(accounts.lmTokenMint),
+      getAccountMeta(accounts.lmTokenTreasury),
       getAccountMeta(accounts.tokenProgram),
     ],
     programAddress,
@@ -242,7 +242,7 @@ export function getMintLmTokensFromBucketInstruction<
     TAccountReceivingAccount,
     TAccountTransferAuthority,
     TAccountCortex,
-    TAccountLmTokenMint,
+    TAccountLmTokenTreasury,
     TAccountTokenProgram
   >;
 
@@ -264,7 +264,7 @@ export type ParsedMintLmTokensFromBucketInstruction<
     /** #4 */
     cortex: TAccountMetas[3];
     /** #5 */
-    lmTokenMint: TAccountMetas[4];
+    lmTokenTreasury: TAccountMetas[4];
     /** #6 */
     tokenProgram: TAccountMetas[5];
   };
@@ -296,7 +296,7 @@ export function parseMintLmTokensFromBucketInstruction<
       receivingAccount: getNextAccount(),
       transferAuthority: getNextAccount(),
       cortex: getNextAccount(),
-      lmTokenMint: getNextAccount(),
+      lmTokenTreasury: getNextAccount(),
       tokenProgram: getNextAccount(),
     },
     data: getMintLmTokensFromBucketInstructionDataDecoder().decode(

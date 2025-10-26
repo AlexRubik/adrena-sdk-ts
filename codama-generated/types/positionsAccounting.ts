@@ -8,12 +8,8 @@
 
 import {
   combineCodec,
-  fixDecoderSize,
-  fixEncoderSize,
   getArrayDecoder,
   getArrayEncoder,
-  getBytesDecoder,
-  getBytesEncoder,
   getStructDecoder,
   getStructEncoder,
   getU64Decoder,
@@ -21,7 +17,6 @@ import {
   type Codec,
   type Decoder,
   type Encoder,
-  type ReadonlyUint8Array,
 } from '@solana/kit';
 import {
   getStableLockedAmountStatDecoder,
@@ -42,7 +37,7 @@ export type PositionsAccounting = {
   weightedPrice: U128Split;
   totalQuantity: U128Split;
   cumulativeInterestUsd: bigint;
-  padding: ReadonlyUint8Array;
+  collateralUsd: bigint;
   cumulativeInterestSnapshot: U128Split;
   exitFeeUsd: bigint;
   stableLockedAmount: Array<StableLockedAmountStat>;
@@ -56,7 +51,7 @@ export type PositionsAccountingArgs = {
   weightedPrice: U128SplitArgs;
   totalQuantity: U128SplitArgs;
   cumulativeInterestUsd: number | bigint;
-  padding: ReadonlyUint8Array;
+  collateralUsd: number | bigint;
   cumulativeInterestSnapshot: U128SplitArgs;
   exitFeeUsd: number | bigint;
   stableLockedAmount: Array<StableLockedAmountStatArgs>;
@@ -71,7 +66,7 @@ export function getPositionsAccountingEncoder(): Encoder<PositionsAccountingArgs
     ['weightedPrice', getU128SplitEncoder()],
     ['totalQuantity', getU128SplitEncoder()],
     ['cumulativeInterestUsd', getU64Encoder()],
-    ['padding', fixEncoderSize(getBytesEncoder(), 8)],
+    ['collateralUsd', getU64Encoder()],
     ['cumulativeInterestSnapshot', getU128SplitEncoder()],
     ['exitFeeUsd', getU64Encoder()],
     [
@@ -90,7 +85,7 @@ export function getPositionsAccountingDecoder(): Decoder<PositionsAccounting> {
     ['weightedPrice', getU128SplitDecoder()],
     ['totalQuantity', getU128SplitDecoder()],
     ['cumulativeInterestUsd', getU64Decoder()],
-    ['padding', fixDecoderSize(getBytesDecoder(), 8)],
+    ['collateralUsd', getU64Decoder()],
     ['cumulativeInterestSnapshot', getU128SplitDecoder()],
     ['exitFeeUsd', getU64Decoder()],
     [

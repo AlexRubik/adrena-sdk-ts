@@ -70,7 +70,7 @@ export type UpgradeLockedStakeInstruction<
   TAccountGovernanceTokenMint extends string | IAccountMeta<string> = string,
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountGenesisLock extends string | IAccountMeta<string> = string,
-  TAccountLmTokenMint extends string | IAccountMeta<string> = string,
+  TAccountLmTokenTreasury extends string | IAccountMeta<string> = string,
   TAccountFeeRedistributionMint extends string | IAccountMeta<string> = string,
   TAccountGovernanceRealm extends string | IAccountMeta<string> = string,
   TAccountGovernanceRealmConfig extends string | IAccountMeta<string> = string,
@@ -136,9 +136,9 @@ export type UpgradeLockedStakeInstruction<
       TAccountGenesisLock extends string
         ? WritableAccount<TAccountGenesisLock>
         : TAccountGenesisLock,
-      TAccountLmTokenMint extends string
-        ? WritableAccount<TAccountLmTokenMint>
-        : TAccountLmTokenMint,
+      TAccountLmTokenTreasury extends string
+        ? WritableAccount<TAccountLmTokenTreasury>
+        : TAccountLmTokenTreasury,
       TAccountFeeRedistributionMint extends string
         ? ReadonlyAccount<TAccountFeeRedistributionMint>
         : TAccountFeeRedistributionMint,
@@ -231,7 +231,7 @@ export type UpgradeLockedStakeInput<
   TAccountGovernanceTokenMint extends string = string,
   TAccountPool extends string = string,
   TAccountGenesisLock extends string = string,
-  TAccountLmTokenMint extends string = string,
+  TAccountLmTokenTreasury extends string = string,
   TAccountFeeRedistributionMint extends string = string,
   TAccountGovernanceRealm extends string = string,
   TAccountGovernanceRealmConfig extends string = string,
@@ -270,7 +270,7 @@ export type UpgradeLockedStakeInput<
   /** #13 */
   genesisLock: Address<TAccountGenesisLock>;
   /** #14 */
-  lmTokenMint: Address<TAccountLmTokenMint>;
+  lmTokenTreasury: Address<TAccountLmTokenTreasury>;
   /** #15 */
   feeRedistributionMint: Address<TAccountFeeRedistributionMint>;
   /**
@@ -319,7 +319,7 @@ export function getUpgradeLockedStakeInstruction<
   TAccountGovernanceTokenMint extends string,
   TAccountPool extends string,
   TAccountGenesisLock extends string,
-  TAccountLmTokenMint extends string,
+  TAccountLmTokenTreasury extends string,
   TAccountFeeRedistributionMint extends string,
   TAccountGovernanceRealm extends string,
   TAccountGovernanceRealmConfig extends string,
@@ -346,7 +346,7 @@ export function getUpgradeLockedStakeInstruction<
     TAccountGovernanceTokenMint,
     TAccountPool,
     TAccountGenesisLock,
-    TAccountLmTokenMint,
+    TAccountLmTokenTreasury,
     TAccountFeeRedistributionMint,
     TAccountGovernanceRealm,
     TAccountGovernanceRealmConfig,
@@ -374,7 +374,7 @@ export function getUpgradeLockedStakeInstruction<
   TAccountGovernanceTokenMint,
   TAccountPool,
   TAccountGenesisLock,
-  TAccountLmTokenMint,
+  TAccountLmTokenTreasury,
   TAccountFeeRedistributionMint,
   TAccountGovernanceRealm,
   TAccountGovernanceRealmConfig,
@@ -419,7 +419,7 @@ export function getUpgradeLockedStakeInstruction<
     },
     pool: { value: input.pool ?? null, isWritable: true },
     genesisLock: { value: input.genesisLock ?? null, isWritable: true },
-    lmTokenMint: { value: input.lmTokenMint ?? null, isWritable: true },
+    lmTokenTreasury: { value: input.lmTokenTreasury ?? null, isWritable: true },
     feeRedistributionMint: {
       value: input.feeRedistributionMint ?? null,
       isWritable: false,
@@ -486,7 +486,7 @@ export function getUpgradeLockedStakeInstruction<
       getAccountMeta(accounts.governanceTokenMint),
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.genesisLock),
-      getAccountMeta(accounts.lmTokenMint),
+      getAccountMeta(accounts.lmTokenTreasury),
       getAccountMeta(accounts.feeRedistributionMint),
       getAccountMeta(accounts.governanceRealm),
       getAccountMeta(accounts.governanceRealmConfig),
@@ -517,7 +517,7 @@ export function getUpgradeLockedStakeInstruction<
     TAccountGovernanceTokenMint,
     TAccountPool,
     TAccountGenesisLock,
-    TAccountLmTokenMint,
+    TAccountLmTokenTreasury,
     TAccountFeeRedistributionMint,
     TAccountGovernanceRealm,
     TAccountGovernanceRealmConfig,
@@ -566,7 +566,7 @@ export type ParsedUpgradeLockedStakeInstruction<
     /** #13 */
     genesisLock: TAccountMetas[12];
     /** #14 */
-    lmTokenMint: TAccountMetas[13];
+    lmTokenTreasury: TAccountMetas[13];
     /** #15 */
     feeRedistributionMint: TAccountMetas[14];
     /**
@@ -637,7 +637,7 @@ export function parseUpgradeLockedStakeInstruction<
       governanceTokenMint: getNextAccount(),
       pool: getNextAccount(),
       genesisLock: getNextAccount(),
-      lmTokenMint: getNextAccount(),
+      lmTokenTreasury: getNextAccount(),
       feeRedistributionMint: getNextAccount(),
       governanceRealm: getNextAccount(),
       governanceRealmConfig: getNextAccount(),

@@ -66,7 +66,7 @@ export type MintStakedLmTokensFromBucketInstruction<
   TAccountUserStaking extends string | IAccountMeta<string> = string,
   TAccountStaking extends string | IAccountMeta<string> = string,
   TAccountCortex extends string | IAccountMeta<string> = string,
-  TAccountLmTokenMint extends string | IAccountMeta<string> = string,
+  TAccountLmTokenTreasury extends string | IAccountMeta<string> = string,
   TAccountAdrenaProgram extends string | IAccountMeta<string> = string,
   TAccountSystemProgram extends
     | string
@@ -105,9 +105,9 @@ export type MintStakedLmTokensFromBucketInstruction<
       TAccountCortex extends string
         ? WritableAccount<TAccountCortex>
         : TAccountCortex,
-      TAccountLmTokenMint extends string
-        ? WritableAccount<TAccountLmTokenMint>
-        : TAccountLmTokenMint,
+      TAccountLmTokenTreasury extends string
+        ? WritableAccount<TAccountLmTokenTreasury>
+        : TAccountLmTokenTreasury,
       TAccountAdrenaProgram extends string
         ? ReadonlyAccount<TAccountAdrenaProgram>
         : TAccountAdrenaProgram,
@@ -181,7 +181,7 @@ export type MintStakedLmTokensFromBucketInput<
   TAccountUserStaking extends string = string,
   TAccountStaking extends string = string,
   TAccountCortex extends string = string,
-  TAccountLmTokenMint extends string = string,
+  TAccountLmTokenTreasury extends string = string,
   TAccountAdrenaProgram extends string = string,
   TAccountSystemProgram extends string = string,
   TAccountTokenProgram extends string = string,
@@ -203,7 +203,7 @@ export type MintStakedLmTokensFromBucketInput<
   /** #8 */
   cortex: Address<TAccountCortex>;
   /** #9 */
-  lmTokenMint: Address<TAccountLmTokenMint>;
+  lmTokenTreasury: Address<TAccountLmTokenTreasury>;
   /** #10 */
   adrenaProgram: Address<TAccountAdrenaProgram>;
   /** #11 */
@@ -225,7 +225,7 @@ export function getMintStakedLmTokensFromBucketInstruction<
   TAccountUserStaking extends string,
   TAccountStaking extends string,
   TAccountCortex extends string,
-  TAccountLmTokenMint extends string,
+  TAccountLmTokenTreasury extends string,
   TAccountAdrenaProgram extends string,
   TAccountSystemProgram extends string,
   TAccountTokenProgram extends string,
@@ -240,7 +240,7 @@ export function getMintStakedLmTokensFromBucketInstruction<
     TAccountUserStaking,
     TAccountStaking,
     TAccountCortex,
-    TAccountLmTokenMint,
+    TAccountLmTokenTreasury,
     TAccountAdrenaProgram,
     TAccountSystemProgram,
     TAccountTokenProgram
@@ -256,7 +256,7 @@ export function getMintStakedLmTokensFromBucketInstruction<
   TAccountUserStaking,
   TAccountStaking,
   TAccountCortex,
-  TAccountLmTokenMint,
+  TAccountLmTokenTreasury,
   TAccountAdrenaProgram,
   TAccountSystemProgram,
   TAccountTokenProgram
@@ -280,7 +280,7 @@ export function getMintStakedLmTokensFromBucketInstruction<
     userStaking: { value: input.userStaking ?? null, isWritable: true },
     staking: { value: input.staking ?? null, isWritable: true },
     cortex: { value: input.cortex ?? null, isWritable: true },
-    lmTokenMint: { value: input.lmTokenMint ?? null, isWritable: true },
+    lmTokenTreasury: { value: input.lmTokenTreasury ?? null, isWritable: true },
     adrenaProgram: { value: input.adrenaProgram ?? null, isWritable: false },
     systemProgram: { value: input.systemProgram ?? null, isWritable: false },
     tokenProgram: { value: input.tokenProgram ?? null, isWritable: false },
@@ -314,7 +314,7 @@ export function getMintStakedLmTokensFromBucketInstruction<
       getAccountMeta(accounts.userStaking),
       getAccountMeta(accounts.staking),
       getAccountMeta(accounts.cortex),
-      getAccountMeta(accounts.lmTokenMint),
+      getAccountMeta(accounts.lmTokenTreasury),
       getAccountMeta(accounts.adrenaProgram),
       getAccountMeta(accounts.systemProgram),
       getAccountMeta(accounts.tokenProgram),
@@ -333,7 +333,7 @@ export function getMintStakedLmTokensFromBucketInstruction<
     TAccountUserStaking,
     TAccountStaking,
     TAccountCortex,
-    TAccountLmTokenMint,
+    TAccountLmTokenTreasury,
     TAccountAdrenaProgram,
     TAccountSystemProgram,
     TAccountTokenProgram
@@ -365,7 +365,7 @@ export type ParsedMintStakedLmTokensFromBucketInstruction<
     /** #8 */
     cortex: TAccountMetas[7];
     /** #9 */
-    lmTokenMint: TAccountMetas[8];
+    lmTokenTreasury: TAccountMetas[8];
     /** #10 */
     adrenaProgram: TAccountMetas[9];
     /** #11 */
@@ -405,7 +405,7 @@ export function parseMintStakedLmTokensFromBucketInstruction<
       userStaking: getNextAccount(),
       staking: getNextAccount(),
       cortex: getNextAccount(),
-      lmTokenMint: getNextAccount(),
+      lmTokenTreasury: getNextAccount(),
       adrenaProgram: getNextAccount(),
       systemProgram: getNextAccount(),
       tokenProgram: getNextAccount(),

@@ -76,6 +76,7 @@ import {
   type ParsedLiquidateShortInstruction,
   type ParsedMigrateUserProfileFromV1ToV2Instruction,
   type ParsedMigrateVestFromV1ToV2Instruction,
+  type ParsedMintAllLmTokensInstruction,
   type ParsedMintLmTokensFromBucketInstruction,
   type ParsedMintStakedLmTokensFromBucketInstruction,
   type ParsedOpenOrIncreasePositionWithSwapLongInstruction,
@@ -84,7 +85,6 @@ import {
   type ParsedOpenPositionShortInstruction,
   type ParsedPatchCustodiesOraclesInstruction,
   type ParsedPatchCustodyLockedAmountInstruction,
-  type ParsedPatchStakingRoundInstruction,
   type ParsedRemoveCollateralLongInstruction,
   type ParsedRemoveCollateralShortInstruction,
   type ParsedRemoveCustodyInstruction,
@@ -386,7 +386,6 @@ export enum AdrenaInstruction {
   SetStopLossShort,
   CancelTakeProfit,
   CancelStopLoss,
-  PatchStakingRound,
   SetPoolWhitelistedSwapper,
   InitLimitOrderBook,
   AddLimitOrder,
@@ -402,6 +401,7 @@ export enum AdrenaInstruction {
   ResolvePositionBorrowFees,
   SyncUserVotingPower,
   MintStakedLmTokensFromBucket,
+  MintAllLmTokens,
 }
 
 export function identifyAdrenaInstruction(
@@ -1347,17 +1347,6 @@ export function identifyAdrenaInstruction(
     containsBytes(
       data,
       fixEncoderSize(getBytesEncoder(), 8).encode(
-        new Uint8Array([160, 195, 230, 214, 85, 208, 186, 184])
-      ),
-      0
-    )
-  ) {
-    return AdrenaInstruction.PatchStakingRound;
-  }
-  if (
-    containsBytes(
-      data,
-      fixEncoderSize(getBytesEncoder(), 8).encode(
         new Uint8Array([164, 104, 239, 240, 105, 120, 245, 213])
       ),
       0
@@ -1518,6 +1507,17 @@ export function identifyAdrenaInstruction(
     )
   ) {
     return AdrenaInstruction.MintStakedLmTokensFromBucket;
+  }
+  if (
+    containsBytes(
+      data,
+      fixEncoderSize(getBytesEncoder(), 8).encode(
+        new Uint8Array([219, 78, 135, 10, 185, 169, 57, 247])
+      ),
+      0
+    )
+  ) {
+    return AdrenaInstruction.MintAllLmTokens;
   }
   throw new Error(
     'The provided instruction could not be identified as a adrena instruction.'
@@ -1783,9 +1783,6 @@ export type ParsedAdrenaInstruction<
       instructionType: AdrenaInstruction.CancelStopLoss;
     } & ParsedCancelStopLossInstruction<TProgram>)
   | ({
-      instructionType: AdrenaInstruction.PatchStakingRound;
-    } & ParsedPatchStakingRoundInstruction<TProgram>)
-  | ({
       instructionType: AdrenaInstruction.SetPoolWhitelistedSwapper;
     } & ParsedSetPoolWhitelistedSwapperInstruction<TProgram>)
   | ({
@@ -1829,4 +1826,7 @@ export type ParsedAdrenaInstruction<
     } & ParsedSyncUserVotingPowerInstruction<TProgram>)
   | ({
       instructionType: AdrenaInstruction.MintStakedLmTokensFromBucket;
-    } & ParsedMintStakedLmTokensFromBucketInstruction<TProgram>);
+    } & ParsedMintStakedLmTokensFromBucketInstruction<TProgram>)
+  | ({
+      instructionType: AdrenaInstruction.MintAllLmTokens;
+    } & ParsedMintAllLmTokensInstruction<TProgram>);
