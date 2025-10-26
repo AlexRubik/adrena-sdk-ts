@@ -121,8 +121,11 @@ export async function getJitoTipIxn(
     }
   }
 
-  // get destination address from tipAccounts
-  const destinationAddress = tipAccounts[Math.floor(Math.random() * tipAccounts.length)];
+  // get destination address from tipAccounts using cryptographically secure random selection
+  const randomArray = new Uint32Array(1);
+  crypto.getRandomValues(randomArray);
+  const randomIndex = randomArray[0] % tipAccounts.length;
+  const destinationAddress = tipAccounts[randomIndex];
 
   const instruction = getTransferSolInstruction({
     amount: lamports,

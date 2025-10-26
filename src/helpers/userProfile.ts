@@ -70,9 +70,16 @@ export function getUserNicknamePda(nickname: string) {
 }
 
 export function getUniqueMonsterName() {
-    const randomNumber = Math.floor(Math.random() * 100000);
-    // get random fill character, if math random is > 0.5, use number 2 else 1
-    const fillChar = Math.random() > 0.5 ? "2" : "1";
+    // Use cryptographically secure random number generation
+    const randomArray = new Uint32Array(2);
+    crypto.getRandomValues(randomArray);
+
+    // Generate random number between 0 and 99999
+    const randomNumber = randomArray[0] % 100000;
+
+    // Get random fill character securely: if random value is > 0.5, use "2" else "1"
+    const fillChar = (randomArray[1] / 0xFFFFFFFF) > 0.5 ? "2" : "1";
+
     return `RudeGoon${randomNumber.toString().padStart(5, fillChar)}`;
 }
 
