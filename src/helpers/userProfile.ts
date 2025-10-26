@@ -18,6 +18,7 @@ import {
     getEditUserProfileInstruction, 
     getInitUserProfileInstruction,
 } from "../../codama-generated";
+import { randomInt } from "crypto";
 
 
 export function getUserProfilePda(wallet: Address) {
@@ -70,9 +71,9 @@ export function getUserNicknamePda(nickname: string) {
 }
 
 export function getUniqueMonsterName() {
-    const randomNumber = Math.floor(Math.random() * 100000);
-    // get random fill character, if math random is > 0.5, use number 2 else 1
-    const fillChar = Math.random() > 0.5 ? "2" : "1";
+    const randomNumber = randomInt(0, 100000);
+    // get random fill character, use cryptographically secure random
+    const fillChar = randomInt(0, 2) === 1 ? "2" : "1";
     return `RudeGoon${randomNumber.toString().padStart(5, fillChar)}`;
 }
 

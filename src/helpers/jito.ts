@@ -18,6 +18,7 @@ import {
     TransactionSigner
 } from "@solana/kit";
 import { fetchLookupTables, getCUEst } from "./txnHelpers";
+import { randomInt } from "crypto";
 
 const DEBUG = false;
 
@@ -122,7 +123,7 @@ export async function getJitoTipIxn(
   }
 
   // get destination address from tipAccounts
-  const destinationAddress = tipAccounts[Math.floor(Math.random() * tipAccounts.length)];
+  const destinationAddress = tipAccounts[randomInt(0, tipAccounts.length)];
 
   const instruction = getTransferSolInstruction({
     amount: lamports,
