@@ -186,10 +186,13 @@ export const ADRENA_ERROR__INVALID_SIGNER = 0x17c3; // 6083
 export const ADRENA_ERROR__MISSING_ORACLE_PRICE = 0x17c4; // 6084
 /** InvalidOracleSignature: Invalid oracle signature */
 export const ADRENA_ERROR__INVALID_ORACLE_SIGNATURE = 0x17c5; // 6085
+/** CustodyBelowMinimum: Custody amount is below minimum required */
+export const ADRENA_ERROR__CUSTODY_BELOW_MINIMUM = 0x17c6; // 6086
 
 export type AdrenaError =
   | typeof ADRENA_ERROR__BUCKET_MINT_LIMIT
   | typeof ADRENA_ERROR__CUSTODY_AMOUNT_LIMIT
+  | typeof ADRENA_ERROR__CUSTODY_BELOW_MINIMUM
   | typeof ADRENA_ERROR__CUSTODY_NOT_FOUND
   | typeof ADRENA_ERROR__CUSTODY_STABLE_LOCKED_AMOUNT_NOT_FOUND
   | typeof ADRENA_ERROR__GENESIS_ALP_LIMIT_REACHED
@@ -280,6 +283,7 @@ if (process.env.NODE_ENV !== 'production') {
   adrenaErrorMessages = {
     [ADRENA_ERROR__BUCKET_MINT_LIMIT]: `Reached bucket mint limit`,
     [ADRENA_ERROR__CUSTODY_AMOUNT_LIMIT]: `Custody amount limit exceeded`,
+    [ADRENA_ERROR__CUSTODY_BELOW_MINIMUM]: `Custody amount is below minimum required`,
     [ADRENA_ERROR__CUSTODY_NOT_FOUND]: `Cannot find custody`,
     [ADRENA_ERROR__CUSTODY_STABLE_LOCKED_AMOUNT_NOT_FOUND]: `Cannot find custody stable locked amount`,
     [ADRENA_ERROR__GENESIS_ALP_LIMIT_REACHED]: `Genesis ALP add liquidity limit reached`,

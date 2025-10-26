@@ -66,7 +66,7 @@ export type RemoveLockedStakeInstruction<
   TAccountCortex extends string | IAccountMeta<string> = string,
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountGenesisLock extends string | IAccountMeta<string> = string,
-  TAccountLmTokenMint extends string | IAccountMeta<string> = string,
+  TAccountLmTokenTreasury extends string | IAccountMeta<string> = string,
   TAccountStakedTokenMint extends string | IAccountMeta<string> = string,
   TAccountGovernanceTokenMint extends string | IAccountMeta<string> = string,
   TAccountFeeRedistributionMint extends string | IAccountMeta<string> = string,
@@ -131,9 +131,9 @@ export type RemoveLockedStakeInstruction<
       TAccountGenesisLock extends string
         ? WritableAccount<TAccountGenesisLock>
         : TAccountGenesisLock,
-      TAccountLmTokenMint extends string
-        ? WritableAccount<TAccountLmTokenMint>
-        : TAccountLmTokenMint,
+      TAccountLmTokenTreasury extends string
+        ? WritableAccount<TAccountLmTokenTreasury>
+        : TAccountLmTokenTreasury,
       TAccountStakedTokenMint extends string
         ? WritableAccount<TAccountStakedTokenMint>
         : TAccountStakedTokenMint,
@@ -221,7 +221,7 @@ export type RemoveLockedStakeInput<
   TAccountCortex extends string = string,
   TAccountPool extends string = string,
   TAccountGenesisLock extends string = string,
-  TAccountLmTokenMint extends string = string,
+  TAccountLmTokenTreasury extends string = string,
   TAccountStakedTokenMint extends string = string,
   TAccountGovernanceTokenMint extends string = string,
   TAccountFeeRedistributionMint extends string = string,
@@ -261,7 +261,7 @@ export type RemoveLockedStakeInput<
   /** #13 */
   genesisLock: Address<TAccountGenesisLock>;
   /** #14 */
-  lmTokenMint: Address<TAccountLmTokenMint>;
+  lmTokenTreasury: Address<TAccountLmTokenTreasury>;
   /** #15 */
   stakedTokenMint: Address<TAccountStakedTokenMint>;
   /** #16 */
@@ -310,7 +310,7 @@ export function getRemoveLockedStakeInstruction<
   TAccountCortex extends string,
   TAccountPool extends string,
   TAccountGenesisLock extends string,
-  TAccountLmTokenMint extends string,
+  TAccountLmTokenTreasury extends string,
   TAccountStakedTokenMint extends string,
   TAccountGovernanceTokenMint extends string,
   TAccountFeeRedistributionMint extends string,
@@ -338,7 +338,7 @@ export function getRemoveLockedStakeInstruction<
     TAccountCortex,
     TAccountPool,
     TAccountGenesisLock,
-    TAccountLmTokenMint,
+    TAccountLmTokenTreasury,
     TAccountStakedTokenMint,
     TAccountGovernanceTokenMint,
     TAccountFeeRedistributionMint,
@@ -367,7 +367,7 @@ export function getRemoveLockedStakeInstruction<
   TAccountCortex,
   TAccountPool,
   TAccountGenesisLock,
-  TAccountLmTokenMint,
+  TAccountLmTokenTreasury,
   TAccountStakedTokenMint,
   TAccountGovernanceTokenMint,
   TAccountFeeRedistributionMint,
@@ -416,7 +416,7 @@ export function getRemoveLockedStakeInstruction<
     cortex: { value: input.cortex ?? null, isWritable: true },
     pool: { value: input.pool ?? null, isWritable: true },
     genesisLock: { value: input.genesisLock ?? null, isWritable: true },
-    lmTokenMint: { value: input.lmTokenMint ?? null, isWritable: true },
+    lmTokenTreasury: { value: input.lmTokenTreasury ?? null, isWritable: true },
     stakedTokenMint: { value: input.stakedTokenMint ?? null, isWritable: true },
     governanceTokenMint: {
       value: input.governanceTokenMint ?? null,
@@ -484,7 +484,7 @@ export function getRemoveLockedStakeInstruction<
       getAccountMeta(accounts.cortex),
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.genesisLock),
-      getAccountMeta(accounts.lmTokenMint),
+      getAccountMeta(accounts.lmTokenTreasury),
       getAccountMeta(accounts.stakedTokenMint),
       getAccountMeta(accounts.governanceTokenMint),
       getAccountMeta(accounts.feeRedistributionMint),
@@ -516,7 +516,7 @@ export function getRemoveLockedStakeInstruction<
     TAccountCortex,
     TAccountPool,
     TAccountGenesisLock,
-    TAccountLmTokenMint,
+    TAccountLmTokenTreasury,
     TAccountStakedTokenMint,
     TAccountGovernanceTokenMint,
     TAccountFeeRedistributionMint,
@@ -566,7 +566,7 @@ export type ParsedRemoveLockedStakeInstruction<
     /** #13 */
     genesisLock: TAccountMetas[12];
     /** #14 */
-    lmTokenMint: TAccountMetas[13];
+    lmTokenTreasury: TAccountMetas[13];
     /** #15 */
     stakedTokenMint: TAccountMetas[14];
     /** #16 */
@@ -639,7 +639,7 @@ export function parseRemoveLockedStakeInstruction<
       cortex: getNextAccount(),
       pool: getNextAccount(),
       genesisLock: getNextAccount(),
-      lmTokenMint: getNextAccount(),
+      lmTokenTreasury: getNextAccount(),
       stakedTokenMint: getNextAccount(),
       governanceTokenMint: getNextAccount(),
       feeRedistributionMint: getNextAccount(),

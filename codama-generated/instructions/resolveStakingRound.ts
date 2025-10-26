@@ -59,7 +59,7 @@ export type ResolveStakingRoundInstruction<
   TAccountTransferAuthority extends string | IAccountMeta<string> = string,
   TAccountStaking extends string | IAccountMeta<string> = string,
   TAccountCortex extends string | IAccountMeta<string> = string,
-  TAccountLmTokenMint extends string | IAccountMeta<string> = string,
+  TAccountLmTokenTreasury extends string | IAccountMeta<string> = string,
   TAccountFeeRedistributionMint extends string | IAccountMeta<string> = string,
   TAccountAdrenaProgram extends string | IAccountMeta<string> = string,
   TAccountSystemProgram extends
@@ -99,9 +99,9 @@ export type ResolveStakingRoundInstruction<
       TAccountCortex extends string
         ? WritableAccount<TAccountCortex>
         : TAccountCortex,
-      TAccountLmTokenMint extends string
-        ? WritableAccount<TAccountLmTokenMint>
-        : TAccountLmTokenMint,
+      TAccountLmTokenTreasury extends string
+        ? WritableAccount<TAccountLmTokenTreasury>
+        : TAccountLmTokenTreasury,
       TAccountFeeRedistributionMint extends string
         ? ReadonlyAccount<TAccountFeeRedistributionMint>
         : TAccountFeeRedistributionMint,
@@ -159,7 +159,7 @@ export type ResolveStakingRoundInput<
   TAccountTransferAuthority extends string = string,
   TAccountStaking extends string = string,
   TAccountCortex extends string = string,
-  TAccountLmTokenMint extends string = string,
+  TAccountLmTokenTreasury extends string = string,
   TAccountFeeRedistributionMint extends string = string,
   TAccountAdrenaProgram extends string = string,
   TAccountSystemProgram extends string = string,
@@ -182,7 +182,7 @@ export type ResolveStakingRoundInput<
   /** #8 */
   cortex: Address<TAccountCortex>;
   /** #9 */
-  lmTokenMint: Address<TAccountLmTokenMint>;
+  lmTokenTreasury: Address<TAccountLmTokenTreasury>;
   /** #10 */
   feeRedistributionMint: Address<TAccountFeeRedistributionMint>;
   /** #11 */
@@ -202,7 +202,7 @@ export function getResolveStakingRoundInstruction<
   TAccountTransferAuthority extends string,
   TAccountStaking extends string,
   TAccountCortex extends string,
-  TAccountLmTokenMint extends string,
+  TAccountLmTokenTreasury extends string,
   TAccountFeeRedistributionMint extends string,
   TAccountAdrenaProgram extends string,
   TAccountSystemProgram extends string,
@@ -218,7 +218,7 @@ export function getResolveStakingRoundInstruction<
     TAccountTransferAuthority,
     TAccountStaking,
     TAccountCortex,
-    TAccountLmTokenMint,
+    TAccountLmTokenTreasury,
     TAccountFeeRedistributionMint,
     TAccountAdrenaProgram,
     TAccountSystemProgram,
@@ -235,7 +235,7 @@ export function getResolveStakingRoundInstruction<
   TAccountTransferAuthority,
   TAccountStaking,
   TAccountCortex,
-  TAccountLmTokenMint,
+  TAccountLmTokenTreasury,
   TAccountFeeRedistributionMint,
   TAccountAdrenaProgram,
   TAccountSystemProgram,
@@ -266,7 +266,7 @@ export function getResolveStakingRoundInstruction<
     },
     staking: { value: input.staking ?? null, isWritable: true },
     cortex: { value: input.cortex ?? null, isWritable: true },
-    lmTokenMint: { value: input.lmTokenMint ?? null, isWritable: true },
+    lmTokenTreasury: { value: input.lmTokenTreasury ?? null, isWritable: true },
     feeRedistributionMint: {
       value: input.feeRedistributionMint ?? null,
       isWritable: false,
@@ -301,7 +301,7 @@ export function getResolveStakingRoundInstruction<
       getAccountMeta(accounts.transferAuthority),
       getAccountMeta(accounts.staking),
       getAccountMeta(accounts.cortex),
-      getAccountMeta(accounts.lmTokenMint),
+      getAccountMeta(accounts.lmTokenTreasury),
       getAccountMeta(accounts.feeRedistributionMint),
       getAccountMeta(accounts.adrenaProgram),
       getAccountMeta(accounts.systemProgram),
@@ -319,7 +319,7 @@ export function getResolveStakingRoundInstruction<
     TAccountTransferAuthority,
     TAccountStaking,
     TAccountCortex,
-    TAccountLmTokenMint,
+    TAccountLmTokenTreasury,
     TAccountFeeRedistributionMint,
     TAccountAdrenaProgram,
     TAccountSystemProgram,
@@ -352,7 +352,7 @@ export type ParsedResolveStakingRoundInstruction<
     /** #8 */
     cortex: TAccountMetas[7];
     /** #9 */
-    lmTokenMint: TAccountMetas[8];
+    lmTokenTreasury: TAccountMetas[8];
     /** #10 */
     feeRedistributionMint: TAccountMetas[9];
     /** #11 */
@@ -394,7 +394,7 @@ export function parseResolveStakingRoundInstruction<
       transferAuthority: getNextAccount(),
       staking: getNextAccount(),
       cortex: getNextAccount(),
-      lmTokenMint: getNextAccount(),
+      lmTokenTreasury: getNextAccount(),
       feeRedistributionMint: getNextAccount(),
       adrenaProgram: getNextAccount(),
       systemProgram: getNextAccount(),

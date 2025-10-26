@@ -70,7 +70,7 @@ export type ClaimStakesInstruction<
   TAccountCortex extends string | IAccountMeta<string> = string,
   TAccountPool extends string | IAccountMeta<string> = string,
   TAccountGenesisLock extends string | IAccountMeta<string> = string,
-  TAccountLmTokenMint extends string | IAccountMeta<string> = string,
+  TAccountLmTokenTreasury extends string | IAccountMeta<string> = string,
   TAccountFeeRedistributionMint extends string | IAccountMeta<string> = string,
   TAccountAdrenaProgram extends string | IAccountMeta<string> = string,
   TAccountSystemProgram extends
@@ -125,9 +125,9 @@ export type ClaimStakesInstruction<
       TAccountGenesisLock extends string
         ? WritableAccount<TAccountGenesisLock>
         : TAccountGenesisLock,
-      TAccountLmTokenMint extends string
-        ? WritableAccount<TAccountLmTokenMint>
-        : TAccountLmTokenMint,
+      TAccountLmTokenTreasury extends string
+        ? WritableAccount<TAccountLmTokenTreasury>
+        : TAccountLmTokenTreasury,
       TAccountFeeRedistributionMint extends string
         ? ReadonlyAccount<TAccountFeeRedistributionMint>
         : TAccountFeeRedistributionMint,
@@ -204,7 +204,7 @@ export type ClaimStakesInput<
   TAccountCortex extends string = string,
   TAccountPool extends string = string,
   TAccountGenesisLock extends string = string,
-  TAccountLmTokenMint extends string = string,
+  TAccountLmTokenTreasury extends string = string,
   TAccountFeeRedistributionMint extends string = string,
   TAccountAdrenaProgram extends string = string,
   TAccountSystemProgram extends string = string,
@@ -237,7 +237,7 @@ export type ClaimStakesInput<
   /** #13 */
   genesisLock: Address<TAccountGenesisLock>;
   /** #14 */
-  lmTokenMint: Address<TAccountLmTokenMint>;
+  lmTokenTreasury: Address<TAccountLmTokenTreasury>;
   /** #15 */
   feeRedistributionMint: Address<TAccountFeeRedistributionMint>;
   /** #16 */
@@ -263,7 +263,7 @@ export function getClaimStakesInstruction<
   TAccountCortex extends string,
   TAccountPool extends string,
   TAccountGenesisLock extends string,
-  TAccountLmTokenMint extends string,
+  TAccountLmTokenTreasury extends string,
   TAccountFeeRedistributionMint extends string,
   TAccountAdrenaProgram extends string,
   TAccountSystemProgram extends string,
@@ -284,7 +284,7 @@ export function getClaimStakesInstruction<
     TAccountCortex,
     TAccountPool,
     TAccountGenesisLock,
-    TAccountLmTokenMint,
+    TAccountLmTokenTreasury,
     TAccountFeeRedistributionMint,
     TAccountAdrenaProgram,
     TAccountSystemProgram,
@@ -306,7 +306,7 @@ export function getClaimStakesInstruction<
   TAccountCortex,
   TAccountPool,
   TAccountGenesisLock,
-  TAccountLmTokenMint,
+  TAccountLmTokenTreasury,
   TAccountFeeRedistributionMint,
   TAccountAdrenaProgram,
   TAccountSystemProgram,
@@ -342,7 +342,7 @@ export function getClaimStakesInstruction<
     cortex: { value: input.cortex ?? null, isWritable: true },
     pool: { value: input.pool ?? null, isWritable: true },
     genesisLock: { value: input.genesisLock ?? null, isWritable: true },
-    lmTokenMint: { value: input.lmTokenMint ?? null, isWritable: true },
+    lmTokenTreasury: { value: input.lmTokenTreasury ?? null, isWritable: true },
     feeRedistributionMint: {
       value: input.feeRedistributionMint ?? null,
       isWritable: false,
@@ -385,7 +385,7 @@ export function getClaimStakesInstruction<
       getAccountMeta(accounts.cortex),
       getAccountMeta(accounts.pool),
       getAccountMeta(accounts.genesisLock),
-      getAccountMeta(accounts.lmTokenMint),
+      getAccountMeta(accounts.lmTokenTreasury),
       getAccountMeta(accounts.feeRedistributionMint),
       getAccountMeta(accounts.adrenaProgram),
       getAccountMeta(accounts.systemProgram),
@@ -410,7 +410,7 @@ export function getClaimStakesInstruction<
     TAccountCortex,
     TAccountPool,
     TAccountGenesisLock,
-    TAccountLmTokenMint,
+    TAccountLmTokenTreasury,
     TAccountFeeRedistributionMint,
     TAccountAdrenaProgram,
     TAccountSystemProgram,
@@ -453,7 +453,7 @@ export type ParsedClaimStakesInstruction<
     /** #13 */
     genesisLock: TAccountMetas[12];
     /** #14 */
-    lmTokenMint: TAccountMetas[13];
+    lmTokenTreasury: TAccountMetas[13];
     /** #15 */
     feeRedistributionMint: TAccountMetas[14];
     /** #16 */
@@ -500,7 +500,7 @@ export function parseClaimStakesInstruction<
       cortex: getNextAccount(),
       pool: getNextAccount(),
       genesisLock: getNextAccount(),
-      lmTokenMint: getNextAccount(),
+      lmTokenTreasury: getNextAccount(),
       feeRedistributionMint: getNextAccount(),
       adrenaProgram: getNextAccount(),
       systemProgram: getNextAccount(),

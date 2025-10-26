@@ -52,7 +52,7 @@ export type ClaimVestInstruction<
   TAccountCortex extends string | IAccountMeta<string> = string,
   TAccountVestRegistry extends string | IAccountMeta<string> = string,
   TAccountVest extends string | IAccountMeta<string> = string,
-  TAccountLmTokenMint extends string | IAccountMeta<string> = string,
+  TAccountLmTokenTreasury extends string | IAccountMeta<string> = string,
   TAccountGovernanceTokenMint extends string | IAccountMeta<string> = string,
   TAccountGovernanceRealm extends string | IAccountMeta<string> = string,
   TAccountGovernanceRealmConfig extends string | IAccountMeta<string> = string,
@@ -104,9 +104,9 @@ export type ClaimVestInstruction<
       TAccountVest extends string
         ? WritableAccount<TAccountVest>
         : TAccountVest,
-      TAccountLmTokenMint extends string
-        ? WritableAccount<TAccountLmTokenMint>
-        : TAccountLmTokenMint,
+      TAccountLmTokenTreasury extends string
+        ? WritableAccount<TAccountLmTokenTreasury>
+        : TAccountLmTokenTreasury,
       TAccountGovernanceTokenMint extends string
         ? WritableAccount<TAccountGovernanceTokenMint>
         : TAccountGovernanceTokenMint,
@@ -177,7 +177,7 @@ export type ClaimVestInput<
   TAccountCortex extends string = string,
   TAccountVestRegistry extends string = string,
   TAccountVest extends string = string,
-  TAccountLmTokenMint extends string = string,
+  TAccountLmTokenTreasury extends string = string,
   TAccountGovernanceTokenMint extends string = string,
   TAccountGovernanceRealm extends string = string,
   TAccountGovernanceRealmConfig extends string = string,
@@ -206,7 +206,7 @@ export type ClaimVestInput<
   /** #8 */
   vest: Address<TAccountVest>;
   /** #9 */
-  lmTokenMint: Address<TAccountLmTokenMint>;
+  lmTokenTreasury: Address<TAccountLmTokenTreasury>;
   /** #10 */
   governanceTokenMint: Address<TAccountGovernanceTokenMint>;
   /**
@@ -247,7 +247,7 @@ export function getClaimVestInstruction<
   TAccountCortex extends string,
   TAccountVestRegistry extends string,
   TAccountVest extends string,
-  TAccountLmTokenMint extends string,
+  TAccountLmTokenTreasury extends string,
   TAccountGovernanceTokenMint extends string,
   TAccountGovernanceRealm extends string,
   TAccountGovernanceRealmConfig extends string,
@@ -269,7 +269,7 @@ export function getClaimVestInstruction<
     TAccountCortex,
     TAccountVestRegistry,
     TAccountVest,
-    TAccountLmTokenMint,
+    TAccountLmTokenTreasury,
     TAccountGovernanceTokenMint,
     TAccountGovernanceRealm,
     TAccountGovernanceRealmConfig,
@@ -292,7 +292,7 @@ export function getClaimVestInstruction<
   TAccountCortex,
   TAccountVestRegistry,
   TAccountVest,
-  TAccountLmTokenMint,
+  TAccountLmTokenTreasury,
   TAccountGovernanceTokenMint,
   TAccountGovernanceRealm,
   TAccountGovernanceRealmConfig,
@@ -323,7 +323,7 @@ export function getClaimVestInstruction<
     cortex: { value: input.cortex ?? null, isWritable: true },
     vestRegistry: { value: input.vestRegistry ?? null, isWritable: true },
     vest: { value: input.vest ?? null, isWritable: true },
-    lmTokenMint: { value: input.lmTokenMint ?? null, isWritable: true },
+    lmTokenTreasury: { value: input.lmTokenTreasury ?? null, isWritable: true },
     governanceTokenMint: {
       value: input.governanceTokenMint ?? null,
       isWritable: true,
@@ -383,7 +383,7 @@ export function getClaimVestInstruction<
       getAccountMeta(accounts.cortex),
       getAccountMeta(accounts.vestRegistry),
       getAccountMeta(accounts.vest),
-      getAccountMeta(accounts.lmTokenMint),
+      getAccountMeta(accounts.lmTokenTreasury),
       getAccountMeta(accounts.governanceTokenMint),
       getAccountMeta(accounts.governanceRealm),
       getAccountMeta(accounts.governanceRealmConfig),
@@ -407,7 +407,7 @@ export function getClaimVestInstruction<
     TAccountCortex,
     TAccountVestRegistry,
     TAccountVest,
-    TAccountLmTokenMint,
+    TAccountLmTokenTreasury,
     TAccountGovernanceTokenMint,
     TAccountGovernanceRealm,
     TAccountGovernanceRealmConfig,
@@ -446,7 +446,7 @@ export type ParsedClaimVestInstruction<
     /** #8 */
     vest: TAccountMetas[7];
     /** #9 */
-    lmTokenMint: TAccountMetas[8];
+    lmTokenTreasury: TAccountMetas[8];
     /** #10 */
     governanceTokenMint: TAccountMetas[9];
     /**
@@ -512,7 +512,7 @@ export function parseClaimVestInstruction<
       cortex: getNextAccount(),
       vestRegistry: getNextAccount(),
       vest: getNextAccount(),
-      lmTokenMint: getNextAccount(),
+      lmTokenTreasury: getNextAccount(),
       governanceTokenMint: getNextAccount(),
       governanceRealm: getNextAccount(),
       governanceRealmConfig: getNextAccount(),
