@@ -1,23 +1,24 @@
 
 
-import { address, 
-    Address, 
-    GetAccountInfoApi, 
-    getAddressEncoder, 
-    getProgramDerivedAddress, 
+import { address,
+    Address,
+    GetAccountInfoApi,
+    getAddressEncoder,
+    getProgramDerivedAddress,
     getUtf8Decoder,
-    Rpc, 
-    SolanaRpcApi, 
-    TransactionSigner 
+    Rpc,
+    SolanaRpcApi,
+    TransactionSigner
 } from "@solana/kit";
 import { ADRENA_PROGRAM_ID, DEV_PDA } from "./constants";
 import { getCortexPda } from "./utils";
 import { SYSTEM_PROGRAM_ADDRESS } from "@solana-program/system";
-import { 
-    fetchUserProfile, 
-    getEditUserProfileInstruction, 
+import {
+    fetchUserProfile,
+    getEditUserProfileInstruction,
     getInitUserProfileInstruction,
 } from "../../codama-generated";
+import { randomInt } from "crypto";
 
 
 export function getUserProfilePda(wallet: Address) {
@@ -70,9 +71,10 @@ export function getUserNicknamePda(nickname: string) {
 }
 
 export function getUniqueMonsterName() {
-    const randomNumber = Math.floor(Math.random() * 100000);
-    // get random fill character, if math random is > 0.5, use number 2 else 1
-    const fillChar = Math.random() > 0.5 ? "2" : "1";
+    // Use cryptographically secure random number generation
+    const randomNumber = randomInt(0, 100000);
+    // Use cryptographically secure random for fill character selection
+    const fillChar = randomInt(0, 2) === 1 ? "2" : "1";
     return `RudeGoon${randomNumber.toString().padStart(5, fillChar)}`;
 }
 

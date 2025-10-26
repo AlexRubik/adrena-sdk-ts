@@ -1,23 +1,24 @@
 import { getTransferSolInstruction } from "@solana-program/system";
 import { getSetComputeUnitLimitInstruction } from "@solana-program/compute-budget";
-import { 
-    address,  
-    appendTransactionMessageInstructions, 
-    compressTransactionMessageUsingAddressLookupTables, 
-    createTransactionMessage, 
-    getBase64EncodedWireTransaction, 
-    getSignatureFromTransaction, 
-    IInstruction, 
-    pipe, 
-    Rpc, 
-    setTransactionMessageFeePayer, 
-    setTransactionMessageFeePayerSigner, 
-    setTransactionMessageLifetimeUsingBlockhash, 
-    signTransactionMessageWithSigners, 
-    SolanaRpcApi, 
+import {
+    address,
+    appendTransactionMessageInstructions,
+    compressTransactionMessageUsingAddressLookupTables,
+    createTransactionMessage,
+    getBase64EncodedWireTransaction,
+    getSignatureFromTransaction,
+    IInstruction,
+    pipe,
+    Rpc,
+    setTransactionMessageFeePayer,
+    setTransactionMessageFeePayerSigner,
+    setTransactionMessageLifetimeUsingBlockhash,
+    signTransactionMessageWithSigners,
+    SolanaRpcApi,
     TransactionSigner
 } from "@solana/kit";
 import { fetchLookupTables, getCUEst } from "./txnHelpers";
+import { randomInt } from "crypto";
 
 const DEBUG = false;
 
@@ -121,8 +122,8 @@ export async function getJitoTipIxn(
     }
   }
 
-  // get destination address from tipAccounts
-  const destinationAddress = tipAccounts[Math.floor(Math.random() * tipAccounts.length)];
+  // get destination address from tipAccounts using cryptographically secure random
+  const destinationAddress = tipAccounts[randomInt(0, tipAccounts.length)];
 
   const instruction = getTransferSolInstruction({
     amount: lamports,
