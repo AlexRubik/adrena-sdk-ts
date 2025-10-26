@@ -11,6 +11,12 @@ export function findATAAddress(
     const encodedMint = encoder.encode(mint);
     const encodedTokenProgramId = encoder.encode(TOKEN_PROGRAM_ID);
 
+    console.log('findATAAddress - Derivation details:');
+    console.log('  Wallet:', wallet);
+    console.log('  Mint:', mint);
+    console.log('  Token Program:', TOKEN_PROGRAM_ID);
+    console.log('  ATA Program:', ASSOCIATED_TOKEN_PROGRAM_ID);
+
     return getProgramDerivedAddress({
         programAddress: ASSOCIATED_TOKEN_PROGRAM_ID,
         seeds: [encodedWallet, encodedTokenProgramId, encodedMint],
@@ -73,9 +79,20 @@ export async function createAssociatedTokenAccountIx(
   const ATA_PROGRAM_ID = address('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
   const TOKEN_PROGRAM_ID = address('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
   const SYSTEM_PROGRAM_ID = address('11111111111111111111111111111111');
-  const SYSVAR_RENT_ID = address('SysvarRent111111111111111111111111111111111');
   
   const associatedAccount = await findATAAddress(walletAddress, tokenMintAddress);
+  
+  // Log addresses for debugging
+  console.log('\n=== ATA Creation Debug Info ===');
+  console.log('Funding Address (payer):', fundingAddress);
+  console.log('Wallet Address (owner):', walletAddress);
+  console.log('Token Mint Address:', tokenMintAddress);
+  console.log('Derived ATA Address:', associatedAccount[0]);
+  console.log('Token Program ID:', TOKEN_PROGRAM_ID);
+  console.log('ATA Program ID:', ATA_PROGRAM_ID);
+  console.log('System Program ID:', SYSTEM_PROGRAM_ID);
+  console.log('================================\n');
+  
   const hasAta = await hasATA(associatedAccount[0], rpc);
 
   if (hasAta) {
@@ -86,6 +103,15 @@ export async function createAssociatedTokenAccountIx(
     };
   }
 
+  // The Associated Token Program's CreateIdempotent instruction
+  // Matching the Rust implementation and on-chain order:
+  // 0. source (funding_address) - writable, signer
+  // 1. account (associated_account_address) - writable
+  // 2. wallet (wallet_address) - readonly
+  // 3. mint (token_mint_address) - readonly
+  // 4. systemProgram (SYSTEM_PROGRAM_ID) - readonly
+  // 5. tokenProgram (TOKEN_PROGRAM_ID) - readonly
+  // Data: [1] for CreateIdempotent
   const ix = {
       programAddress: ATA_PROGRAM_ID,
       accounts: [
@@ -94,10 +120,9 @@ export async function createAssociatedTokenAccountIx(
           { address: walletAddress, role: AccountRole.READONLY },
           { address: tokenMintAddress, role: AccountRole.READONLY },
           { address: SYSTEM_PROGRAM_ID, role: AccountRole.READONLY },
-          { address: TOKEN_PROGRAM_ID, role: AccountRole.READONLY },
-          { address: SYSVAR_RENT_ID, role: AccountRole.READONLY }
+          { address: TOKEN_PROGRAM_ID, role: AccountRole.READONLY }
       ],
-      data: new Uint8Array([]) // Empty data vector per the original code
+      data: new Uint8Array([1]) // 1 = CreateIdempotent instruction
   };
 
   return {

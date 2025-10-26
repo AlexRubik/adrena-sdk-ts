@@ -1,3 +1,4 @@
+export * from './getAddLiqIx';
 export * from './getCancelSLTPIxs';
 export * from './getClosePositionIxs';
 export * from './getLimitOrderIxs';
