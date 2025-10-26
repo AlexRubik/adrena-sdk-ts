@@ -21,6 +21,17 @@ import { fetchLookupTables, getCUEst } from "./txnHelpers";
 
 const DEBUG = false;
 
+/**
+ * Generates a cryptographically secure random integer between 0 (inclusive) and max (exclusive)
+ * @param max - The upper bound (exclusive)
+ * @returns A secure random integer
+ */
+function getSecureRandomInt(max: number): number {
+  const randomBuffer = new Uint32Array(1);
+  crypto.getRandomValues(randomBuffer);
+  return randomBuffer[0] % max;
+}
+
 type JitoTipData = {
   time: string;
   landed_tips_25th_percentile: number;
@@ -121,8 +132,8 @@ export async function getJitoTipIxn(
     }
   }
 
-  // get destination address from tipAccounts
-  const destinationAddress = tipAccounts[Math.floor(Math.random() * tipAccounts.length)];
+  // get destination address from tipAccounts using cryptographically secure randomness
+  const destinationAddress = tipAccounts[getSecureRandomInt(tipAccounts.length)];
 
   const instruction = getTransferSolInstruction({
     amount: lamports,
